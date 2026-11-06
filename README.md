@@ -12,7 +12,7 @@ cd stocker
 docker compose up --build -d
 ```
 
-Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/docs**. First startup builds dependencies. For later starts use `docker compose up -d`; stop with `docker compose down`, which retains the database volume. If `.env` already exists, its settings take precedence: preserve it and check the UI's data-mode banner.
+Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/docs**. First startup builds dependencies. For later starts use `docker compose up -d`; stop with `docker compose down`, which retains the database volume. Preserve any existing `.env` and check the UI's data-mode banner. If no model is configured, the initial AI setup window appears; you can skip it to explore synthetic fixtures.
 
 ## What works
 
@@ -26,9 +26,11 @@ Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/do
 
 ## Configuration
 
-The root `.env` is optional. For live use, copy `.env.example` only if `.env` does not already exist, then configure the desired server-side variables. A genuine `SEC_USER_AGENT` enables SEC access; `FINNHUB_API_KEY` enables authorized U.S. quotes/news; `LLM_BASE_URL`, `LLM_MODEL` and, where required, `LLM_API_KEY` select an OpenAI-compatible model outside Docker. Optional Yahoo daily history and Bank of Canada macro need no key; Alpha Vantage and FRED are optional alternatives/additions.
+Open **Settings → AI** (or the initial setup window), enter the **API Base URL**, exact **Model ID**, and optional **API Key**, then **Test Connection** and **Save**. Strata and other OpenAI-compatible chat-completion endpoints are supported. Saved settings take effect immediately for new requests and survive container recreation; no rebuild is needed. Keys are stored privately on the backend and never returned to the browser. For a host model in Docker, use `http://host.docker.internal:PORT/v1`; see [host networking](docs/DEVELOPMENT.md#ai-configuration-and-host-networking).
 
-Recreate the backend after changing settings. Keep credentials out of frontend `VITE_*` variables. See [development](docs/DEVELOPMENT.md) for native setup, exact configuration, model networking and safe backups, and [providers](docs/DATA_PROVIDERS.md) for coverage and access limits.
+The root `.env` method remains supported for advanced configuration. Saved AI settings override its three model connection fields; **Use environment configuration** removes that override without editing `.env`. AI setup does not enable live financial data: `DATA_MODE=fixtures` remains synthetic. For live data, configure `.env` with `DATA_MODE=live` and the desired providers. A genuine `SEC_USER_AGENT` enables SEC access; `FINNHUB_API_KEY` enables authorized U.S. quotes/news. Yahoo daily history and Bank of Canada macro need no key; Alpha Vantage and FRED are optional.
+
+Changes to `.env` require backend recreation; UI model changes do not. Keep credentials out of frontend `VITE_*` variables. See [development](docs/DEVELOPMENT.md) for configuration, networking and private backups, and [providers](docs/DATA_PROVIDERS.md) for coverage.
 
 ## Limitations
 
@@ -44,7 +46,7 @@ Canadian support covers explicit `.TO`/`.V` daily-history mapping, CAD positions
 make check
 ```
 
-Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript and a production build without live credentials. Current verified baseline: **150 backend / 21 frontend tests**. [Validation](docs/VALIDATION.md) separates reproducible checks, actual CI evidence and external acceptance limits.
+Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript and a production build without live credentials. See the current counts and acceptance limits in validation. [Validation](docs/VALIDATION.md) separates reproducible checks, actual CI evidence and external acceptance limits.
 
 ## Docs
 
@@ -56,4 +58,4 @@ Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript a
 
 Vibe Research (MIT) inspired the methodology/topic concepts; its attribution is retained in the industry guide. OpenStock (AGPL) was conceptual reference only; no implementation was copied. The official TradingView embed retains its attribution and terms.
 
-[Development history archive](https://github.com/TTDoorTT/stocker/tree/archive/stocker-development-history-2026-11-06) preserves the synchronized original plans, progress, acceptance records and diagnostics.
+The permanent `archive/stocker-development-history` branch holds synchronized code plus plans, progress, decisions and diagnostics. See the [archive workflow](docs/DEVELOPMENT.md#development-history-workflow). The [dated historical snapshot](https://github.com/TTDoorTT/stocker/tree/archive/stocker-development-history-2026-11-06) remains available.

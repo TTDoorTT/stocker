@@ -1,6 +1,8 @@
 # Stocker contributor rules
 
-Read `README.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md` and `docs/VALIDATION.md` before changing code. Record incremental work and validation in PR/issue descriptions or feature branches; keep main documentation focused on current use and contribution.
+Read `README.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md` and `docs/VALIDATION.md` before changing code. Keep main documentation focused on current use and contribution. For previous implementation context, plans, migration/debugging records or decisions, read the permanent `archive/stocker-development-history` branch: `git show archive/stocker-development-history:docs/PROGRESS.md` and `git show archive/stocker-development-history:docs/DECISIONS.md`. Fetch that branch from origin when absent; the dated `archive/stocker-development-history-2026-11-06` is the preserved earlier snapshot.
+
+At each major feature/milestone, follow [the archive workflow](docs/DEVELOPMENT.md#development-history-workflow): merge the verified main or feature commit into the archive, update its progress/decisions with actual test results and next actions, and verify application trees match. Keep archive-only records there; never merge the archive into main. Preserve history and existing branches; pushes require user authorization.
 
 Keep new code in its owned backend `app/modules/{market_data,research,portfolio,intelligence}` or frontend `src/features/*` module. Keep routers thin, provider access behind normalized market-data services and finance calculations pure. Share stable public contracts; preserve enforced import boundaries and API/DTO compatibility.
 
