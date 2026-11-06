@@ -7,7 +7,7 @@ import pytest
 
 from app.contracts.market import NewsItem
 from app.core.config import Settings
-from app.db.repository import Repository
+from app.core.database import Repository
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.service import DataService
 from app.orchestrator.engine import ResearchOrchestrator, new_run

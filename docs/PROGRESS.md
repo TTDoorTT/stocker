@@ -278,3 +278,8 @@
 - Final full backend suite **118 passed in 8.13s**, Ruff lint/format passed; full OpenAPI remains identical. Five synthetic stock snapshots, all history ranges, search and news compared directly with the committed original implementation at a fixed capture time and matched exactly. Every original provider URL literal preserved.
 - DataService owns normalized market/stock/history/search/news/macro facade; adapters under `modules/market_data/providers` own SEC/Finnhub/Alpha Vantage/Yahoo/FRED/Valet and unchanged transport policies. Stable DTOs in `contracts/market.py`; availability exception, symbols and evidence identity have deliberate public ownership. Research/intelligence consume public contracts, not provider helpers. Tests retain original assertions; only imports/transport injection setup changed.
 - Next: Phase 4C portfolio service/repository ownership, preserving existing SQLite queries and currency handling.
+
+## Phase 4C acceptance — 2026-11-06 15:08 EST
+- Portfolio router delegates operations to PortfolioService/PortfolioRepository; existing SQL, position arithmetic and currency checks preserved. Shared SQLite lifecycle relocated unchanged to `core/database.py`; research-specific storage methods move out in 4D.
+- Initial service extraction suite: 118 passed (8.16s). After shared-storage move and two focused missing/wrong-currency quote regressions: results recorded at gate below. Full OpenAPI exactly matches baseline. No database schema or row changes.
+- Phase 4C final gate: **120 passed in 9.20s**, including both new portfolio regressions; Ruff lint/format passed. Phase 4D now in progress.

@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from app.core.config import Settings
-from app.db.repository import Repository
+from app.core.database import Repository
 from app.main import create_app
 from app.models.api import PositionRequest
 from app.modules.market_data.errors import DataUnavailable

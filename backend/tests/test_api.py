@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
-from app.db.repository import Repository
+from app.core.database import Repository
 from app.main import create_app
 
 

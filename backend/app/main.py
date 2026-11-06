@@ -8,7 +8,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agents.client import ModelError
 from app.core.config import Settings
-from app.db.repository import Repository
+from app.core.database import Repository
 from app.models.api import (
     HealthResponse,
 )
@@ -16,7 +16,9 @@ from app.modules.intelligence.router import create_router as intelligence_router
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.router import create_router as market_router
 from app.modules.market_data.service import DataService
+from app.modules.portfolio.repository import PortfolioRepository
 from app.modules.portfolio.router import create_router as portfolio_router
+from app.modules.portfolio.service import PortfolioService
 from app.modules.research.router import create_router as research_router
 from app.orchestrator.engine import now
 from app.services.intelligence import IntelligenceService
@@ -116,7 +118,8 @@ def create_app(settings=None, data=None, repo=None):
         }
 
     app.include_router(market_router(service))
-    app.include_router(portfolio_router(settings, service, repository))
+    portfolio = PortfolioService(PortfolioRepository(repository), service, settings)
+    app.include_router(portfolio_router(portfolio))
     app.include_router(research_router(settings, service, repository, intel, executor, capacity))
     app.include_router(intelligence_router(settings, service, intel))
     return app

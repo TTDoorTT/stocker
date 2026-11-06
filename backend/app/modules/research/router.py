@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 
 from app.core.config import Settings
-from app.db.repository import Repository
+from app.core.database import Repository
 from app.models.api import ChatRequest, ChatResponse, ResearchRequest, ResearchRun
 from app.modules.market_data.service import DataService
 from app.orchestrator.engine import ResearchOrchestrator, new_run
