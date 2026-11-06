@@ -97,7 +97,15 @@ beforeEach(() => {
       calls.push({ path, method, body });
       let response: unknown = {};
       let status = 200;
-      if (path === '/health')
+      if (path === '/settings/ai')
+        response = {
+          base_url: 'http://127.0.0.1:4000/v1',
+          model_id: 'configured-test',
+          configured: true,
+          has_api_key: false,
+          source: 'environment',
+        };
+      else if (path === '/health')
         response = { status: 'ok', mode: healthMode, model_id: 'fixture-stub', model_configured: false };
       else if (path === '/markets/overview') response = [];
       else if (path.startsWith('/stocks/search')) response = [{ symbol: 'AAPL', name: 'Apple fixture' }];

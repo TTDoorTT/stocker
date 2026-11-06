@@ -2,7 +2,9 @@ import { useResource } from '../../shared/hooks/useResource';
 import { ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { ModeBadge, PageTitle } from '../../shared/ui/Presentation';
 import { appApi } from '../api';
+import { AIForm } from '../components/AIConfiguration';
 export function Settings() {
+  const ai = useResource(appApi.ai);
   const health = useResource(appApi.health);
   return (
     <>
@@ -36,10 +38,28 @@ export function Settings() {
             </>
           )
         )}
-        <div className="notice">
-          Provider credentials are configured in the backend environment. Keys are never entered or exposed in
-          this browser. Fixture mode uses a deterministic model stub and synthetic financial samples.
-        </div>
+        <h3>AI configuration</h3>
+        {ai.loading ? (
+          <Loading />
+        ) : ai.error ? (
+          <ErrorBox message={ai.error} retry={ai.reload} />
+        ) : (
+          ai.data && (
+            <>
+              <p>
+                Configuration source: {ai.data.source}. API key saved: {ai.data.has_api_key ? 'Yes' : 'No'}.
+              </p>
+              <AIForm
+                key={`${ai.data.source}:${ai.data.base_url}:${ai.data.model_id}`}
+                initial={ai.data}
+                onSaved={() => {
+                  ai.reload();
+                  health.reload();
+                }}
+              />
+            </>
+          )
+        )}
         <h3>Market coverage</h3>
         <p>United States · initial AAPL, MSFT and NVDA coverage. Provider availability varies by ticker.</p>
         <p className="muted">
