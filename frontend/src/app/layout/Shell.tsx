@@ -30,7 +30,7 @@ export function Shell({ children }: { children: ReactNode }) {
         <main id="main-content">
           {children}
           <footer>
-            StockScope AI · U.S. / Canadian research workspace <span>Sources before conclusions.</span>
+            Stocker · U.S. / Canadian research workspace <span>Sources before conclusions.</span>
           </footer>
         </main>
       </div>

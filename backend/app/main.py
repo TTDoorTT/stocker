@@ -39,7 +39,7 @@ def create_app(
         if repo is None:
             repository.close()
 
-    app = FastAPI(title="StockScope AI", lifespan=lifespan)
+    app = FastAPI(title="Stocker", lifespan=lifespan)
     app.state.repo = repository
     app.state.data = service
     app.state.settings = settings

@@ -112,4 +112,6 @@ def test_full_openapi_contract_matches_migration_baseline():
     baseline = json.loads((Path(__file__).parent / "contracts" / "openapi.json").read_text())
     settings = Settings(_env_file=None, database_url="sqlite:///:memory:")
     with TestClient(create_app(settings)) as client:
-        assert client.get("/openapi.json").json() == baseline
+        actual = client.get("/openapi.json").json()
+        assert actual["info"]["title"] == baseline["info"]["title"] == "Stocker"
+        assert actual == baseline
