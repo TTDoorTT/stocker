@@ -7,9 +7,9 @@ import pytest
 
 from app.contracts.market import NewsItem
 from app.core.config import Settings
+from app.modules.intelligence.news import summarize_news
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.research.errors import ModelError
-from app.services.news_summary import summarize_news
 
 
 def news_item(**updates):
@@ -59,7 +59,7 @@ def model_stub(monkeypatch, mutate=None):
                 mutate(output)
             return output
 
-    monkeypatch.setattr("app.services.news_summary.ModelClient", StubModel)
+    monkeypatch.setattr("app.modules.research.service.ModelClient", StubModel)
     return calls
 
 
@@ -91,7 +91,7 @@ def test_headline_summary_is_on_demand_cited_and_preserves_source_metadata(monke
 @pytest.mark.parametrize("settings", [configured(data_mode="fixtures"), configured(llm_model="")])
 def test_missing_or_fixture_configuration_prevents_data_and_model_calls(monkeypatch, settings):
     model = Mock(side_effect=AssertionError("Model must not be created"))
-    monkeypatch.setattr("app.services.news_summary.ModelClient", model)
+    monkeypatch.setattr("app.modules.research.service.ModelClient", model)
     data = Mock()
     with pytest.raises(ModelError):
         summarize_news(data, settings)
@@ -101,7 +101,7 @@ def test_missing_or_fixture_configuration_prevents_data_and_model_calls(monkeypa
 
 def test_empty_news_prevents_model_call(monkeypatch):
     model = Mock(side_effect=AssertionError("No source, no summary"))
-    monkeypatch.setattr("app.services.news_summary.ModelClient", model)
+    monkeypatch.setattr("app.modules.research.service.ModelClient", model)
     data = Mock()
     data.news.return_value = []
     with pytest.raises(DataUnavailable, match="No sourced live headlines"):
@@ -112,7 +112,7 @@ def test_empty_news_prevents_model_call(monkeypatch):
 @pytest.mark.parametrize("bad_item", [news_item(fixture=True), news_item(source_url="fixture:synthetic")])
 def test_fixture_headlines_never_become_live_ai_evidence(monkeypatch, bad_item):
     model = Mock(side_effect=AssertionError("Fixture source must not reach model"))
-    monkeypatch.setattr("app.services.news_summary.ModelClient", model)
+    monkeypatch.setattr("app.modules.research.service.ModelClient", model)
     data = Mock()
     data.news.return_value = [bad_item]
     with pytest.raises(DataUnavailable):

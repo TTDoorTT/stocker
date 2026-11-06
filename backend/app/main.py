@@ -9,6 +9,7 @@ from app.contracts.api import (
 )
 from app.core.config import Settings
 from app.modules.intelligence.router import create_router as intelligence_router
+from app.modules.intelligence.service import IntelligenceService
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.router import create_router as market_router
 from app.modules.market_data.service import DataService
@@ -19,7 +20,6 @@ from app.modules.research.errors import ModelError
 from app.modules.research.repository import ResearchRepository
 from app.modules.research.router import create_router as research_router
 from app.modules.research.service import ResearchService
-from app.services.intelligence import IntelligenceService
 
 
 def create_app(
@@ -107,7 +107,7 @@ def create_app(
     portfolio = PortfolioService(PortfolioRepository(repository.database), service, settings)
     app.include_router(portfolio_router(portfolio))
     app.include_router(research_router(research))
-    app.include_router(intelligence_router(settings, service, intel))
+    app.include_router(intelligence_router(intel))
     return app
 
 

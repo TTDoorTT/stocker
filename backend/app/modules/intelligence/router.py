@@ -1,15 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
 from app.contracts.api import ChatResponse
-from app.core.config import Settings
+from app.modules.intelligence.service import IntelligenceService
 from app.modules.market_data.errors import DataUnavailable
-from app.modules.market_data.service import DataService
 from app.modules.research.errors import ModelError
-from app.services.intelligence import IntelligenceService
-from app.services.news_summary import summarize_news
 
 
-def create_router(settings: Settings, service: DataService, intel: IntelligenceService) -> APIRouter:
+def create_router(intel: IntelligenceService) -> APIRouter:
     router = APIRouter()
 
     @router.get("/api/daily-review")
@@ -23,7 +20,7 @@ def create_router(settings: Settings, service: DataService, intel: IntelligenceS
     @router.post("/api/intelligence/news/summary", response_model=ChatResponse)
     def news_summary():
         try:
-            return summarize_news(service, settings)
+            return intel.summarize_news()
         except (DataUnavailable, ModelError):
             raise
         except ValueError:

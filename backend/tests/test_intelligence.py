@@ -7,11 +7,11 @@ import pytest
 
 from app.contracts.market import NewsItem
 from app.core.config import Settings
+from app.modules.intelligence.service import IntelligenceService
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.service import DataService
 from app.modules.research.orchestrator import ResearchOrchestrator, new_run
 from app.modules.research.repository import ResearchRepository
-from app.services.intelligence import IntelligenceService
 
 
 def services(**kwargs):
