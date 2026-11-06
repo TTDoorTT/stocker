@@ -1,19 +1,12 @@
 import { Link } from 'react-router-dom';
-import { api } from '../api/client';
 import { Heatmap } from '../components/Heatmap';
-import {
-  dateTime,
-  Empty,
-  ErrorBox,
-  formatNumber,
-  Loading,
-  ModeBadge,
-  money,
-  PageTitle,
-  SourceLink,
-  useResource,
-} from '../components/shared';
-import type { Stock } from '../types';
+import { marketApi } from '../features/market/api';
+import { portfolioApi } from '../features/portfolio/api';
+import { useResource } from '../shared/hooks/useResource';
+import type { Stock } from '../shared/types/index';
+import { Empty, ErrorBox, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
+import { dateTime, formatNumber, money } from '../shared/utils/format';
 
 export function MarketCards({ stocks }: { stocks: Stock[] }) {
   return (
@@ -41,8 +34,8 @@ export function MarketCards({ stocks }: { stocks: Stock[] }) {
   );
 }
 export function Home() {
-  const overview = useResource(api.overview);
-  const watchlist = useResource(api.watchlist);
+  const overview = useResource(marketApi.overview);
+  const watchlist = useResource(portfolioApi.watchlist);
   return (
     <>
       <PageTitle title="Market workspace">
@@ -115,7 +108,7 @@ export function Home() {
 }
 
 function PositionsPreview() {
-  const positions = useResource(api.positions);
+  const positions = useResource(portfolioApi.positions);
   return (
     <section className="panel">
       <div className="panel-heading">

@@ -1,12 +1,14 @@
 import { NavLink, Route, Routes } from 'react-router-dom';
-import { api } from '../api/client';
 import { StockSearch } from '../components/Search';
-import { ErrorBox, Loading, ModeBadge, PageTitle, useResource } from '../components/shared';
 import { Home } from '../pages/Home';
 import { DailyReview, Industries, NewsRadar } from '../pages/Intelligence';
 import { MyStocks } from '../pages/MyStocks';
 import { ResearchRecords, ResearchRun } from '../pages/Research';
 import { ResearchLanding, StockPage } from '../pages/Stock';
+import { useResource } from '../shared/hooks/useResource';
+import { ErrorBox, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle } from '../shared/ui/Presentation';
+import { appApi } from './api';
 
 const navigation = [
   ['/', '◈', 'Home'],
@@ -19,7 +21,7 @@ const navigation = [
   ['/settings', '⚙', 'Settings / AI'],
 ];
 function Settings() {
-  const health = useResource(api.health);
+  const health = useResource(appApi.health);
   return (
     <>
       <PageTitle title="Settings / AI" />
@@ -67,7 +69,7 @@ function Settings() {
   );
 }
 export function App() {
-  const health = useResource(api.health);
+  const health = useResource(appApi.health);
   return (
     <div className="app-shell">
       <aside className="sidebar">

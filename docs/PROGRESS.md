@@ -296,3 +296,10 @@
 ## Phase 4F accepted
 - Added AST boundary checks covering aliased/package/nested private imports, pure finance and router persistence restrictions; positive public-facade integration uses isolated synthetic data and shared in-memory SQLite. Added full OpenAPI snapshot regression from the pre-module baseline (no credentials/data records).
 - `make check`: **132 passed in 7.90s**, 18 frontend tests, Ruff/Biome lint/format/CI, TypeScript and production build pass. Native `browser_smoke.py`: **passed**, zero pageerrors, restart/report persistence, holdings, 20 templates, Canadian labels, mobile and forced widget retry. Backend modularization accepted.
+
+## Phase 5 shared frontend checkpoint in progress — 2026-11-06 15:17 EST
+- Split generic HTTP/error handling, resource hook, formatters, generic UI and evidence presentation into cohesive shared modules; endpoint wrappers now live in feature API modules and app health API. Original pages remain temporarily while imports migrate. No request shapes or UI text/behavior changes.
+- Initial Biome check flagged unused imports in generated endpoint wrappers; removed only those unused imports using the targeted rule. TypeScript/tests/build pending. Feature type ownership/page moves follow this verified checkpoint.
+
+- Shared frontend verification: TypeScript initially found the chart's co-located `./shared` import missed by the path rewrite; corrected only that import. Final frontend result is recorded at the checkpoint commit. Endpoint wrappers retain the original request expressions and shared fetch/error behavior.
+- Shared frontend checkpoint accepted: Biome check, strict TypeScript, **18 tests passed in 2.72s**, production build passed (218 modules). Next: owned pages/components/types and app layout/router extraction.

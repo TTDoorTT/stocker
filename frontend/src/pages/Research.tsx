@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
-import { api } from '../api/client';
-import {
-  dateTime,
-  Empty,
-  ErrorBox,
-  EvidenceTable,
-  Gaps,
-  Loading,
-  ModeBadge,
-  PageTitle,
-  StatusBadge,
-  useResource,
-} from '../components/shared';
-import type { Run, RunEvent } from '../types';
+import { researchApi } from '../features/research/api';
+import { useResource } from '../shared/hooks/useResource';
+import type { Run, RunEvent } from '../shared/types/index';
+import { EvidenceTable } from '../shared/ui/EvidenceTable';
+import { Empty, ErrorBox, Gaps, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle, StatusBadge } from '../shared/ui/Presentation';
+import { dateTime } from '../shared/utils/format';
 
 const stages = ['profile', 'financials', 'estimates', 'valuation', 'risk', 'report'];
 export function ResearchRun() {
@@ -30,7 +23,7 @@ export function ResearchRun() {
     setError('');
     async function poll() {
       try {
-        const [value, log] = await Promise.all([api.run(id), api.events(id)]);
+        const [value, log] = await Promise.all([researchApi.run(id), researchApi.events(id)]);
         if (!active) return;
         setRun(value);
         setEvents(log);
@@ -199,7 +192,7 @@ export function ResearchRun() {
   );
 }
 export function ResearchRecords() {
-  const records = useResource(api.runs);
+  const records = useResource(researchApi.runs);
   return (
     <>
       <PageTitle title="Research records">

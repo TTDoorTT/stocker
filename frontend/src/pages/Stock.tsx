@@ -1,22 +1,16 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api } from '../api/client';
 import { PriceChart } from '../components/PriceChart';
-import {
-  dateTime,
-  Empty,
-  ErrorBox,
-  EvidenceTable,
-  Gaps,
-  Loading,
-  ModeBadge,
-  money,
-  PageTitle,
-  SourceLink,
-  useResource,
-} from '../components/shared';
-import type { ChatReply } from '../types';
+import { marketApi } from '../features/market/api';
+import { portfolioApi } from '../features/portfolio/api';
+import { researchApi } from '../features/research/api';
+import { useResource } from '../shared/hooks/useResource';
+import type { ChatReply } from '../shared/types/index';
+import { EvidenceTable } from '../shared/ui/EvidenceTable';
+import { Empty, ErrorBox, Gaps, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
+import { dateTime, money } from '../shared/utils/format';
 
 function Chat({ symbol }: { symbol: string }) {
   const [message, setMessage] = useState('');
@@ -28,7 +22,7 @@ function Chat({ symbol }: { symbol: string }) {
     setBusy(true);
     setError('');
     try {
-      setAnswer(await api.chat(symbol, message));
+      setAnswer(await researchApi.chat(symbol, message));
       setMessage('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Chat unavailable');
@@ -80,8 +74,8 @@ function Chat({ symbol }: { symbol: string }) {
 }
 export function StockPage() {
   const { symbol = 'AAPL' } = useParams();
-  const stock = useResource(() => api.stock(symbol), [symbol]);
-  const history = useResource(() => api.history(symbol), [symbol]);
+  const stock = useResource(() => marketApi.stock(symbol), [symbol]);
+  const history = useResource(() => marketApi.history(symbol), [symbol]);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [notice, setNotice] = useState('');
@@ -90,7 +84,7 @@ export function StockPage() {
     setBusy(true);
     setActionError('');
     try {
-      const run = await api.runResearch(symbol);
+      const run = await researchApi.runResearch(symbol);
       navigate(`/runs/${run.run_id}`);
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Research unavailable');
@@ -100,7 +94,7 @@ export function StockPage() {
   }
   async function watch() {
     try {
-      await api.watch(symbol);
+      await portfolioApi.watch(symbol);
       setNotice(`${symbol} added to watchlist`);
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Could not add stock');

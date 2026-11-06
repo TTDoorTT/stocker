@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '../api/client';
-import type { SearchResult } from '../types';
+import { marketApi } from '../features/market/api';
+
+import type { SearchResult } from '../shared/types/index';
 
 export function StockSearch() {
   const [query, setQuery] = useState('');
@@ -17,7 +18,7 @@ export function StockSearch() {
     }
     const timer = setTimeout(() => {
       setBusy(true);
-      api
+      marketApi
         .search(query.trim())
         .then((rows) => {
           if (active) {

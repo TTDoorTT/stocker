@@ -1,21 +1,13 @@
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../api/client';
-import {
-  dateTime,
-  Empty,
-  ErrorBox,
-  formatNumber,
-  Loading,
-  ModeBadge,
-  money,
-  PageTitle,
-  SourceLink,
-  useResource,
-} from '../components/shared';
+import { portfolioApi } from '../features/portfolio/api';
+import { useResource } from '../shared/hooks/useResource';
+import { Empty, ErrorBox, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
+import { dateTime, formatNumber, money } from '../shared/utils/format';
 export function MyStocks() {
-  const watchlist = useResource(api.watchlist);
-  const positions = useResource(api.positions);
+  const watchlist = useResource(portfolioApi.watchlist);
+  const positions = useResource(portfolioApi.positions);
   const [symbol, setSymbol] = useState('');
   const [shares, setShares] = useState('');
   const [cost, setCost] = useState('');
@@ -26,7 +18,7 @@ export function MyStocks() {
     setBusy(true);
     setError('');
     try {
-      await api.position({
+      await portfolioApi.position({
         symbol: symbol.toUpperCase(),
         shares: Number(shares),
         average_cost: Number(cost),
@@ -44,7 +36,7 @@ export function MyStocks() {
   }
   async function removePosition(id: number) {
     try {
-      await api.removePosition(id);
+      await portfolioApi.removePosition(id);
       positions.reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Position could not be removed');
@@ -52,7 +44,7 @@ export function MyStocks() {
   }
   async function removeWatch(value: string) {
     try {
-      await api.unwatch(value);
+      await portfolioApi.unwatch(value);
       watchlist.reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Stock could not be removed');

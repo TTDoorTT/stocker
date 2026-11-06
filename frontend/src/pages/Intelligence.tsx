@@ -1,22 +1,15 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, request } from '../api/client';
-import {
-  dateTime,
-  Empty,
-  ErrorBox,
-  EvidenceTable,
-  formatNumber,
-  Gaps,
-  Loading,
-  ModeBadge,
-  money,
-  PageTitle,
-  SourceLink,
-  useResource,
-} from '../components/shared';
-import type { ChatReply, Mode, NewsItem, Quote } from '../types';
+import { intelligenceApi } from '../features/intelligence/api';
+import { researchApi } from '../features/research/api';
+import { request } from '../shared/api/client';
+import { useResource } from '../shared/hooks/useResource';
+import type { ChatReply, Mode, NewsItem, Quote } from '../shared/types/index';
+import { EvidenceTable } from '../shared/ui/EvidenceTable';
+import { Empty, ErrorBox, Gaps, Loading } from '../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
+import { dateTime, formatNumber, money } from '../shared/utils/format';
 
 function NewsList({ items }: { items: NewsItem[] }) {
   return items.length ? (
@@ -39,7 +32,7 @@ function NewsList({ items }: { items: NewsItem[] }) {
   );
 }
 export function NewsRadar() {
-  const news = useResource(api.news);
+  const news = useResource(intelligenceApi.news);
   const [summary, setSummary] = useState<ChatReply>();
   const [summaryError, setSummaryError] = useState('');
   const [summarizing, setSummarizing] = useState(false);
@@ -48,7 +41,7 @@ export function NewsRadar() {
     setSummaryError('');
     setSummary(undefined);
     try {
-      setSummary(await api.summarizeNews());
+      setSummary(await intelligenceApi.summarizeNews());
     } catch (error) {
       setSummaryError(error instanceof Error ? error.message : 'Headline summary unavailable');
     } finally {
@@ -297,7 +290,7 @@ export function Industries() {
     setBusy(`${industry.slug}-${symbol}`);
     setError('');
     try {
-      const run = await api.runResearch(symbol, industry.slug);
+      const run = await researchApi.runResearch(symbol, industry.slug);
       navigate(`/runs/${run.run_id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Research could not start');
