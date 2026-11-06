@@ -2,7 +2,7 @@
 
 ---
 
-# StockScope AI — Codex Implementation Plan
+# Stocker — Codex Implementation Plan
 
 **Purpose:** Build a university multi-agent stock research application inspired by Vibe Research and OpenStock, with a U.S.-first implementation and a future Canadian/TSX extension.
 
@@ -14,7 +14,7 @@
 
 ## 0. Instructions to Codex (read first)
 
-You are the lead software engineer implementing **StockScope AI**. Execute this plan in order, writing actual code, configuration, tests, and documentation; do not merely summarize it.
+You are the lead software engineer implementing **Stocker**. Execute this plan in order, writing actual code, configuration, tests, and documentation; do not merely summarize it.
 
 1. Work in **WSL2 Ubuntu** on the Linux filesystem, using **`~/uni/dh399/stocker`** as the **existing, authoritative project root**. Do not create or switch to another workspace. Inspect the existing files and Git status first; preserve all pre-existing work. Do not alter `~/ai/codx-testing`, Codex CLI configuration, or the existing LiteLLM installation.
 2. Treat the two external GitHub repos as **reference implementations**, not codebases to merge. Build a small independent implementation. Only port narrowly justified Vibe MIT-licensed code with proper copyright/license attribution. **Do not copy OpenStock's AGPL-3.0 code** into the new project without explicitly resolving licensing obligations.
@@ -334,7 +334,7 @@ Create `docs/PROGRESS.md` **at the start of Phase 0** and keep it up to date thr
 Use this concise initial template and keep it current:
 
 ```markdown
-# StockScope AI — Implementation Progress
+# Stocker — Implementation Progress
 
 ## Current status
 - Phase: 0 — Reference audit (not started / in progress / complete)
@@ -533,7 +533,7 @@ Create `.env.example` with safe placeholders and comments:
 # app mode: fixtures | live
 DATA_MODE=fixtures
 APP_ENV=development
-DATABASE_URL=sqlite:///./stockscope.db
+DATABASE_URL=sqlite:///./stocker.db
 
 # OpenAI-compatible LLM: endpoint may be local LiteLLM or a hosted provider.
 # Optional while running fixture-mode tests.
