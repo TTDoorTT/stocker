@@ -190,27 +190,13 @@ Inside Docker, `127.0.0.1` means the backend container. For a model running on t
 
 Compose persists private credentials at `/data/ai-settings/config.json` in the existing volume, with 0600 file/0700 directory permissions. Native defaults to ignored `.ai-settings/config.json` at the repository root. `AI_CONFIG_FILE` must point to a dedicated private directory, on persistent storage for Docker. Secrets are access-controlled plaintext: protect volume exports and backups; local OS/Docker administrators can read them. No encryption key management dependency is introduced. Never print this file or include it in diagnostics. Back up the file separately from SQLite, using `docker compose cp backend:/data/ai-settings/config.json /absolute/private/backup/ai-config.json` into a private 0700 backup directory; set the exported file to 0600 and compare with `cmp` silently after restoring to a private staging path. Restoring requires stopping the backend, preserving the current file, copying the backup to the configured path, restoring 0600/0700 permissions and starting the backend. Never commit backups. A corrupt file fails startup safely rather than silently discarding credentials.
 
-## Development history workflow
+## Development progress workflow
 
-`main` owns current application source, tests/CI, Docker setup, user guides, architecture/API contracts, roadmap and limitations. `archive/stocker-development-history` is the single long-lived branch for detailed progress, plans, migration acceptance, debugging/execution records and decision history. The old dated archive remains an untouched snapshot. This replaces the earlier freeze-only archive policy.
+Keep application source, user/contributor documentation and development records on `main`. Put detailed progress, implementation plans, execution/debugging notes, migration acceptance and decision history in the root [`progress/`](../progress/README.md) folder. Keep current setup, architecture, API contracts, roadmap and limitations in `README.md` and `docs/`.
 
-At a major milestone, commit and validate application work on a feature branch/main first. In a separate clean archive worktree, merge that exact verified commit with a normal merge (no squash, force push or reset), then update archive-only `docs/PROGRESS.md` and `docs/DECISIONS.md`. Record commit, test results, failures/limits and the precise next action. After main receives the feature, merge main there as well to include its integration commit. Keep application/config/test trees identical to the selected source commit. Archive history is retrieved with:
+Read the latest entry in [`progress/PROGRESS.md`](../progress/PROGRESS.md) before resuming work. Update it at meaningful milestones, after test runs, on blockers and before ending a session, recording actual results, limitations and the precise next action. Record architecture decisions in [`progress/DECISIONS.md`](../progress/DECISIONS.md). Include these records in the same commit/PR workflow as the corresponding implementation; a temporary feature/PR branch may still be used for required checks.
 
-```bash
-git fetch origin archive/stocker-development-history
-git show origin/archive/stocker-development-history:docs/PROGRESS.md
-git show origin/archive/stocker-development-history:docs/DECISIONS.md
-# Create a separate worktree once; reuse it for subsequent milestones.
-git worktree add /tmp/stocker-history archive/stocker-development-history
-# Run inside that archive worktree, using the exact verified source ref:
-git merge --no-ff main
-# Edit archive-only progress/decisions, commit, then verify synchronized source:
-git diff main -- backend frontend fixtures scripts compose.yaml compose.fixture.yaml Makefile .github
-```
-
-If the local branch is absent after fetching, create the worktree with `git worktree add -b archive/stocker-development-history /tmp/stocker-history origin/archive/stocker-development-history`. A freshly provisioned remote may initially have only the dated snapshot: create the permanent branch from that snapshot, merge main, and restore archive-only deleted records from the pre-merge archive commit before committing. Resolve only reviewed conflicts; preserve historical records and take current application source from main. Never merge the archive branch into main. The first permanent archive and feature commits are local until an authorized push; publishing/merging follow repository protections and require user authorization. Future milestones reuse this branch, rather than creating new dated archives.
-
-Use `git show` for historical context instead of copying old plans into the public branch. Verify public Markdown links resolve or explicitly target archived content. Archive-only documents may retain historical product names and obsolete instructions; current main architecture/contributor instructions take precedence.
+The separate archive synchronization workflow is retired. The existing archive branches remain unchanged as historical snapshots. Their imported Markdown is indexed in `progress/`; historical instructions do not override current `AGENTS.md` or current architecture. Raw JSON diagnostics remain accessible through the pinned snapshot links in the progress guide. Verify relocated Markdown links when adding or moving records, keep secrets/private backups outside Git, and follow repository branch protections when publishing.
 
 AI-specific browser acceptance on an isolated fixture stack uses a synthetic loopback responder (never start this in live mode):
 
