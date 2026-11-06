@@ -9,7 +9,7 @@ function status(frame: HTMLIFrameElement, value: string, attempt = 0) {
     window,
     new MessageEvent('message', {
       source: frame.contentWindow,
-      data: { type: 'stockscope-heatmap-status', attempt, status: value },
+      data: { type: 'stocker-heatmap-status', attempt, status: value },
     }),
   );
 }
@@ -33,7 +33,7 @@ describe('isolated TradingView lifecycle', () => {
     fireEvent(
       window,
       new MessageEvent('message', {
-        data: { type: 'stockscope-heatmap-status', attempt: 0, status: 'loaded' },
+        data: { type: 'stocker-heatmap-status', attempt: 0, status: 'loaded' },
       }),
     );
     act(() => vi.advanceTimersByTime(20000));

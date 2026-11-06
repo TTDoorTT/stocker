@@ -66,7 +66,7 @@ make check                           # isolated fixture quality/test/build
 make smoke
 ```
 
-Source binds provide Uvicorn reload and Vite HMR; Docker frontend polls at 200ms, native Vite stays event-based. SQLite: `/data/stockscope.db` on `stockscope_stockscope_data`. Diagnostic history remains separately at `/data/live-acceptance.db`; DEVELOPMENT.md explains explicitly selecting it.
+Source binds provide Uvicorn reload and Vite HMR; Docker frontend polls at 200ms, native Vite stays event-based. SQLite: `/data/stocker.db` on `stocker_stocker_data`. Diagnostic history remains separately at `/data/live-acceptance.db`; DEVELOPMENT.md explains explicitly selecting it.
 
 Backups: `../stocker-backups/migration-resume-20261106-1453`, private root.env/five native SQLite copies/manifest plus user-owned 0600 Docker exports. Original `.env` and database contents still match; named-volume fingerprints match the pre-check snapshots. Default native history was empty; four diagnostic runs and 67 events are preserved, without silently merging histories. Credentials never entered Git/build contexts/frontend/logs.
 

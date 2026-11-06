@@ -7,7 +7,7 @@ docker compose config --quiet
 make check
 ```
 
-The runtime AI configuration revision passes **169 backend / 26 frontend tests**, Ruff/Biome format/lint/import checks, strict TypeScript, boundary/API snapshot checks and production build (234 modules). One existing Starlette/httpx deprecation warning remains. Existing API routes/schemas are preserved; only AI settings routes and DTOs are added. Checks run in isolated credential-free fixture containers.
+The Stocker naming revision passes **172 backend / 26 frontend tests**, Ruff/Biome format/lint/import checks, strict TypeScript, boundary/API snapshot checks and production build (234 modules). One existing Starlette/httpx deprecation warning remains. Existing API routes/schemas are preserved; only AI settings routes and DTOs are added. Checks run in isolated credential-free fixture containers.
 
 Docker acceptance verified AI preferences, watchlist/positions, six-stage research, report and events survive container recreation unchanged on a separate fixture volume. Container checks verified 0700 directory/0600 credential-file permissions, redacted status and no synthetic secrets in backend logs. The exact Docker host alias resolves; this does not prove a particular Windows/WSL host model is reachable.
 
@@ -15,7 +15,7 @@ Real Chromium acceptance passed setup/skip/backend model test/save/Settings/rese
 
 ## CI
 
-The current feature revision is local: remote CI is unrun. The configured workflow covers Python 3.11/3.13, Node 22 quality/tests/build and isolated Docker recreation/persistence. A previously verified main baseline passed [GitHub Actions run 42298783499](https://github.com/TTDoorTT/stocker/actions/runs/42298783499); that historical result does not establish current revision success.
+The naming revision is local until publication; its remote CI is unrun. The preceding AI configuration revision passed [GitHub Actions run 42308316004](https://github.com/TTDoorTT/stocker/actions/runs/42308316004). The configured workflow covers Python 3.11/3.13, Node 22 quality/tests/build and isolated Docker recreation/persistence. A previously verified main baseline passed [GitHub Actions run 42298783499](https://github.com/TTDoorTT/stocker/actions/runs/42298783499); that historical result does not establish current revision success.
 
 ## Acceptance limits
 

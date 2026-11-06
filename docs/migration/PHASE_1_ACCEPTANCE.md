@@ -21,7 +21,7 @@ Implemented files: `compose.yaml`, `compose.fixture.yaml`, both Dockerfiles, roo
 | Verification | Actual result |
 |---|---|
 | `docker compose config --quiet` | Passed |
-| `docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml config --quiet` | Passed; override removes live env file |
+| `docker compose -p stocker-fixture -f compose.yaml -f compose.fixture.yaml config --quiet` | Passed; override removes live env file |
 | `docker compose build` | Passed after sandbox retry for Buildx metadata; locked dependencies including history extra installed |
 | Fixture `up -d --wait` / `ps` | Both services up; backend healthy; ports bound to 127.0.0.1 |
 | Backend `/api/health`, frontend `/api/health` and `/api/stocks/search?q=AAPL` | Passed through real Vite proxy, fixture labels/model stub explicit |
@@ -32,7 +32,7 @@ Implemented files: `compose.yaml`, `compose.fixture.yaml`, both Dockerfiles, roo
 | Backend reload | Temporary health-marker edit observed over HTTP, restored and observed again; no rebuild |
 | Vite HMR | Temporary Home heading edit observed in open browser, restored and observed again; no rebuild |
 | Fixture `down` / `up -d --wait` persistence | Identical watchlist, stored position/P&L, full immutable six-stage run/report and ordered events |
-| SQLite import to default named volume | Native empty v1 DB imported to `/data/stockscope.db`; separate 4-run/67-event diagnostic history imported to `/data/live-acceptance.db`; integrity/version/counts/all row fingerprints match snapshots |
+| SQLite import to default named volume | Native empty v1 DB imported to `/data/stocker.db`; separate 4-run/67-event diagnostic history imported to `/data/live-acceptance.db`; integrity/version/counts/all row fingerprints match snapshots |
 | Default live stack `up --build -d --wait`, `down`, `up -d --wait`, `ps`, logs and both health URLs | Passed; backend healthy, frontend proxy reports live/iq3_s; existing configuration retained. Volume integrity/v1/counts confirmed after recreation; no `.env` file baked into backend image. Stack left running |
 | External model discovery | BLOCKED: native WSL `ConnectTimeout`, same on outside-sandbox retry; Docker `ConnectError`; raw TCP native timeout / Docker ECONNREFUSED (111) |
 
