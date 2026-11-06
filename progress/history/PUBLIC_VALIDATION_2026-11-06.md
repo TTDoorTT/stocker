@@ -1,6 +1,6 @@
 > Historical record imported from `docs/history/PUBLIC_VALIDATION_2026-11-06.md` at `f8d3cbc`. Current workflow and file locations are in the [progress guide](../README.md); old execution steps and branch policies below are historical context.
 
-Historical public validation before runtime AI configuration. Current validation is in ../VALIDATION.md.
+Historical public validation before runtime AI configuration. Current validation is in [docs/VALIDATION.md](../../docs/VALIDATION.md).
 
 # Validation
 
