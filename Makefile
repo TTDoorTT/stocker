@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := dev
-CHECK_COMPOSE = docker compose -p stockscope-check -f compose.yaml -f compose.fixture.yaml
+CHECK_COMPOSE = docker compose -p stocker-check -f compose.yaml -f compose.fixture.yaml
 RUN = $(CHECK_COMPOSE) run --rm --no-deps -T
-BACKEND = $(RUN) -e DATABASE_URL=sqlite:////tmp/stockscope-check.db backend
+BACKEND = $(RUN) -e DATABASE_URL=sqlite:////tmp/stocker-check.db backend
 FRONTEND = $(RUN) frontend
 
 .PHONY: dev stop status logs test lint format format-check typecheck check build smoke rebuild

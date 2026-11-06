@@ -1,4 +1,4 @@
-# Always combine with -p stockscope-fixture to isolate the data volume.
+# Always combine with -p stocker-fixture to isolate the data volume.
 services:
   backend:
     env_file: !reset []

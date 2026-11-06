@@ -13,7 +13,7 @@ jobs:
         python: ['3.11', '3.13']
     env:
       DATA_MODE: fixtures
-      DATABASE_URL: sqlite:////tmp/stockscope-ci.db
+      DATABASE_URL: sqlite:////tmp/stocker-ci.db
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -40,7 +40,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     env:
-      COMPOSE_PROJECT_NAME: stockscope-ci
+      COMPOSE_PROJECT_NAME: stocker-ci
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Validate and build isolated fixture stack
@@ -51,10 +51,10 @@ jobs:
       - name: Proxy and persistence acceptance
         run: |
           curl --fail http://127.0.0.1:8000/api/health
-          python3 scripts/compose_smoke.py seed /tmp/stockscope-smoke.json
+          python3 scripts/compose_smoke.py seed /tmp/stocker-smoke.json
           docker compose -f compose.yaml -f compose.fixture.yaml down
           docker compose -f compose.yaml -f compose.fixture.yaml up -d --wait
-          python3 scripts/compose_smoke.py verify /tmp/stockscope-smoke.json
+          python3 scripts/compose_smoke.py verify /tmp/stocker-smoke.json
       - name: Stop without deleting SQLite volume
         if: always()
         run: docker compose -f compose.yaml -f compose.fixture.yaml down
