@@ -1,0 +1,952 @@
+{
+  "run_id": "25f97ee8-9c14-465b-8842-c10d39c60eb1",
+  "symbol": "AAPL",
+  "market": "US",
+  "model_id": "iq3_s",
+  "strategy": "multi",
+  "mode": "live",
+  "started_at": "2026-11-06T08:37:41.924365+00:00",
+  "finished_at": "2026-11-06T08:38:09.437060+00:00",
+  "status": "incomplete",
+  "stages": [
+    {
+      "stage": "profile",
+      "attempt": 1,
+      "status": "failed",
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "started_at": "2026-11-06T08:37:43.300224+00:00",
+      "finished_at": "2026-11-06T08:37:51.043173+00:00",
+      "output": null,
+      "validation_errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "input": {
+        "stage": "profile",
+        "mode": "live",
+        "scope": {
+          "symbol": "AAPL",
+          "profile": "Apple Inc.. SEC industry classification: Electronic Computers."
+        },
+        "validated_prior": {},
+        "validation_feedback": []
+      }
+    },
+    {
+      "stage": "profile",
+      "attempt": 2,
+      "status": "failed",
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "started_at": "2026-11-06T08:37:51.072599+00:00",
+      "finished_at": "2026-11-06T08:38:02.029141+00:00",
+      "output": null,
+      "validation_errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "input": {
+        "stage": "profile",
+        "mode": "live",
+        "scope": {
+          "symbol": "AAPL",
+          "profile": "Apple Inc.. SEC industry classification: Electronic Computers."
+        },
+        "validated_prior": {},
+        "validation_feedback": [
+          "Serialized model context budget exhausted"
+        ]
+      }
+    },
+    {
+      "stage": "profile",
+      "attempt": 3,
+      "status": "failed",
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "started_at": "2026-11-06T08:38:02.083902+00:00",
+      "finished_at": "2026-11-06T08:38:09.407209+00:00",
+      "output": null,
+      "validation_errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "input": {
+        "stage": "profile",
+        "mode": "live",
+        "scope": {
+          "symbol": "AAPL",
+          "profile": "Apple Inc.. SEC industry classification: Electronic Computers."
+        },
+        "validated_prior": {},
+        "validation_feedback": [
+          "Serialized model context budget exhausted"
+        ]
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "ev-eac0573e03df478d",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "company_name",
+      "value": "Apple Inc.",
+      "unit": "text",
+      "currency": null,
+      "period": "current SEC submissions",
+      "period_start": null,
+      "period_end": null,
+      "source_name": "SEC EDGAR submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000320193.json",
+      "published_at": null,
+      "fetched_at": "2026-11-06T08:37:42.152309Z",
+      "missing_reason": "Identity publication timestamp is unavailable in SEC submissions.",
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-f6ccb0dfed2955b8",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "industry_classification",
+      "value": "Electronic Computers",
+      "unit": "text",
+      "currency": null,
+      "period": "current SEC submissions",
+      "period_start": null,
+      "period_end": null,
+      "source_name": "SEC EDGAR submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000320193.json",
+      "published_at": null,
+      "fetched_at": "2026-11-06T08:37:42.152309Z",
+      "missing_reason": "Industry-classification publication timestamp is unavailable.",
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-2c721bafc9ea5cd0",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "revenue",
+      "value": 478834000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2025-09-28..2026-09-26",
+      "period_start": "2025-09-28",
+      "period_end": "2026-09-26",
+      "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-470c797dfb45eb7c",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "revenue",
+      "value": 416161000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2024-09-29..2025-09-27",
+      "period_start": "2024-09-29",
+      "period_end": "2025-09-27",
+      "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-110e91e865e79172",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "revenue",
+      "value": 391035000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2023-10-01..2024-09-28",
+      "period_start": "2023-10-01",
+      "period_end": "2024-09-28",
+      "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-6a38a97e2c766740",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "net_income",
+      "value": 132175000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2025-09-28..2026-09-26",
+      "period_start": "2025-09-28",
+      "period_end": "2026-09-26",
+      "source_name": "SEC EDGAR (NetIncomeLoss)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-86feb920acc86ce2",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "net_income",
+      "value": 112010000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2024-09-29..2025-09-27",
+      "period_start": "2024-09-29",
+      "period_end": "2025-09-27",
+      "source_name": "SEC EDGAR (NetIncomeLoss)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-b1d539fb233439bc",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "net_income",
+      "value": 93736000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2023-10-01..2024-09-28",
+      "period_start": "2023-10-01",
+      "period_end": "2024-09-28",
+      "source_name": "SEC EDGAR (NetIncomeLoss)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-67badb6572c07b2d",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "eps",
+      "value": 8.98,
+      "unit": "USD/shares",
+      "currency": "USD",
+      "period": "2025-09-28..2026-09-26",
+      "period_start": "2025-09-28",
+      "period_end": "2026-09-26",
+      "source_name": "SEC EDGAR (EarningsPerShareDiluted)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-11c9b7b1b69fa458",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "eps",
+      "value": 7.46,
+      "unit": "USD/shares",
+      "currency": "USD",
+      "period": "2024-09-29..2025-09-27",
+      "period_start": "2024-09-29",
+      "period_end": "2025-09-27",
+      "source_name": "SEC EDGAR (EarningsPerShareDiluted)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-bef3a6b25d5a2a51",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "eps",
+      "value": 6.08,
+      "unit": "USD/shares",
+      "currency": "USD",
+      "period": "2023-10-01..2024-09-28",
+      "period_start": "2023-10-01",
+      "period_end": "2024-09-28",
+      "source_name": "SEC EDGAR (EarningsPerShareDiluted)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-4f2f2e87bb2bed49",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "cashflow",
+      "value": 145097000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2025-09-28..2026-09-26",
+      "period_start": "2025-09-28",
+      "period_end": "2026-09-26",
+      "source_name": "SEC EDGAR (NetCashProvidedByUsedInOperatingActivities)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-26712dd45f9ae2d9",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "cashflow",
+      "value": 111482000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2024-09-29..2025-09-27",
+      "period_start": "2024-09-29",
+      "period_end": "2025-09-27",
+      "source_name": "SEC EDGAR (NetCashProvidedByUsedInOperatingActivities)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-6871f363eee1aa9c",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "cashflow",
+      "value": 118254000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2023-10-01..2024-09-28",
+      "period_start": "2023-10-01",
+      "period_end": "2024-09-28",
+      "source_name": "SEC EDGAR (NetCashProvidedByUsedInOperatingActivities)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-cb547b3a9f1462ae",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "long_term_debt",
+      "value": 78114000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2026-09-26..2026-09-26",
+      "period_start": null,
+      "period_end": "2026-09-26",
+      "source_name": "SEC EDGAR (LongTermDebt)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-5b2e89c8abb2aa6b",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "long_term_debt",
+      "value": 90678000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2025-09-27..2025-09-27",
+      "period_start": null,
+      "period_end": "2025-09-27",
+      "source_name": "SEC EDGAR (LongTermDebt)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-7ce56a32badb8c42",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "long_term_debt",
+      "value": 96662000000.0,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2024-09-28..2024-09-28",
+      "period_start": null,
+      "period_end": "2024-09-28",
+      "source_name": "SEC EDGAR (LongTermDebt)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/",
+      "published_at": "2025-10-31T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.405182Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-7372335c35d0af36",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "price",
+      "value": 344.17,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2026-11-05",
+      "period_start": null,
+      "period_end": null,
+      "source_name": "Finnhub",
+      "source_url": "https://finnhub.io/docs/api/quote",
+      "published_at": "2026-11-05T21:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.529608Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    },
+    {
+      "evidence_id": "ev-6777d64d02ad5fee",
+      "symbol": "AAPL",
+      "market": "US",
+      "field": "previous_close",
+      "value": 349.51,
+      "unit": "USD",
+      "currency": "USD",
+      "period": "2026-11-05",
+      "period_start": null,
+      "period_end": null,
+      "source_name": "Finnhub",
+      "source_url": "https://finnhub.io/docs/api/quote",
+      "published_at": "2026-11-05T21:00:00Z",
+      "fetched_at": "2026-11-06T08:37:42.529608Z",
+      "missing_reason": null,
+      "fixture": false,
+      "stale": false,
+      "cached": false
+    }
+  ],
+  "calculations": [
+    {
+      "calculation_id": "calc-5aa7a99119f6eee9",
+      "metric": "revenue_yoy",
+      "value": 15.05979656911629,
+      "unit": "%",
+      "input_evidence_ids": [
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c"
+      ],
+      "inputs": {
+        "current": 478834000000.0,
+        "previous": 416161000000.0,
+        "current_period": "2025-09-28..2026-09-26",
+        "previous_period": "2024-09-29..2025-09-27",
+        "currency": "USD"
+      },
+      "reason": null
+    },
+    {
+      "calculation_id": "calc-65d48c6c1dd24cd4",
+      "metric": "eps_growth",
+      "value": 20.375335120643445,
+      "unit": "%",
+      "input_evidence_ids": [
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458"
+      ],
+      "inputs": {
+        "current": 8.98,
+        "previous": 7.46,
+        "current_period": "2025-09-28..2026-09-26",
+        "previous_period": "2024-09-29..2025-09-27",
+        "currency": "USD"
+      },
+      "reason": null
+    },
+    {
+      "calculation_id": "calc-0405c66e25d22109",
+      "metric": "profit_margin",
+      "value": 27.603511864236875,
+      "unit": "%",
+      "input_evidence_ids": [
+        "ev-6a38a97e2c766740",
+        "ev-2c721bafc9ea5cd0"
+      ],
+      "inputs": {
+        "net_income": 132175000000.0,
+        "revenue": 478834000000.0,
+        "period": "2025-09-28..2026-09-26",
+        "currency": "USD"
+      },
+      "reason": null
+    },
+    {
+      "calculation_id": "calc-c06078eff93a242e",
+      "metric": "pe_annual",
+      "value": 38.32628062360802,
+      "unit": "ratio",
+      "input_evidence_ids": [
+        "ev-7372335c35d0af36",
+        "ev-67badb6572c07b2d"
+      ],
+      "inputs": {
+        "price": 344.17,
+        "annual_eps": 8.98,
+        "eps_period": "2025-09-28..2026-09-26",
+        "currency": "USD"
+      },
+      "reason": null
+    },
+    {
+      "calculation_id": "calc-61105dc56a42cb4f",
+      "metric": "daily_return",
+      "value": -1.5278532803067124,
+      "unit": "%",
+      "input_evidence_ids": [
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "inputs": {
+        "price": 344.17,
+        "previous_close": 349.51
+      },
+      "reason": null
+    }
+  ],
+  "gaps": [
+    "SEC identity publication timestamp is unavailable; retrieval time is separate.",
+    "SEC companyfacts fy identifies the filing fiscal year; fact fiscal-year labels are unavailable, so exact start/end dates are used.",
+    "Long-term debt follows the named SEC concept; current/noncurrent components are not summed and no total-debt coverage is claimed.",
+    "Licensed analyst consensus unavailable.",
+    "Annual SEC metrics are not trailing twelve-month metrics.",
+    "profile: exhausted bounded validation attempts"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 1472,
+      "completion_tokens": 134,
+      "total_tokens": 1606,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 1477,
+      "completion_tokens": 255,
+      "total_tokens": 1732,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 1477,
+      "completion_tokens": 293,
+      "total_tokens": 1770,
+      "prompt_tokens_details": {
+        "cached_tokens": 1472
+      }
+    }
+  ],
+  "latency_seconds": 27.4264,
+  "report_saved": false,
+  "model_request_timings": [
+    {
+      "http_status": 400,
+      "latency_seconds": 0.004
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "tool_calls": 6,
+      "latency_seconds": 7.62
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "tool_calls": 6,
+      "latency_seconds": 10.818
+    },
+    {
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "tool_calls": 6,
+      "latency_seconds": 7.091
+    }
+  ],
+  "events": [
+    {
+      "event": "run_started",
+      "at": "2026-11-06T08:37:41.935394+00:00",
+      "model_id": "iq3_s",
+      "mode": "live",
+      "strategy": "multi",
+      "id": 1
+    },
+    {
+      "event": "stage_started",
+      "at": "2026-11-06T08:37:43.300242+00:00",
+      "stage": "profile",
+      "attempt": 1,
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "id": 2
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:50.971448+00:00",
+      "stage": "profile",
+      "tool": "get_company_data",
+      "id": 3
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:50.986032+00:00",
+      "stage": "profile",
+      "tool": "get_financial_facts",
+      "id": 4
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:50.997549+00:00",
+      "stage": "profile",
+      "tool": "get_price_history",
+      "id": 5
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:51.008337+00:00",
+      "stage": "profile",
+      "tool": "get_news",
+      "id": 6
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:51.020049+00:00",
+      "stage": "profile",
+      "tool": "calculate_metric",
+      "id": 7
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:37:51.031150+00:00",
+      "stage": "profile",
+      "tool": "read_prior_stage",
+      "id": 8
+    },
+    {
+      "event": "validation_failed",
+      "at": "2026-11-06T08:37:51.043182+00:00",
+      "stage": "profile",
+      "attempt": 1,
+      "errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "id": 9
+    },
+    {
+      "event": "stage_retry",
+      "at": "2026-11-06T08:37:51.062940+00:00",
+      "stage": "profile",
+      "attempt": 2,
+      "feedback": [
+        "Serialized model context budget exhausted"
+      ],
+      "id": 10
+    },
+    {
+      "event": "stage_started",
+      "at": "2026-11-06T08:37:51.072618+00:00",
+      "stage": "profile",
+      "attempt": 2,
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "id": 11
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:01.922723+00:00",
+      "stage": "profile",
+      "tool": "get_company_data",
+      "id": 12
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:01.942617+00:00",
+      "stage": "profile",
+      "tool": "get_financial_facts",
+      "id": 13
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:01.960450+00:00",
+      "stage": "profile",
+      "tool": "get_price_history",
+      "id": 14
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:01.978911+00:00",
+      "stage": "profile",
+      "tool": "get_news",
+      "id": 15
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:01.996372+00:00",
+      "stage": "profile",
+      "tool": "calculate_metric",
+      "id": 16
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:02.015814+00:00",
+      "stage": "profile",
+      "tool": "read_prior_stage",
+      "id": 17
+    },
+    {
+      "event": "validation_failed",
+      "at": "2026-11-06T08:38:02.029151+00:00",
+      "stage": "profile",
+      "attempt": 2,
+      "errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "id": 18
+    },
+    {
+      "event": "stage_retry",
+      "at": "2026-11-06T08:38:02.065379+00:00",
+      "stage": "profile",
+      "attempt": 3,
+      "feedback": [
+        "Serialized model context budget exhausted"
+      ],
+      "id": 19
+    },
+    {
+      "event": "stage_started",
+      "at": "2026-11-06T08:38:02.083931+00:00",
+      "stage": "profile",
+      "attempt": 3,
+      "input_evidence_ids": [
+        "ev-eac0573e03df478d",
+        "ev-f6ccb0dfed2955b8",
+        "ev-2c721bafc9ea5cd0",
+        "ev-470c797dfb45eb7c",
+        "ev-110e91e865e79172",
+        "ev-6a38a97e2c766740",
+        "ev-86feb920acc86ce2",
+        "ev-b1d539fb233439bc",
+        "ev-67badb6572c07b2d",
+        "ev-11c9b7b1b69fa458",
+        "ev-bef3a6b25d5a2a51",
+        "ev-4f2f2e87bb2bed49",
+        "ev-26712dd45f9ae2d9",
+        "ev-6871f363eee1aa9c",
+        "ev-cb547b3a9f1462ae",
+        "ev-5b2e89c8abb2aa6b",
+        "ev-7ce56a32badb8c42",
+        "ev-7372335c35d0af36",
+        "ev-6777d64d02ad5fee"
+      ],
+      "id": 20
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.294297+00:00",
+      "stage": "profile",
+      "tool": "get_company_data",
+      "id": 21
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.313233+00:00",
+      "stage": "profile",
+      "tool": "get_financial_facts",
+      "id": 22
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.332612+00:00",
+      "stage": "profile",
+      "tool": "get_price_history",
+      "id": 23
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.348616+00:00",
+      "stage": "profile",
+      "tool": "get_news",
+      "id": 24
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.366676+00:00",
+      "stage": "profile",
+      "tool": "calculate_metric",
+      "id": 25
+    },
+    {
+      "event": "tool_called",
+      "at": "2026-11-06T08:38:09.384051+00:00",
+      "stage": "profile",
+      "tool": "read_prior_stage",
+      "id": 26
+    },
+    {
+      "event": "validation_failed",
+      "at": "2026-11-06T08:38:09.407219+00:00",
+      "stage": "profile",
+      "attempt": 3,
+      "errors": [
+        "Serialized model context budget exhausted"
+      ],
+      "id": 27
+    },
+    {
+      "event": "run_finished",
+      "at": "2026-11-06T08:38:09.453942+00:00",
+      "status": "incomplete",
+      "id": 28
+    }
+  ],
+  "limitations": [
+    "Actual model and live provider data; no synthetic fallback.",
+    "Incomplete status is expected for documented source gaps."
+  ]
+}

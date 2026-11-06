@@ -1,0 +1,1 @@
+Interpret only defensible calculation-tool ratios. P/E requires positive earnings and consistent currency and period. Distinguish annual historical EPS from TTM. No target prices or recommendations. Return limitations for absent history, consensus and forward metrics.

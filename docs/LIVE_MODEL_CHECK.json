@@ -1,0 +1,99 @@
+{
+  "run_id": "c17ff87a-e20d-485f-a317-ea8d6f835019",
+  "symbol": "AAPL",
+  "market": "US",
+  "model_id": "iq3_s",
+  "mode": "live",
+  "status": "incomplete",
+  "started_at": "2026-11-06T08:19:08.537997+00:00",
+  "finished_at": "2026-11-06T08:22:15.653080+00:00",
+  "latency_seconds": 186.599,
+  "gaps": [
+    "SEC financials unavailable; verify SEC_USER_AGENT, network and ticker mapping.",
+    "Quote unavailable; verify FINNHUB_API_KEY, symbol and plan entitlement.",
+    "Licensed analyst consensus unavailable.",
+    "Annual SEC metrics are not trailing twelve-month metrics.",
+    "profile: exhausted bounded validation attempts"
+  ],
+  "usage": [
+    {
+      "prompt_tokens": 1466,
+      "completion_tokens": 304,
+      "total_tokens": 1770,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 2008,
+      "completion_tokens": 234,
+      "total_tokens": 2242,
+      "prompt_tokens_details": {
+        "cached_tokens": 1461
+      }
+    },
+    {
+      "prompt_tokens": 1475,
+      "completion_tokens": 305,
+      "total_tokens": 1780,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    {
+      "prompt_tokens": 1787,
+      "completion_tokens": 211,
+      "total_tokens": 1998,
+      "prompt_tokens_details": {
+        "cached_tokens": 1470
+      }
+    },
+    {
+      "prompt_tokens": 1475,
+      "completion_tokens": 265,
+      "total_tokens": 1740,
+      "prompt_tokens_details": {
+        "cached_tokens": 1470
+      }
+    }
+  ],
+  "evidence_count": 0,
+  "report_saved": false,
+  "stages": [
+    {
+      "stage": "profile",
+      "attempt": 1,
+      "status": "failed",
+      "validation_errors": [
+        "Model response unavailable or invalid (ReadTimeout)"
+      ]
+    },
+    {
+      "stage": "profile",
+      "attempt": 2,
+      "status": "failed",
+      "validation_errors": [
+        "Model response unavailable or invalid (ReadTimeout)"
+      ]
+    },
+    {
+      "stage": "profile",
+      "attempt": 3,
+      "status": "failed",
+      "validation_errors": [
+        "Model response unavailable or invalid (ReadTimeout)"
+      ]
+    }
+  ],
+  "event_count": 36,
+  "limitations": [
+    "Real model integration check with missing SEC/Finnhub configuration; no sourced financial fundamentals/quotes.",
+    "No synthetic fixtures or model stub used; not full financial acceptance."
+  ],
+  "previous_attempt": {
+    "run_id": "67c8722c-58ea-4dee-a3da-3c789ea800cf",
+    "status": "incomplete",
+    "report_saved": false,
+    "reason": "Model supplied nonempty parameterless-tool arguments; rejected safely. Added actionable tool feedback within existing bounds."
+  }
+}

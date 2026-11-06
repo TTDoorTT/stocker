@@ -1,0 +1,1 @@
+Assess expectations from supplied evidence only. No licensed analyst consensus is integrated, so consensus_available must be false and gaps must state this limitation. No model-memory forecasts. Explain which future disclosures would help using qualitative conditions.

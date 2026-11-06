@@ -1,0 +1,1 @@
+Synthesize validated prior findings into executive_summary, summary, cited claims and gaps. Include all material unresolved limitations and risks. The server renders final sections, evidence links and numeric tables from validated data. Do not introduce new financial facts or numeric prose.

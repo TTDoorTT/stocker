@@ -1,0 +1,182 @@
+{
+  "checked_at": "2026-11-06T08:37:09.668435+00:00",
+  "mode": "live",
+  "stocks": [
+    {
+      "symbol": "AAPL",
+      "identity_available": true,
+      "facts_count": 15,
+      "evidence_count": 19,
+      "quote_available": true,
+      "filings_count": 6,
+      "gaps": [
+        "SEC identity publication timestamp is unavailable; retrieval time is separate.",
+        "SEC companyfacts fy identifies the filing fiscal year; fact fiscal-year labels are unavailable, so exact start/end dates are used.",
+        "Long-term debt follows the named SEC concept; current/noncurrent components are not summed and no total-debt coverage is claimed.",
+        "Licensed analyst consensus unavailable.",
+        "Annual SEC metrics are not trailing twelve-month metrics."
+      ],
+      "sample_fact": {
+        "evidence_id": "ev-2c721bafc9ea5cd0",
+        "symbol": "AAPL",
+        "market": "US",
+        "field": "revenue",
+        "value": 478834000000.0,
+        "unit": "USD",
+        "currency": "USD",
+        "period": "2025-09-28..2026-09-26",
+        "period_start": "2025-09-28",
+        "period_end": "2026-09-26",
+        "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/",
+        "published_at": "2026-11-03T00:00:00Z",
+        "fetched_at": "2026-11-06T08:37:10.156149Z",
+        "missing_reason": null,
+        "fixture": false,
+        "stale": false,
+        "cached": false,
+        "statement": "income",
+        "fiscal_year": null,
+        "filing_fiscal_year": 2026,
+        "fiscal_period": "FY"
+      },
+      "quote": {
+        "price": 344.17,
+        "previous_close": 349.51,
+        "timestamp": "2026-11-05T21:00:00Z",
+        "source_url": "https://finnhub.io/docs/api/quote",
+        "source_name": "Finnhub",
+        "stale": false,
+        "delayed": true,
+        "evidence_id": "ev-7372335c35d0af36",
+        "currency": "USD",
+        "fixture": false,
+        "fetched_at": "2026-11-06T08:37:10.296282Z",
+        "cached": false
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "identity_available": true,
+      "facts_count": 15,
+      "evidence_count": 19,
+      "quote_available": true,
+      "filings_count": 5,
+      "gaps": [
+        "SEC identity publication timestamp is unavailable; retrieval time is separate.",
+        "SEC companyfacts fy identifies the filing fiscal year; fact fiscal-year labels are unavailable, so exact start/end dates are used.",
+        "Long-term debt follows the named SEC concept; current/noncurrent components are not summed and no total-debt coverage is claimed.",
+        "Licensed analyst consensus unavailable.",
+        "Annual SEC metrics are not trailing twelve-month metrics."
+      ],
+      "sample_fact": {
+        "evidence_id": "ev-fa5b41f1d77145e9",
+        "symbol": "MSFT",
+        "market": "US",
+        "field": "revenue",
+        "value": 331839000000.0,
+        "unit": "USD",
+        "currency": "USD",
+        "period": "2025-07-01..2026-06-30",
+        "period_start": "2025-07-01",
+        "period_end": "2026-06-30",
+        "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/",
+        "published_at": "2026-07-29T00:00:00Z",
+        "fetched_at": "2026-11-06T08:37:10.655449Z",
+        "missing_reason": null,
+        "fixture": false,
+        "stale": false,
+        "cached": false,
+        "statement": "income",
+        "fiscal_year": null,
+        "filing_fiscal_year": 2026,
+        "fiscal_period": "FY"
+      },
+      "quote": {
+        "price": 535.93,
+        "previous_close": 555.8,
+        "timestamp": "2026-11-05T21:00:00Z",
+        "source_url": "https://finnhub.io/docs/api/quote",
+        "source_name": "Finnhub",
+        "stale": false,
+        "delayed": true,
+        "evidence_id": "ev-23dd5da6ae08797a",
+        "currency": "USD",
+        "fixture": false,
+        "fetched_at": "2026-11-06T08:37:11.351229Z",
+        "cached": false
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "identity_available": true,
+      "facts_count": 15,
+      "evidence_count": 19,
+      "quote_available": true,
+      "filings_count": 6,
+      "gaps": [
+        "SEC identity publication timestamp is unavailable; retrieval time is separate.",
+        "SEC companyfacts fy identifies the filing fiscal year; fact fiscal-year labels are unavailable, so exact start/end dates are used.",
+        "Long-term debt follows the named SEC concept; current/noncurrent components are not summed and no total-debt coverage is claimed.",
+        "Licensed analyst consensus unavailable.",
+        "Annual SEC metrics are not trailing twelve-month metrics."
+      ],
+      "sample_fact": {
+        "evidence_id": "ev-6080569d8745ae9e",
+        "symbol": "NVDA",
+        "market": "US",
+        "field": "revenue",
+        "value": 26914000000.0,
+        "unit": "USD",
+        "currency": "USD",
+        "period": "2021-02-01..2022-01-30",
+        "period_start": "2021-02-01",
+        "period_end": "2022-01-30",
+        "source_name": "SEC EDGAR (RevenueFromContractWithCustomerExcludingAssessedTax)",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/",
+        "published_at": "2022-03-18T00:00:00Z",
+        "fetched_at": "2026-11-06T08:37:11.653835Z",
+        "missing_reason": null,
+        "fixture": false,
+        "stale": false,
+        "cached": false,
+        "statement": "income",
+        "fiscal_year": null,
+        "filing_fiscal_year": 2022,
+        "fiscal_period": "FY"
+      },
+      "quote": {
+        "price": 181.6,
+        "previous_close": 200.13,
+        "timestamp": "2026-11-05T21:00:00Z",
+        "source_url": "https://finnhub.io/docs/api/quote",
+        "source_name": "Finnhub",
+        "stale": false,
+        "delayed": true,
+        "evidence_id": "ev-df4ec218e545a223",
+        "currency": "USD",
+        "fixture": false,
+        "fetched_at": "2026-11-06T08:37:12.449726Z",
+        "cached": false
+      }
+    }
+  ],
+  "company_news": {
+    "symbol": "AAPL",
+    "count": 26,
+    "sample": {
+      "headline": "AAPL SEC 10-K filing",
+      "source_name": "SEC EDGAR",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019326000026/aapl-20260926.htm",
+      "published_at": "2026-11-03T00:00:00Z",
+      "fetched_at": "2026-11-06T08:37:09.949348Z",
+      "symbols": [
+        "AAPL"
+      ],
+      "sector": null,
+      "fixture": false,
+      "cached": true
+    }
+  }
+}

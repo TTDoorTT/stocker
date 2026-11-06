@@ -1,0 +1,1 @@
+Establish company identity, US listing, listing currency, reporting currency and business scope using company identity evidence. Return identity_check and sourced descriptive claims. If one source only is available, state that cross-source verification is incomplete.

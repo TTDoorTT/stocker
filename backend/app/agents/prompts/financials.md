@@ -1,0 +1,1 @@
+Interpret period-normalized financial facts: revenue, profitability, cash flow and debt. Use calculate_metric for ratios and growth. Preserve fiscal periods; no quarter/YTD or mixed-currency comparisons. Return performance and gaps for absent statements. Annual EPS is annual, not trailing quarterly EPS.

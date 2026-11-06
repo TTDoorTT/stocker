@@ -1,0 +1,11 @@
+{
+  "notice": "SYNTHETIC TEST FIXTURE. All prices, financial values and dates are invented for offline software demonstration; these are not financial facts or real AI analysis.",
+  "as_of": "2025-01-15T21:00:00Z",
+  "companies": {
+    "AAPL": {"name":"Apple Inc.","price":120,"previous_close":118,"revenue":[1000,1200],"net_income":[200,250],"eps":[4,5],"cashflow":[220,270],"debt":[300,320],"fiscal_end":"09-30"},
+    "MSFT": {"name":"Microsoft Corporation","price":240,"previous_close":245,"revenue":[2000,2300],"net_income":[600,700],"eps":[8,9],"cashflow":[650,760],"debt":[500,480],"fiscal_end":"06-30"},
+    "NVDA": {"name":"NVIDIA Corporation","price":90,"previous_close":88,"revenue":[500,800],"net_income":[100,240],"eps":[2,4],"cashflow":[120,260],"debt":[150,140],"fiscal_end":"01-31"},
+    "SPY": {"name":"S&P 500 ETF proxy (synthetic)","price":400,"previous_close":398},
+    "QQQ": {"name":"Nasdaq-100 ETF proxy (synthetic)","price":350,"previous_close":352}
+  }
+}
