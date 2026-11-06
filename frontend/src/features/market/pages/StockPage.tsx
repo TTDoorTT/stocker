@@ -1,77 +1,15 @@
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useResource } from '../../../shared/hooks/useResource';
+import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
+import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../../../shared/ui/Presentation';
+import { dateTime, money } from '../../../shared/utils/format';
+import { portfolioApi } from '../../portfolio/api';
+import { researchApi } from '../../research/api';
+import { Chat } from '../../research/components/Chat';
+import { marketApi } from '../api';
 import { PriceChart } from '../components/PriceChart';
-import { marketApi } from '../features/market/api';
-import { portfolioApi } from '../features/portfolio/api';
-import { researchApi } from '../features/research/api';
-import { useResource } from '../shared/hooks/useResource';
-import type { ChatReply } from '../shared/types/index';
-import { EvidenceTable } from '../shared/ui/EvidenceTable';
-import { Empty, ErrorBox, Gaps, Loading } from '../shared/ui/Feedback';
-import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
-import { dateTime, money } from '../shared/utils/format';
-
-function Chat({ symbol }: { symbol: string }) {
-  const [message, setMessage] = useState('');
-  const [answer, setAnswer] = useState<ChatReply>();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError('');
-    try {
-      setAnswer(await researchApi.chat(symbol, message));
-      setMessage('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Chat unavailable');
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <section className="panel">
-      <div className="panel-heading">
-        <h2>Ask about {symbol}</h2>
-        <span className="badge">Read-only context</span>
-      </div>
-      <p className="muted">
-        Ask a focused question about available sources. Chat does not start a research run.
-      </p>
-      <form className="chat-form" onSubmit={submit}>
-        <label className="sr-only" htmlFor="chat-message">
-          Stock question
-        </label>
-        <textarea
-          id="chat-message"
-          placeholder="What evidence is available about this company’s financial performance?"
-          value={message}
-          maxLength={2000}
-          onChange={(e) => setMessage(e.target.value)}
-          required
-        />
-        <button className="button" disabled={busy || !message.trim()}>
-          {busy ? 'Reading sources…' : 'Ask question'}
-        </button>
-      </form>
-      {error && <ErrorBox message={error} />}{' '}
-      {answer && (
-        <div className="chat-answer">
-          <ModeBadge mode={answer.mode} />
-          <div className="markdown">
-            <ReactMarkdown>{answer.answer}</ReactMarkdown>
-          </div>
-          <Gaps gaps={answer.gaps} />
-          <details>
-            <summary>Answer sources</summary>
-            <EvidenceTable evidence={answer.evidence} />
-          </details>
-        </div>
-      )}
-    </section>
-  );
-}
 export function StockPage() {
   const { symbol = 'AAPL' } = useParams();
   const stock = useResource(() => marketApi.stock(symbol), [symbol]);
@@ -201,53 +139,6 @@ export function StockPage() {
         )}
       </section>
       <Link to="/research">← Back to research</Link>
-    </>
-  );
-}
-export function ResearchLanding() {
-  return (
-    <>
-      <PageTitle title="Stock research" />
-      <section className="hero">
-        <div>
-          <p className="eyebrow">SIX DISTINCT SPECIALISTS</p>
-          <h2>
-            From source to
-            <br />
-            scrutinized report.
-          </h2>
-          <p>
-            Search a U.S. ticker or explicit Canadian .TO / .V listing above or choose a starting symbol
-            below. Each run preserves the evidence, calculations and actual agent transitions.
-          </p>
-          <div className="ticker-links">
-            {['AAPL', 'MSFT', 'NVDA'].map((symbol) => (
-              <Link key={symbol} to={`/stocks/${symbol}`}>
-                {symbol} ↗
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div className="pipeline-mini">
-          {[
-            'Company profile',
-            'Financial analysis',
-            'Sourced expectations',
-            'Deterministic valuation',
-            'Risk & counterevidence',
-            'Evidence-backed report',
-          ].map((stage, i) => (
-            <div key={stage}>
-              <span>0{i + 1}</span>
-              {stage}
-            </div>
-          ))}
-        </div>
-      </section>
-      <div className="notice">
-        Missing consensus, provider failures and disputed claims are retained as explicit gaps. Research is
-        educational and does not provide investment advice.
-      </div>
     </>
   );
 }

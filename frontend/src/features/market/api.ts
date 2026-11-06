@@ -1,5 +1,5 @@
 import { request } from '../../shared/api/client';
-import type { PriceBar, SearchResult, Stock } from '../../shared/types/index';
+import type { PriceBar, SearchResult, Stock } from './types';
 export const marketApi = {
   overview: () => request<Stock[]>('/markets/overview'),
   search: (query: string) => request<SearchResult[]>(`/stocks/search?q=${encodeURIComponent(query)}`),

@@ -1,7 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Evidence, Run, Stock } from '../shared/types/index';
+import type { Stock } from '../features/market/types';
+import type { Run } from '../features/research/types';
+import type { Evidence } from '../shared/types';
 import { App } from './App';
 
 const timestamp = '2025-01-01T00:00:00Z';

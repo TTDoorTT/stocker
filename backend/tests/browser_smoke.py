@@ -127,6 +127,11 @@ def main():
                 expect(page.locator(".event-log")).to_contain_text("run finished")
                 run = page.request.get(BASE + "/api/research-runs/" + run_url.rsplit("/", 1)[1]).json()
                 assert run["status"] == "incomplete" and len(run["stages"]) == 6 and run["report"]
+                with page.expect_download() as pending_download:
+                    page.get_by_role("button", name="Download Markdown", exact=False).click()
+                download = pending_download.value
+                assert download.suggested_filename == f"AAPL-research-{run['run_id']}.md"
+                assert Path(download.path()).read_text() == run["report"]
                 page.screenshot(path=str(screenshots / "research-desktop.png"), full_page=True)
                 steps.append(
                     "Six actual stage completions, saved cited incomplete report and execution events"

@@ -1,5 +1,5 @@
 import { post, request } from '../../shared/api/client';
-import type { ChatReply, Run, RunEvent } from '../../shared/types/index';
+import type { ChatReply, Run, RunEvent } from './types';
 export const researchApi = {
   runResearch: (symbol: string, industry_slug?: string) =>
     post<Run>('/research-runs', { symbol, industry_slug }),

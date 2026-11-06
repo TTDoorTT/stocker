@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
-import { researchApi } from '../features/research/api';
-import { useResource } from '../shared/hooks/useResource';
-import type { Run, RunEvent } from '../shared/types/index';
-import { EvidenceTable } from '../shared/ui/EvidenceTable';
-import { Empty, ErrorBox, Gaps, Loading } from '../shared/ui/Feedback';
-import { ModeBadge, PageTitle, StatusBadge } from '../shared/ui/Presentation';
-import { dateTime } from '../shared/utils/format';
+import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
+import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
+import { ModeBadge, PageTitle, StatusBadge } from '../../../shared/ui/Presentation';
+import { dateTime } from '../../../shared/utils/format';
+import { researchApi } from '../api';
+import { AgentProgress } from '../components/AgentProgress';
+import type { Run, RunEvent } from '../types';
 
-const stages = ['profile', 'financials', 'estimates', 'valuation', 'risk', 'report'];
 export function ResearchRun() {
   const { id = '' } = useParams();
   const [run, setRun] = useState<Run>();
@@ -63,19 +62,7 @@ export function ResearchRun() {
         <code>{run.run_id}</code>
       </div>
       {error && <ErrorBox message={error} retry={() => setRetry((v) => v + 1)} />}
-      <div className="stage-grid" aria-label="Research stage progress">
-        {stages.map((name, i) => {
-          const stage = run.stages?.filter((s) => s.stage === name).at(-1);
-          return (
-            <div key={name} className={`stage-card ${stage?.status || ''}`}>
-              <span className="stage-number">0{i + 1}</span>
-              <strong>{name === 'estimates' ? 'Expectations' : name[0].toUpperCase() + name.slice(1)}</strong>
-              <StatusBadge status={stage?.status || 'pending'} />
-              {stage && <small>Attempt {stage.attempt}</small>}
-            </div>
-          );
-        })}
-      </div>
+      <AgentProgress run={run} />
       {isRunning && (
         <p role="status" className="notice">
           <span className="spinner" /> Agents are executing. This page polls stored run state; stages update
@@ -188,65 +175,6 @@ export function ResearchRun() {
         )}
       </section>
       <Link to="/records">← Research records</Link>
-    </>
-  );
-}
-export function ResearchRecords() {
-  const records = useResource(researchApi.runs);
-  return (
-    <>
-      <PageTitle title="Research records">
-        <Link className="button" to="/research">
-          New research ↗
-        </Link>
-      </PageTitle>
-      <p className="muted">
-        Saved runs retain stage attempts, evidence, calculation inputs and validation failures.
-      </p>
-      <section className="panel">
-        {records.loading ? (
-          <Loading />
-        ) : records.error ? (
-          <ErrorBox message={records.error} retry={records.reload} />
-        ) : records.data?.length ? (
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Company</th>
-                  <th>Started</th>
-                  <th>Model / data</th>
-                  <th>Status</th>
-                  <th>Record</th>
-                </tr>
-              </thead>
-              <tbody>
-                {records.data.map((run) => (
-                  <tr key={run.run_id}>
-                    <td>
-                      <strong>{run.symbol}</strong>
-                    </td>
-                    <td>{dateTime(run.started_at)}</td>
-                    <td>
-                      {run.model_id}
-                      <br />
-                      <ModeBadge mode={run.mode} />
-                    </td>
-                    <td>
-                      <StatusBadge status={run.status} />
-                    </td>
-                    <td>
-                      <Link to={`/runs/${run.run_id}`}>Open analysis ↗</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <Empty>No research runs yet. Open a stock and select Run Research.</Empty>
-        )}
-      </section>
     </>
   );
 }

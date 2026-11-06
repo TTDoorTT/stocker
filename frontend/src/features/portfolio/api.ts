@@ -1,5 +1,5 @@
 import { post, request } from '../../shared/api/client';
-import type { Position } from '../../shared/types/index';
+import type { Position } from './types';
 export const portfolioApi = {
   watchlist: () => request<{ symbol: string }[]>('/watchlist'),
   watch: (symbol: string) => post('/watchlist', { symbol }),

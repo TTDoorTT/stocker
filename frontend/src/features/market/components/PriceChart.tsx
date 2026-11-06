@@ -1,7 +1,7 @@
-import type { PriceBar } from '../shared/types/index';
-import { Empty } from '../shared/ui/Feedback';
-import { SourceLink } from '../shared/ui/Presentation';
-import { dateTime, money } from '../shared/utils/format';
+import { Empty } from '../../../shared/ui/Feedback';
+import { SourceLink } from '../../../shared/ui/Presentation';
+import { dateTime, money } from '../../../shared/utils/format';
+import type { PriceBar } from '../types';
 
 export function PriceChart({ bars, currency }: { bars: PriceBar[]; currency: string }) {
   const valid = bars.filter((bar) => Number.isFinite(bar.close));

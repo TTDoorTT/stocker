@@ -1,8 +1,8 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { marketApi } from '../features/market/api';
+import { marketApi } from '../api';
 
-import type { SearchResult } from '../shared/types/index';
+import type { SearchResult } from '../types';
 
 export function StockSearch() {
   const [query, setQuery] = useState('');

@@ -303,3 +303,19 @@
 
 - Shared frontend verification: TypeScript initially found the chart's co-located `./shared` import missed by the path rewrite; corrected only that import. Final frontend result is recorded at the checkpoint commit. Endpoint wrappers retain the original request expressions and shared fetch/error behavior.
 - Shared frontend checkpoint accepted: Biome check, strict TypeScript, **18 tests passed in 2.72s**, production build passed (218 modules). Next: owned pages/components/types and app layout/router extraction.
+
+## Phase 5 feature move in progress
+- Moved market/research/portfolio/intelligence pages/components and feature-owned DTOs, leaving source/evidence/currency contracts shared. App now composes Shell, router, Sidebar/Header and Settings; existing DOM/route labels retained. Generic HTTP module contains no endpoints; all wrappers are feature/app-owned. Polling remains 1500ms and download/chart/widget logic unchanged.
+- Initial TypeScript check caught a moved Heatmap test's stale import (the source had moved before its relative path was resolved); corrected only the import. Original assertions retained. Tests/build/browser rerun pending.
+
+## Phase 5 page/type/layout verification
+- Biome check, TypeScript, **18 frontend tests in 2.76s** and production build (233 modules) passed. Full native browser smoke **passed**, zero pageerrors, six-stage workflow/report, actual restart persistence, holdings, all templates, Canadian labels, 390px layout and forced widget failure/retry. Routes, request shapes, poll interval and render labels preserved.
+- Added direct browser verification of Markdown download filename/content against the persisted report (previous smoke only checked button visibility); targeted rerun pending.
+
+## Phase 5 accepted — 2026-11-06 15:23 EST
+- Feature-owned pages/components/API/types and app layout/router completed; original source implementations removed rather than duplicated. Generic shared modules remain reusable. Preserved routes, labels, requests, 1500ms polling, chart/widget isolation and download behavior.
+- Frontend TypeScript/Biome/tests/build pass after page moves (18 existing tests, 233-module build). Full native browser smoke passes, zero pageerrors; enhanced rerun additionally verifies downloaded Markdown filename and exact persisted content. Native restart/report persistence and mobile/widget checks still pass.
+- Added semantic frontend import gates for shared ownership, endpoint-only HTTP access and explicit public cross-feature UI contracts; latest results recorded below. Next: Phase 6 CI and final Compose fixture/recreation/reload checks.
+
+- New frontend boundary test initially failed TypeScript because Node filesystem type declarations are not dependencies. Reworked source collection to Vite's typed raw-source glob and standard URL resolution, using existing dependencies only. This failure was isolated to the newly added test; prior 18-test/page-move/browser acceptance remains valid. Final boundary check rerun pending before amending the checkpoint.
+- Final frontend boundary correction passes: TypeScript, **21 tests in 2.76s** (18 preserved + 3 architecture checks), Biome CI/import/format gate. Page/layout checkpoint amended with this verified test implementation; no Node type dependency added.

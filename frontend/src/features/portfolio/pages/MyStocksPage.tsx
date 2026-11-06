@@ -1,10 +1,11 @@
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { portfolioApi } from '../features/portfolio/api';
-import { useResource } from '../shared/hooks/useResource';
-import { Empty, ErrorBox, Loading } from '../shared/ui/Feedback';
-import { ModeBadge, PageTitle, SourceLink } from '../shared/ui/Presentation';
-import { dateTime, formatNumber, money } from '../shared/utils/format';
+import { useResource } from '../../../shared/hooks/useResource';
+import { Empty, ErrorBox, Loading } from '../../../shared/ui/Feedback';
+import { ModeBadge, PageTitle, SourceLink } from '../../../shared/ui/Presentation';
+import { dateTime, formatNumber, money } from '../../../shared/utils/format';
+import { portfolioApi } from '../api';
+
 export function MyStocks() {
   const watchlist = useResource(portfolioApi.watchlist);
   const positions = useResource(portfolioApi.positions);
