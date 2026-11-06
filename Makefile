@@ -24,8 +24,8 @@ lint:
 	$(BACKEND) ruff check --config pyproject.toml . /workspace/scripts
 	$(FRONTEND) npm run lint
 format:
-	$(RUN) -v ./backend/tests:/workspace/backend/tests -v ./scripts:/workspace/scripts backend ruff format --config pyproject.toml app tests /workspace/scripts
-	$(RUN) -v ./frontend:/app -v /app/node_modules frontend npm run format
+	$(CHECK_COMPOSE) -f compose.format.yaml run --rm --no-deps -T --user $(shell id -u):$(shell id -g) -e RUFF_CACHE_DIR=/tmp/ruff-cache backend ruff format --config pyproject.toml app tests /workspace/scripts
+	$(CHECK_COMPOSE) -f compose.format.yaml run --rm --no-deps -T --user $(shell id -u):$(shell id -g) frontend npm run format
 format-check:
 	$(BACKEND) ruff format --config pyproject.toml --check --silent app tests /workspace/scripts
 	$(FRONTEND) npm run format:check

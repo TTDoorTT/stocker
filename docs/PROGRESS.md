@@ -246,3 +246,7 @@
 - Formatting follows in a dedicated commit, then meaningful regression/type/build checks.
 
 - Phase 3 tooling checks: exact Biome installation audited **0 vulnerabilities**; frontend Biome lint and TypeScript pass before formatting. Initial config emitted a deprecated `recommended` setting notice; migrated to Biome 2.6's `preset: none` with the same explicit rules. One npm lint invocation used the root cwd and failed ENOENT; corrected frontend invocation passes. Image rebuild running.
+
+- Initial `make format` formatted 19 backend app files, then failed because Compose retained read-only flags when overriding test/script mounts. No functional edits. Corrected explicit `:rw` overrides and run formatting as host UID/GID to preserve source ownership; this command fix is committed separately from the source formatting baseline.
+
+- Formatter command correction: explicit one-off `:rw` flags also retained read-only mounts; host-UID run additionally required a writable Ruff cache. Replaced the mount set using `compose.format.yaml` with Compose `!override`, keeping normal checks read-only and formatting as host UID/GID with `/tmp` cache. Backend formatting now succeeds; frontend result and regressions pending.
