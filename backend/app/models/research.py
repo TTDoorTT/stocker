@@ -2,12 +2,12 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-STAGES = ('profile', 'financials', 'estimates', 'valuation', 'risk', 'report')
-StageName = Literal['profile', 'financials', 'estimates', 'valuation', 'risk', 'report']
+STAGES = ("profile", "financials", "estimates", "valuation", "risk", "report")
+StageName = Literal["profile", "financials", "estimates", "valuation", "risk", "report"]
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
 class Claim(StrictModel):
@@ -28,46 +28,51 @@ class StageBase(StrictModel):
 
 
 class ProfileOutput(StageBase):
-    stage: Literal['profile']
+    stage: Literal["profile"]
     identity_check: str
 
 
 class FinancialOutput(StageBase):
-    stage: Literal['financials']
+    stage: Literal["financials"]
     performance: str
 
 
 class EstimatesOutput(StageBase):
-    stage: Literal['estimates']
+    stage: Literal["estimates"]
     consensus_available: bool
 
 
 class ValuationOutput(StageBase):
-    stage: Literal['valuation']
+    stage: Literal["valuation"]
     limitations: list[str]
 
 
 class Dispute(StrictModel):
-    stage: Literal['profile', 'financials', 'estimates', 'valuation']
+    stage: Literal["profile", "financials", "estimates", "valuation"]
     reason: str
     evidence_ids: list[str]
 
 
 class RiskOutput(StageBase):
-    stage: Literal['risk']
+    stage: Literal["risk"]
     counterevidence: list[str] = Field(min_length=1)
     invalidation_conditions: list[str] = Field(min_length=1)
     disputes: list[Dispute] = Field(max_length=4)
 
 
 class ReportOutput(StageBase):
-    stage: Literal['report']
+    stage: Literal["report"]
     executive_summary: str
 
 
 StageOutput = Annotated[
     ProfileOutput | FinancialOutput | EstimatesOutput | ValuationOutput | RiskOutput | ReportOutput,
-    Field(discriminator='stage'),
+    Field(discriminator="stage"),
 ]
-SCHEMAS = dict(zip(STAGES, (ProfileOutput, FinancialOutput, EstimatesOutput,
-                           ValuationOutput, RiskOutput, ReportOutput), strict=True))
+SCHEMAS = dict(
+    zip(
+        STAGES,
+        (ProfileOutput, FinancialOutput, EstimatesOutput, ValuationOutput, RiskOutput, ReportOutput),
+        strict=True,
+    )
+)

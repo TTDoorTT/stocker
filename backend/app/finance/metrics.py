@@ -1,4 +1,5 @@
 """Deterministic calculations. Inputs retain evidence, fiscal periods, units and currencies."""
+
 import hashlib
 import json
 from datetime import date
@@ -53,9 +54,15 @@ def comparable(a: FinancialFact, b: FinancialFact, *, same_period=True) -> bool:
 
 def _calculation(metric, value, unit, refs, inputs, reason=None):
     payload = json.dumps([metric, refs, inputs], sort_keys=True, default=str)
-    return Calculation(calculation_id='calc-' + hashlib.sha256(payload.encode()).hexdigest()[:16],
-                       metric=metric, value=value, unit=unit, input_evidence_ids=refs,
-                       inputs=inputs, reason=reason)
+    return Calculation(
+        calculation_id="calc-" + hashlib.sha256(payload.encode()).hexdigest()[:16],
+        metric=metric,
+        value=value,
+        unit=unit,
+        input_evidence_ids=refs,
+        inputs=inputs,
+        reason=reason,
+    )
 
 
 def build_calculations(stock: Stock) -> list[Calculation]:
@@ -66,38 +73,83 @@ def build_calculations(stock: Stock) -> list[Calculation]:
             by_field.setdefault(fact.field, []).append(fact)
     for facts in by_field.values():
         facts.sort(key=lambda f: f.period_end or date.min, reverse=True)
-    for field, metric in [('revenue', 'revenue_yoy'), ('eps', 'eps_growth')]:
+    for field, metric in [("revenue", "revenue_yoy"), ("eps", "eps_growth")]:
         facts = by_field.get(field, [])
         if len(facts) >= 2:
             current, previous = facts[:2]
             valid = comparable(current, previous, same_period=False)
             value = percentage_change(current.value, previous.value) if valid else None
-            result.append(_calculation(metric, value, '%', [current.evidence_id, previous.evidence_id],
-                {'current': current.value, 'previous': previous.value, 'current_period': current.period,
-                 'previous_period': previous.period, 'currency': current.currency},
-                None if value is not None else 'Incomparable fiscal periods/currency or nonpositive denominator'))
-    revenues, profits = by_field.get('revenue', []), by_field.get('net_income', [])
+            result.append(
+                _calculation(
+                    metric,
+                    value,
+                    "%",
+                    [current.evidence_id, previous.evidence_id],
+                    {
+                        "current": current.value,
+                        "previous": previous.value,
+                        "current_period": current.period,
+                        "previous_period": previous.period,
+                        "currency": current.currency,
+                    },
+                    None
+                    if value is not None
+                    else "Incomparable fiscal periods/currency or nonpositive denominator",
+                )
+            )
+    revenues, profits = by_field.get("revenue", []), by_field.get("net_income", [])
     if revenues and profits:
         revenue, profit = revenues[0], profits[0]
         valid = comparable(revenue, profit)
         value = profit_margin(profit.value, revenue.value) if valid else None
-        result.append(_calculation('profit_margin', value, '%', [profit.evidence_id, revenue.evidence_id],
-            {'net_income': profit.value, 'revenue': revenue.value, 'period': revenue.period,
-             'currency': revenue.currency}, None if value is not None else 'Period/unit/currency mismatch'))
-    eps_facts = by_field.get('eps', [])
+        result.append(
+            _calculation(
+                "profit_margin",
+                value,
+                "%",
+                [profit.evidence_id, revenue.evidence_id],
+                {
+                    "net_income": profit.value,
+                    "revenue": revenue.value,
+                    "period": revenue.period,
+                    "currency": revenue.currency,
+                },
+                None if value is not None else "Period/unit/currency mismatch",
+            )
+        )
+    eps_facts = by_field.get("eps", [])
     if stock.quote and eps_facts:
         eps, quote = eps_facts[0], stock.quote
-        compatible = eps.currency == quote.currency and eps.unit == f'{quote.currency}/shares'
+        compatible = eps.currency == quote.currency and eps.unit == f"{quote.currency}/shares"
         value = price_earnings(quote.price, eps.value) if compatible else None
-        result.append(_calculation('pe_annual', value, 'ratio', [quote.evidence_id, eps.evidence_id],
-            {'price': quote.price, 'annual_eps': eps.value, 'eps_period': eps.period,
-             'currency': quote.currency}, None if value is not None else 'EPS nonpositive or incompatible currency/unit'))
+        result.append(
+            _calculation(
+                "pe_annual",
+                value,
+                "ratio",
+                [quote.evidence_id, eps.evidence_id],
+                {
+                    "price": quote.price,
+                    "annual_eps": eps.value,
+                    "eps_period": eps.period,
+                    "currency": quote.currency,
+                },
+                None if value is not None else "EPS nonpositive or incompatible currency/unit",
+            )
+        )
     if stock.quote and stock.quote.previous_close:
         quote = stock.quote
         value = percentage_change(quote.price, quote.previous_close)
-        previous = next((e for e in stock.evidence if e.field == 'previous_close'), None)
+        previous = next((e for e in stock.evidence if e.field == "previous_close"), None)
         refs = [quote.evidence_id] + ([previous.evidence_id] if previous else [])
-        result.append(_calculation('daily_return', value, '%', refs,
-            {'price': quote.price, 'previous_close': quote.previous_close},
-            None if value is not None else 'Previous close is not meaningful'))
+        result.append(
+            _calculation(
+                "daily_return",
+                value,
+                "%",
+                refs,
+                {"price": quote.price, "previous_close": quote.previous_close},
+                None if value is not None else "Previous close is not meaningful",
+            )
+        )
     return result

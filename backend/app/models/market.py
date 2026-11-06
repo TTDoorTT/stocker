@@ -5,17 +5,17 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra='forbid', allow_inf_nan=False)
+    model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
 
 class Evidence(StrictModel):
     evidence_id: str
     symbol: str
-    market: Literal['US', 'CA'] = 'US'
+    market: Literal["US", "CA"] = "US"
     field: str
     value: float | str | None
     unit: str
-    currency: str | None = 'USD'
+    currency: str | None = "USD"
     period: str
     period_start: date | None = None
     period_end: date | None = None
@@ -30,10 +30,10 @@ class Evidence(StrictModel):
 
 
 class FinancialFact(Evidence):
-    statement: Literal['income', 'balance', 'cashflow'] = 'income'
+    statement: Literal["income", "balance", "cashflow"] = "income"
     fiscal_year: int | None = None
     filing_fiscal_year: int | None = None
-    fiscal_period: str = 'FY'
+    fiscal_period: str = "FY"
 
 
 class Quote(StrictModel):
@@ -45,7 +45,7 @@ class Quote(StrictModel):
     stale: bool
     delayed: bool = True
     evidence_id: str
-    currency: str = 'USD'
+    currency: str = "USD"
     fixture: bool = False
     fetched_at: datetime | None = None
     cached: bool = False
@@ -60,7 +60,7 @@ class PriceBar(StrictModel):
     adjusted: bool = False
     fixture: bool = False
     cached: bool = False
-    currency: Literal['USD', 'CAD'] = 'USD'
+    currency: Literal["USD", "CAD"] = "USD"
     limitations: list[str] = Field(default_factory=list)
 
 
@@ -79,9 +79,9 @@ class NewsItem(StrictModel):
 class Stock(StrictModel):
     symbol: str
     name: str
-    market: Literal['US', 'CA'] = 'US'
-    currency: str = 'USD'
-    mode: Literal['fixtures', 'live']
+    market: Literal["US", "CA"] = "US"
+    currency: str = "USD"
+    mode: Literal["fixtures", "live"]
     profile: str
     quote: Quote | None = None
     facts: list[FinancialFact] = Field(default_factory=list)
