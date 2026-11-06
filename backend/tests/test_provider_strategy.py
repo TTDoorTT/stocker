@@ -6,17 +6,17 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
+from app.contracts.api import PositionRequest
 from app.core.config import Settings
-from app.core.database import Repository
 from app.main import create_app
-from app.models.api import PositionRequest
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.providers.bank_of_canada import valet_signals
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.providers.yahoo import YFinanceHistory
 from app.modules.market_data.service import DataService
 from app.modules.market_data.symbols import normalize_symbol, symbol_market
-from app.orchestrator.engine import new_run
+from app.modules.research.orchestrator import new_run
+from app.modules.research.repository import ResearchRepository
 
 
 @pytest.mark.parametrize(
@@ -162,7 +162,7 @@ def test_canadian_api_routes_and_positions_share_existing_storage():
     from fastapi.testclient import TestClient
 
     settings = Settings(_env_file=None, data_mode="live")
-    repo = Repository("sqlite:///:memory:")
+    repo = ResearchRepository("sqlite:///:memory:")
     try:
         with TestClient(create_app(settings, repo=repo)) as client:
             response = client.get("/api/stocks/RY.TO?market=CA")

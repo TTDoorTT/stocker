@@ -1,11 +1,10 @@
-import json
 import sqlite3
 from pathlib import Path
 from threading import RLock
 
 
-class Repository:
-    """Schema v1: JSON run snapshots plus independent, ordered event records."""
+class Database:
+    """SQLite v1 lifecycle and serialized transactions shared by feature repositories."""
 
     def __init__(self, url: str):
         if not url.startswith("sqlite:///"):
@@ -31,43 +30,6 @@ class Repository:
         PRAGMA user_version=1;
         """)
         self.conn.commit()
-
-    def save_run(self, run):
-        with self.lock, self.conn:
-            self.conn.execute(
-                "INSERT OR REPLACE INTO runs VALUES (?, ?)", (run["run_id"], json.dumps(run, allow_nan=False))
-            )
-
-    def run(self, run_id):
-        with self.lock:
-            row = self.conn.execute("SELECT payload FROM runs WHERE id=?", (run_id,)).fetchone()
-            return json.loads(row[0]) if row else None
-
-    def runs(self, limit=50, offset=0):
-        with self.lock:
-            return [
-                json.loads(row[0])
-                for row in self.conn.execute(
-                    "SELECT payload FROM runs ORDER BY rowid DESC LIMIT ? OFFSET ?", (limit, offset)
-                )
-            ]
-
-    def event(self, run_id, event):
-        with self.lock, self.conn:
-            cursor = self.conn.execute(
-                "INSERT INTO events(run_id,payload) VALUES (?,?)",
-                (run_id, json.dumps(event, allow_nan=False)),
-            )
-            return cursor.lastrowid
-
-    def events(self, run_id):
-        with self.lock:
-            return [
-                dict(json.loads(row["payload"]), id=row["id"])
-                for row in self.conn.execute(
-                    "SELECT id,payload FROM events WHERE run_id=? ORDER BY id", (run_id,)
-                )
-            ]
 
     def query(self, sql, params=()):
         with self.lock, self.conn:

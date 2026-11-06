@@ -91,7 +91,7 @@ cd backend
 source .venv/bin/activate
 pytest -q
 ruff check .
-python -m app.services.evaluation
+python -m app.modules.research.evaluation
 ```
 
 ```bash

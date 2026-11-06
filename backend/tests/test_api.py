@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
-from app.core.database import Repository
 from app.main import create_app
+from app.modules.research.repository import ResearchRepository
 
 
 def test_local_workflow_and_persistence(tmp_path):
@@ -79,8 +79,8 @@ def test_local_workflow_and_persistence(tmp_path):
 
 def test_research_restart_marks_interrupted(tmp_path):
     settings = Settings(_env_file=None)
-    repository = Repository(f"sqlite:///{tmp_path}/runs.db")
-    from app.orchestrator.engine import new_run
+    repository = ResearchRepository(f"sqlite:///{tmp_path}/runs.db")
+    from app.modules.research.orchestrator import new_run
 
     run = new_run("AAPL", settings)
     repository.save_run(run)

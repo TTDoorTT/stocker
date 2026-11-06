@@ -1,6 +1,6 @@
+from app.contracts.api import PositionRequest
 from app.core.config import Settings
 from app.finance.metrics import unrealized_pnl
-from app.models.api import PositionRequest
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.service import DataService
 from app.modules.portfolio.repository import PortfolioRepository

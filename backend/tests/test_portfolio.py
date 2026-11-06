@@ -3,9 +3,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from app.contracts.api import PositionRequest
 from app.core.config import Settings
-from app.core.database import Repository
-from app.models.api import PositionRequest
+from app.core.database import Database
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.service import DataService
 from app.modules.portfolio.repository import PortfolioRepository
@@ -15,7 +15,7 @@ from app.modules.portfolio.service import PortfolioService
 @pytest.mark.parametrize("provider_unavailable", [False, True])
 def test_portfolio_keeps_missing_or_wrong_currency_quote_unavailable(provider_unavailable):
     settings = Settings(_env_file=None)
-    storage = Repository("sqlite:///:memory:")
+    storage = Database("sqlite:///:memory:")
     repository = PortfolioRepository(storage)
     repository.add_position(PositionRequest(symbol="RY.TO", shares=2, average_cost=100, currency="CAD"))
     data = Mock(spec=DataService)

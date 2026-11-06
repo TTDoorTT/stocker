@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.models.api import PositionRequest, SymbolRequest
+from app.contracts.api import PositionRequest, SymbolRequest
 from app.modules.market_data.symbols import normalize_symbol
 from app.modules.portfolio.service import PortfolioService
 

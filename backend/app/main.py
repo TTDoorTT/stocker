@@ -1,17 +1,13 @@
-from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
-from threading import BoundedSemaphore
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from app.agents.client import ModelError
-from app.core.config import Settings
-from app.core.database import Repository
-from app.models.api import (
+from app.contracts.api import (
     HealthResponse,
 )
+from app.core.config import Settings
 from app.modules.intelligence.router import create_router as intelligence_router
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.router import create_router as market_router
@@ -19,37 +15,27 @@ from app.modules.market_data.service import DataService
 from app.modules.portfolio.repository import PortfolioRepository
 from app.modules.portfolio.router import create_router as portfolio_router
 from app.modules.portfolio.service import PortfolioService
+from app.modules.research.errors import ModelError
+from app.modules.research.repository import ResearchRepository
 from app.modules.research.router import create_router as research_router
-from app.orchestrator.engine import now
+from app.modules.research.service import ResearchService
 from app.services.intelligence import IntelligenceService
 
 
-def create_app(settings=None, data=None, repo=None):
+def create_app(
+    settings: Settings | None = None, data: DataService | None = None, repo: ResearchRepository | None = None
+) -> FastAPI:
     settings = settings or Settings()
-    repository = repo or Repository(settings.database_url)
+    repository = repo or ResearchRepository(settings.database_url)
     service = data or DataService(settings)
     intel = IntelligenceService(service, settings)
-    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="research")
-    capacity = BoundedSemaphore(4)
+    research = ResearchService(repository, service, settings, intel.industry)
 
     @asynccontextmanager
     async def lifespan(app):
-        for run in repository.runs(limit=10000):
-            if run["status"] in ("running", "queued"):
-                run.update(status="incomplete", finished_at=now())
-                run["gaps"].append("Service restart interrupted execution; launch a new run to retry.")
-                repository.save_run(run)
-                repository.event(
-                    run["run_id"],
-                    {
-                        "event": "run_finished",
-                        "at": now(),
-                        "status": "incomplete",
-                        "reason": "service_restart",
-                    },
-                )
+        research.recover_interrupted()
         yield
-        executor.shutdown(wait=True)
+        research.shutdown()
         if repo is None:
             repository.close()
 
@@ -118,9 +104,9 @@ def create_app(settings=None, data=None, repo=None):
         }
 
     app.include_router(market_router(service))
-    portfolio = PortfolioService(PortfolioRepository(repository), service, settings)
+    portfolio = PortfolioService(PortfolioRepository(repository.database), service, settings)
     app.include_router(portfolio_router(portfolio))
-    app.include_router(research_router(settings, service, repository, intel, executor, capacity))
+    app.include_router(research_router(research))
     app.include_router(intelligence_router(settings, service, intel))
     return app
 

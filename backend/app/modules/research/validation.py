@@ -1,7 +1,7 @@
 import math
 import re
 
-from app.models.research import SCHEMAS
+from app.modules.research.schemas import SCHEMAS
 
 
 def validate_output(stage, raw, evidence, calculations):

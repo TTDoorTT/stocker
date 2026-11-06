@@ -283,3 +283,8 @@
 - Portfolio router delegates operations to PortfolioService/PortfolioRepository; existing SQL, position arithmetic and currency checks preserved. Shared SQLite lifecycle relocated unchanged to `core/database.py`; research-specific storage methods move out in 4D.
 - Initial service extraction suite: 118 passed (8.16s). After shared-storage move and two focused missing/wrong-currency quote regressions: results recorded at gate below. Full OpenAPI exactly matches baseline. No database schema or row changes.
 - Phase 4C final gate: **120 passed in 9.20s**, including both new portfolio regressions; Ruff lint/format passed. Phase 4D now in progress.
+
+## Phase 4D verification
+- Moved agents/prompts/orchestrator/schema validation/report/chat/evaluation under research; stable HTTP DTOs moved to shared `contracts/api.py`. SQLite connection/schema lifecycle stays in core; research repository owns unchanged run/event SQL, portfolio uses the same connection directly through its own repository. ResearchService owns the original one-worker/four-slot scheduling and restart recovery.
+- Initial import cleanup caught an overbroad constructor rename before tests; restored portfolio composition and import. Full suite after extraction: **120 passed in 8.30s**. Original/new fixture runs, full reports and every event compare exactly under fixed clock/ID; prompts byte-identical; full OpenAPI unchanged. Public domain errors now keep model transport internals out of other features; focused final rerun pending. No model budgets/prompts/validation behavior edited.
+- Phase 4D final gate: **120 passed in 8.10s**, Ruff passed; full OpenAPI unchanged after domain-error extraction. Phase 4D complete; 4E next.

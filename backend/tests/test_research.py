@@ -4,19 +4,19 @@ from copy import deepcopy
 
 import pytest
 
-from app.agents.client import FixtureModel
 from app.core.config import Settings
-from app.core.database import Repository
-from app.models.research import STAGES
 from app.modules.market_data.service import DataService
-from app.orchestrator.engine import ResearchOrchestrator, new_run
-from app.orchestrator.validation import validate_output
+from app.modules.research.agents.client import FixtureModel
+from app.modules.research.orchestrator import ResearchOrchestrator, new_run
+from app.modules.research.repository import ResearchRepository
+from app.modules.research.schemas import STAGES
+from app.modules.research.validation import validate_output
 
 
 @pytest.fixture
 def setup():
     settings = Settings(_env_file=None, data_mode="fixtures")
-    repository = Repository("sqlite:///:memory:")
+    repository = ResearchRepository("sqlite:///:memory:")
     data = DataService(settings)
     yield settings, repository, data
     repository.close()
@@ -169,10 +169,10 @@ def test_risk_dispute_revisits_upstream_once_and_leaves_unresolved_gap(setup):
 def test_research_and_trace_survive_repository_reopen(tmp_path):
     settings = Settings(_env_file=None, data_mode="fixtures")
     url = f"sqlite:///{tmp_path / 'research.db'}"
-    first = Repository(url)
+    first = ResearchRepository(url)
     run, events = execute((settings, first, DataService(settings)))
     first.close()
-    reopened = Repository(url)
+    reopened = ResearchRepository(url)
     try:
         assert reopened.run(run["run_id"]) == run
         assert reopened.events(run["run_id"]) == events

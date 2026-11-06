@@ -3,13 +3,10 @@ from pathlib import Path
 
 import httpx
 
-from app.agents.tools import ToolArgumentsError
+from app.modules.research.agents.tools import ToolArgumentsError
+from app.modules.research.errors import ModelError
 
 PROMPTS = Path(__file__).parent / "prompts"
-
-
-class ModelError(Exception):
-    pass
 
 
 class ModelClient:

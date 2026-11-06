@@ -1,8 +1,8 @@
-from app.agents.client import FixtureModel, ModelClient
-from app.agents.tools import ResearchTools
 from app.finance.metrics import build_calculations
-from app.models.research import SCHEMAS
-from app.orchestrator.validation import validate_output
+from app.modules.research.agents.client import FixtureModel, ModelClient
+from app.modules.research.agents.tools import ResearchTools
+from app.modules.research.schemas import SCHEMAS
+from app.modules.research.validation import validate_output
 
 
 def answer_chat(request, data, settings):

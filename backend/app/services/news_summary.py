@@ -1,13 +1,14 @@
 """Explicit, on-demand summaries of retrieved headlines, never invented article contents."""
 
-from app.agents.client import ModelClient, ModelError
-from app.agents.tools import ResearchTools
 from app.contracts.market import Evidence
-from app.models.research import SCHEMAS
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.provenance import evidence_id
 from app.modules.market_data.symbols import normalize_symbol
-from app.orchestrator.validation import validate_output
+from app.modules.research.agents.client import ModelClient
+from app.modules.research.agents.tools import ResearchTools
+from app.modules.research.errors import ModelError
+from app.modules.research.schemas import SCHEMAS
+from app.modules.research.validation import validate_output
 
 
 def summarize_news(data, settings, symbol: str | None = None) -> dict:

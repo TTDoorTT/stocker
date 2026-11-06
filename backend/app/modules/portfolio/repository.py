@@ -1,11 +1,11 @@
 """Portfolio persistence using the existing schema and storage transaction lock."""
 
-from app.core.database import Repository
-from app.models.api import PositionRequest
+from app.contracts.api import PositionRequest
+from app.core.database import Database
 
 
 class PortfolioRepository:
-    def __init__(self, storage: Repository):
+    def __init__(self, storage: Database):
         self.storage = storage
 
     def watchlist(self) -> list[dict[str, str]]:

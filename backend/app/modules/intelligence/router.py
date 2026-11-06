@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 
-from app.agents.client import ModelError
+from app.contracts.api import ChatResponse
 from app.core.config import Settings
-from app.models.api import ChatResponse
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.service import DataService
+from app.modules.research.errors import ModelError
 from app.services.intelligence import IntelligenceService
 from app.services.news_summary import summarize_news
 

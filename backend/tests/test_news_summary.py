@@ -5,10 +5,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from app.agents.client import ModelError
 from app.contracts.market import NewsItem
 from app.core.config import Settings
 from app.modules.market_data.errors import DataUnavailable
+from app.modules.research.errors import ModelError
 from app.services.news_summary import summarize_news
 
 

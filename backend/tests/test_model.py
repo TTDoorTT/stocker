@@ -5,9 +5,10 @@ import json
 import httpx
 import pytest
 
-from app.agents.client import ModelClient, ModelError
-from app.agents.tools import ResearchTools
 from app.core.config import Settings
+from app.modules.research.agents.client import ModelClient
+from app.modules.research.agents.tools import ResearchTools
+from app.modules.research.errors import ModelError
 
 
 def model_settings():
@@ -55,7 +56,7 @@ def tools():
 def transport(monkeypatch, handler):
     original = httpx.Client
     monkeypatch.setattr(
-        "app.agents.client.httpx.Client",
+        "app.modules.research.agents.client.httpx.Client",
         lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
     )
 

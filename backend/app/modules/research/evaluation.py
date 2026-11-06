@@ -1,6 +1,6 @@
 """Reproducible offline comparison harness, not a live model quality benchmark.
 
-Run from backend: python -m app.services.evaluation
+Run from backend: python -m app.modules.research.evaluation
 Only a deterministic stub and explicitly synthetic fixture values are used.
 """
 
@@ -8,12 +8,12 @@ import hashlib
 import json
 from datetime import UTC, datetime
 
-from app.agents.client import FixtureModel
 from app.core.config import ROOT, Settings
-from app.core.database import Repository
 from app.modules.market_data.service import DataService
-from app.orchestrator.engine import ResearchOrchestrator, new_run
-from app.orchestrator.validation import validate_output
+from app.modules.research.agents.client import FixtureModel
+from app.modules.research.orchestrator import ResearchOrchestrator, new_run
+from app.modules.research.repository import ResearchRepository
+from app.modules.research.validation import validate_output
 
 
 class CapturedData:
@@ -109,7 +109,7 @@ def evaluate():
     settings = Settings(_env_file=None, data_mode="fixtures")
     data = DataService(settings)
     cases = []
-    repository = Repository("sqlite:///:memory:")
+    repository = ResearchRepository("sqlite:///:memory:")
     try:
         for symbol in ("AAPL", "MSFT", "NVDA"):
             captured = CapturedData(data.stock(symbol), data.history(symbol))

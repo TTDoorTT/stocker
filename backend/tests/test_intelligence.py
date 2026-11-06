@@ -7,10 +7,10 @@ import pytest
 
 from app.contracts.market import NewsItem
 from app.core.config import Settings
-from app.core.database import Repository
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.service import DataService
-from app.orchestrator.engine import ResearchOrchestrator, new_run
+from app.modules.research.orchestrator import ResearchOrchestrator, new_run
+from app.modules.research.repository import ResearchRepository
 from app.services.intelligence import IntelligenceService
 
 
@@ -133,7 +133,7 @@ def test_two_template_selections_reuse_company_research_pipeline(slug, symbol):
     service = services()
     template = service.industry(slug)
     assert symbol in template["symbols"]
-    repository = Repository("sqlite:///:memory:")
+    repository = ResearchRepository("sqlite:///:memory:")
     try:
         run = new_run(symbol, service.settings)
         # Current acceptance is a representative company case with explicit sector-data gaps.
