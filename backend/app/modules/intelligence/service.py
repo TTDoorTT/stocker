@@ -1,5 +1,6 @@
 """Small, source-backed market intelligence; no second agent orchestration system."""
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from app.core.config import Settings
@@ -14,9 +15,12 @@ def now():
 
 
 class IntelligenceService:
-    def __init__(self, data: DataService, settings: Settings):
+    def __init__(
+        self, data: DataService, settings: Settings, current_settings: Callable[[], Settings] | None = None
+    ):
         self.data = data
         self.settings = settings
+        self.current_settings = current_settings or (lambda: self.settings)
         self.catalog = IndustryCatalog()
 
     def daily_review(self) -> dict:
@@ -62,4 +66,4 @@ class IntelligenceService:
         return self.catalog.industry(slug)
 
     def summarize_news(self) -> dict:
-        return summarize_news(self.data, self.settings)
+        return summarize_news(self.data, self.current_settings())

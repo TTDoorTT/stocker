@@ -12,6 +12,7 @@ from pathlib import Path
 
 from app.core.config import Settings
 from app.modules.market_data.service import DataService
+from app.modules.research.configuration.service import AIConfiguration
 from app.modules.research.orchestrator import ResearchOrchestrator, new_run
 from app.modules.research.repository import ResearchRepository
 from app.modules.research.schemas import STAGES
@@ -39,7 +40,7 @@ def main():
     parser.add_argument("--database", required=True, type=Path)
     parser.add_argument("--symbol", default="AAPL", choices=["AAPL", "MSFT", "NVDA"])
     args = parser.parse_args()
-    settings = Settings()
+    settings = AIConfiguration(Settings()).current()
     if settings.data_mode != "live" or args.database.exists():
         parser.error("Requires DATA_MODE=live and a new dedicated database; existing history is preserved")
     settings.database_url = f"sqlite:///{args.database.resolve()}"

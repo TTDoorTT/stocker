@@ -488,3 +488,15 @@ def test_reported_usage_reclaims_output_and_stops_at_configured_total(monkeypatc
     with pytest.raises(ModelError, match="budget exhausted"):
         client.complete("profile", {}, {}, tools())
     assert client.calls == 1
+
+
+def test_optional_model_key_omits_authorization(monkeypatch):
+    settings = model_settings()
+    settings.llm_api_key = ""
+
+    def handler(request):
+        assert "authorization" not in request.headers
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    transport(monkeypatch, handler)
+    assert ModelClient(settings).complete("profile", {}, {}, tools()) == {}

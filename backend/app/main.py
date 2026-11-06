@@ -16,6 +16,8 @@ from app.modules.market_data.service import DataService
 from app.modules.portfolio.repository import PortfolioRepository
 from app.modules.portfolio.router import create_router as portfolio_router
 from app.modules.portfolio.service import PortfolioService
+from app.modules.research.configuration.router import create_router as ai_router
+from app.modules.research.configuration.service import AIConfiguration
 from app.modules.research.errors import ModelError
 from app.modules.research.repository import ResearchRepository
 from app.modules.research.router import create_router as research_router
@@ -26,10 +28,11 @@ def create_app(
     settings: Settings | None = None, data: DataService | None = None, repo: ResearchRepository | None = None
 ) -> FastAPI:
     settings = settings or Settings()
+    ai = AIConfiguration(settings)
     repository = repo or ResearchRepository(settings.database_url)
     service = data or DataService(settings)
-    intel = IntelligenceService(service, settings)
-    research = ResearchService(repository, service, settings, intel.industry)
+    intel = IntelligenceService(service, settings, ai.current)
+    research = ResearchService(repository, service, settings, intel.industry, ai.current)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -80,6 +83,7 @@ def create_app(
 
     @app.get("/api/health", response_model=HealthResponse)
     def health() -> dict:
+        settings = ai.current()
         return {
             "status": "ok",
             "mode": settings.data_mode,
@@ -103,6 +107,7 @@ def create_app(
             ],
         }
 
+    app.include_router(ai_router(ai))
     app.include_router(market_router(service))
     portfolio = PortfolioService(PortfolioRepository(repository.database), service, settings)
     app.include_router(portfolio_router(portfolio))

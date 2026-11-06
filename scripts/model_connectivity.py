@@ -10,11 +10,12 @@ import sys
 import httpx
 
 from app.core.config import Settings
+from app.modules.research.configuration.service import AIConfiguration
 
 
 def main():
     try:
-        settings = Settings()
+        settings = AIConfiguration(Settings()).current()
         response = httpx.get(
             settings.llm_base_url.rstrip("/") + "/models",
             headers={"Authorization": "Bearer " + settings.llm_api_key},
