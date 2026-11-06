@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
     data_mode: Literal["fixtures", "live"] = "fixtures"
     app_env: str = "development"
-    database_url: str = "sqlite:///./stockscope.db"
+    database_url: str = "sqlite:///./stocker.db"
     llm_base_url: str = "http://127.0.0.1:4000/v1"
     llm_model: str = ""
     llm_api_key: str = Field(default="", repr=False)

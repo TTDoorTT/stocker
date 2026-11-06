@@ -6,7 +6,7 @@ Stocker is a feature-oriented modular monolith: one React/TypeScript/Vite applic
 
 ```text
 Browser localhost:5173 -> frontend Vite -> /api proxy -> backend:8000
-                                                     |-> SQLite /data/stockscope.db
+                                                     |-> SQLite /data/stocker.db
                                                      |-> external Strata / providers
 ```
 
@@ -66,4 +66,4 @@ Ruff targets Python 3.11 with 110-column formatting; Biome 2.6.6 owns frontend f
 
 Research owns `modules/research/configuration`: validated preferences, private atomic file persistence and a small bounded connectivity probe, exposed by thin settings routes. Main composes its immutable `current()` settings snapshots into research/chat and intelligence summaries. Queued/running research retains its original snapshot; new operations see saved changes. Model budgets, financial provider settings and data mode remain environment-owned. No dependency or SQLite schema change is needed.
 
-Compose stores `/data/ai-settings/config.json` in the existing `stockscope_data` volume; native fallback uses ignored `.ai-settings/config.json`. `AI_CONFIG_FILE` can select another private persistent path. Files are 0600 and their dedicated directory 0700. This is access-controlled local secret storage, not application encryption; OS/Docker administrators can read it. Saved fields override the original environment until reset. Corrupt saved configuration fails closed with a sanitized error. Settings validation responses omit input values; status exposes only key presence. The UI holds a newly entered key in form memory until save/unmount and uses no browser storage. No secrets enter reports or application logs.
+Compose stores `/data/ai-settings/config.json` in the existing `stocker_data` volume; native fallback uses ignored `.ai-settings/config.json`. `AI_CONFIG_FILE` can select another private persistent path. Files are 0600 and their dedicated directory 0700. This is access-controlled local secret storage, not application encryption; OS/Docker administrators can read it. Saved fields override the original environment until reset. Corrupt saved configuration fails closed with a sanitized error. Settings validation responses omit input values; status exposes only key presence. The UI holds a newly entered key in form memory until save/unmount and uses no browser storage. No secrets enter reports or application logs.

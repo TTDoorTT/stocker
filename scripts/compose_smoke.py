@@ -1,6 +1,6 @@
 """Credential-free fixture API/persistence acceptance through the real Vite proxy.
 
-Usage: python scripts/compose_smoke.py seed|verify /tmp/stockscope-smoke.json
+Usage: python scripts/compose_smoke.py seed|verify /tmp/stocker-smoke.json
 Run only against the explicitly isolated fixture Compose project on port 5173.
 """
 
