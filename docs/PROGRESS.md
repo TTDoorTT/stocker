@@ -1,4 +1,6 @@
-# StockScope AI — Implementation Progress
+# Stocker — Development History
+
+Current milestone: runtime AI configuration and permanent archive workflow (2026-11-06). Read the latest entries at the end for current results/next action; earlier acceptance and instructions are historical. Current source/architecture comes from main or the recorded verified feature commit.
 
 ## Live integrations and local model budgets — verified 2026-11-06 16:37 EST
 
@@ -403,3 +405,24 @@ Pre-archive rerun: `docker compose config --quiet` and complete `make check` pas
 - Architecture: research-owned AI configuration service, private atomic JSON file on existing Docker volume (0700 directory/0600 file), environment fallback and explicit reset, immutable request/run snapshots, no new dependencies or SQLite migration. Exact Docker host alias permits host models without arbitrary LAN HTTP. Keys never returned; validation errors sanitized; redirects/proxies disabled for connection probe. Financial data mode unchanged.
 - Initial backend run: 165 passed, one expected OpenAPI additive-contract failure. Frontend: five new form tests passed; existing app tests exposed jsdom missing dialog.close. Fix: close only an open dialog; no browser behavior change. Full gate pending.
 - Next: finish API snapshot, integration tests, Docker recreation/persistence, UI browser smoke, quality gate; merge verified feature into this archive and record final evidence. No push authorized.
+
+### AI configuration persistence checkpoint
+- Existing OpenAPI routes and schemas compared exactly; only /api/settings/ai and /api/settings/ai/test plus their new DTOs added.
+- Full make check reached 168 backend / 26 frontend passing, TypeScript and production build passed; last Biome import-order check failed on one Settings import, corrected. Added optional-key client regression and manual browser harness; final full gate pending.
+- Isolated Docker stack stockscope-ai-acceptance on 18000/15173 (original live stack on 8000/5173 untouched): synthetic six-stage research/report/events, portfolio snapshots and AI settings survive down/up container recreation identically. No real credentials/providers used, no volume deletion.
+- Browser's alternate-port request initially received the expected untrusted-origin rejection despite route.continue header override. Harness now uses route.fetch with the exact permitted origin; application policy remains restrictive. Rerun pending. Added .dockerignore private-directory exclusion; diagnostics resolve saved preferences. No global settings or existing .env/database/volume touched.
+
+
+### AI browser/security checkpoint
+- Real Chromium setup/skip/test/save/settings/reset passed against actual FastAPI and synthetic loopback model responder. No pageerrors; saved key absent from reloaded DOM and browser storage; mobile 390px overflow assertion passed. Alternate fixture-port origin simulation uses Playwright route.fetch; app host/origin rules unchanged.
+- Volume directory/file permissions verified 0700/0600 inside Docker, safe status responses verified, host.docker.internal resolves. Three synthetic key values absent from captured isolated backend logs.
+- vision-analyze screenshot inspection could not run: NVIDIA_API_KEY missing. No configuration sourcing or global changes attempted; DOM/browser checks are verified, visual perception unverified.
+- New optional-key research regression added. Full gate retry initially stopped at new diagnostic import order (fixed). Latest full gate running. Backend increment committed b1326fe; final UI/docs commits and archive synchronization pending.
+
+
+### AI configuration final gate
+- Complete make check PASS: 169 backend tests (9.60s), 26 frontend tests, Ruff/Biome format/lint/import gates, strict TypeScript, public API snapshot and boundary checks, production build (234 modules). Existing upstream Starlette/httpx warning only. docker compose config --quiet PASS. Public Markdown file links resolve. Executable prompts, financial calculations, fixtures and storage identifiers unchanged.
+- Commits: b1326fe backend persistence/API; dfe8e70 setup/settings UI and acceptance; 65758e9 public docs and permanent workflow. Starting main 0d38f9c. No pushes/remote CI or main merge performed.
+- Isolated fixture Compose recreation and actual UI smoke passed; synthetic credentials absent from logs/status/reloaded DOM/browser storage. Original live stack remains up and untouched. Acceptance stack stopped, volume retained. Host alias DNS verified; real Windows/WSL host endpoint connectivity and live provider/model quality not retested.
+- Screenshot visual inspection unavailable (NVIDIA_API_KEY missing); general native browser smoke not rerun because original live ports are occupied. Focused browser smoke verifies setup, skip, real backend probe to synthetic responder, save, settings, reset, 390px overflow and no pageerrors.
+- Next: synchronize this archive with verified feature 65758e9 and verify source-tree equality. Once the user authorizes publication, push permanent archive first, publish feature/PR, inspect actual remote CI and merge following branch protections; then merge main integration commit into this same archive. Never merge archive-only records into main.
