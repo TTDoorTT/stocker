@@ -10,7 +10,13 @@ const sources = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
 const publicComponents = new Set(['research/components/Chat', 'portfolio/components/PositionsPreview']);
 
 function violations(source: string, file: string): string[] {
-  const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const ast = ts.createSourceFile(
+    file,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
   const owner = file.replace('/src/', '').split('/');
   const errors: string[] = [];
   for (const node of ast.statements) {

@@ -333,3 +333,7 @@
 - Enabled `WATCH_USE_POLLING=true` only in Compose and conditional Vite watcher polling (200ms); native defaults remain unchanged. Added `scripts/reload_smoke.py` to verify actual backend reload, frontend update/restore, fixture banner and mobile/no-pageerrors with guaranteed source restoration. No networking/security changes. Rerun pending.
 
 - Reload correction verified: `scripts/reload_smoke.py` **PASS** on final fixture containers — backend edit/restore, frontend HMR edit/restore, synthetic banner, 390px no overflow and zero pageerrors. The stale-transform failure is resolved by Docker-only polling; native behavior unchanged.
+
+## Phase 6 accepted; Phase 7 final verification
+- CI workflow passes official actionlint 1.7.12; actions pinned to verified refs, contents read-only, no personal credentials required. Local equivalent quality/test/build and Docker proxy/recreation checks passed. GitHub execution remains **not run** because no push is authorized; Python 3.11 CI lane is configured, not claimed as locally executed.
+- Final image rebuild/start passed. One verification command mistakenly selected the older ad-hoc state file format (`KeyError: run`); this did not mutate data. Re-seeding a fresh fixture state file and rerunning the supported recreation/verify/reload sequence. No live database involved.

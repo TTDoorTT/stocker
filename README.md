@@ -24,7 +24,7 @@ The backend validates each stage independently and persists every attempt, failu
 
 After one-time image setup, use `docker compose up -d` and open http://localhost:5173 (API docs: http://localhost:8000/docs). First run: `docker compose up --build -d`. Source bind mounts enable Vite HMR and backend reload. `docker compose down` stops both and retains SQLite on the named volume.
 
-Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Docker fixture checks and native/container Strata discovery pass. The developer-command and modular migration continues on the dedicated branch.
+Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Docker fixture checks, persistent storage, source reload and native/container Strata discovery pass. Feature modules and quality/CI gates are implemented; see progress for remaining remote verification.
 
 ## Native fallback
 
@@ -86,6 +86,9 @@ The existing Strata iq3_s connection has passed real inference and a tool-using 
 
 ## Verify and demonstrate
 
+From the root, `make check` runs isolated fixture tests, Ruff/Biome lint/format/import checks, strict TypeScript and the frontend build. `make dev`, `stop`, `status`, `logs`, `rebuild` are optional Compose wrappers; Make is not needed for startup. Backend and frontend now own market/research/portfolio/intelligence feature modules with enforced import boundaries. See [architecture](docs/ARCHITECTURE.md).
+
+
 ```bash
 cd backend
 source .venv/bin/activate
@@ -96,13 +99,14 @@ python -m app.modules.research.evaluation
 
 ```bash
 cd frontend
-npm run lint
+npm run ci
+npm run typecheck
 npm run test
 npm run build
 npm audit
 ```
 
-Verified: 117 backend tests and 18 frontend tests pass; production build and Ruff/TypeScript checks pass; the previous dependency audit reported 0 frontend vulnerabilities (not rerun for this backend provider revision). See [phase acceptance](docs/IMPLEMENTATION_STATUS.md), [actual checks and remaining work](docs/PROGRESS.md), [demo walkthrough](docs/DEMO.md), [baseline evaluation](docs/EVALUATION.md), [API](docs/API.md) and [architecture](docs/ARCHITECTURE.md). Evaluation currently measures deterministic fixture workflows on identical evidence; it establishes no live six-agent advantage. The [real browser smoke](docs/BROWSER_SMOKE.md) verifies navigation, mutations, six stages, restart persistence, mobile overflow and forced heatmap failure/retry with zero runtime errors. Screenshot perception remains unverified because vision-analyze lacks its NVIDIA key. An earlier restricted sandbox run hung in Starlette thread dispatch; the resumed ordinary checks passed without escalation.
+Verified: 132 backend tests and 21 frontend tests pass; production build and Ruff/TypeScript checks pass; the previous dependency audit reported 0 frontend vulnerabilities (not rerun for this backend provider revision). See [phase acceptance](docs/IMPLEMENTATION_STATUS.md), [actual checks and remaining work](docs/PROGRESS.md), [demo walkthrough](docs/DEMO.md), [baseline evaluation](docs/EVALUATION.md), [API](docs/API.md) and [architecture](docs/ARCHITECTURE.md). Evaluation currently measures deterministic fixture workflows on identical evidence; it establishes no live six-agent advantage. The [real browser smoke](docs/BROWSER_SMOKE.md) verifies navigation, mutations, six stages, restart persistence, mobile overflow and forced heatmap failure/retry with zero runtime errors. Screenshot perception remains unverified because vision-analyze lacks its NVIDIA key. The structural migration preserves the full OpenAPI contract and original financial/model behavior. GitHub Actions is configured but has not run because this branch has not been pushed.
 
 SQLite schema v1 initializes additively; unknown future schema versions are rejected until explicitly migrated. Reports store immutable evidence snapshots. On restart, interrupted runs become incomplete and can be relaunched. This is local development software, not a public multiuser service. Research queue and model calls have bounded budgets; model/provider errors expose sanitized failures.
 

@@ -1,0 +1,60 @@
+name: CI
+"on":
+  pull_request:
+  push:
+    branches: [main, chore/docker-modular-migration]
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ['3.11', '3.13']
+    env:
+      DATA_MODE: fixtures
+      DATABASE_URL: sqlite:////tmp/stockscope-ci.db
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r backend/requirements.lock
+      - run: ruff check --config backend/pyproject.toml backend scripts
+      - run: ruff format --config backend/pyproject.toml --check --silent backend scripts
+      - run: pytest -q
+        working-directory: backend
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci --legacy-peer-deps
+        working-directory: frontend
+      - run: npm run ci && npm run typecheck && npm run test && npm run build
+        working-directory: frontend
+  docker:
+    runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: stockscope-ci
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Validate and build isolated fixture stack
+        run: |
+          docker compose -f compose.yaml -f compose.fixture.yaml config --quiet
+          docker compose -f compose.yaml -f compose.fixture.yaml build
+          docker compose -f compose.yaml -f compose.fixture.yaml up -d --wait
+      - name: Proxy and persistence acceptance
+        run: |
+          curl --fail http://127.0.0.1:8000/api/health
+          python3 scripts/compose_smoke.py seed /tmp/stockscope-smoke.json
+          docker compose -f compose.yaml -f compose.fixture.yaml down
+          docker compose -f compose.yaml -f compose.fixture.yaml up -d --wait
+          python3 scripts/compose_smoke.py verify /tmp/stockscope-smoke.json
+      - name: Stop without deleting SQLite volume
+        if: always()
+        run: docker compose -f compose.yaml -f compose.fixture.yaml down
