@@ -292,3 +292,7 @@
 ## Phase 4E accepted — 2026-11-06 15:13 EST
 - Intelligence owns service/router, news capture/deduplication and industry catalog. Headline-only model execution/validation uses research's supported `summarize_captured_headlines` application entrypoint; no second model/orchestrator path. Public typed interfaces keep providers/agent internals private. All 20 templates, coverage gaps, macro semantics and captured-news limitations retained.
 - Full backend **120 passed in 8.69s**; Ruff passed; full OpenAPI identical. Test monkeypatch targets follow the moved shared model entrypoint; assertions unchanged. Next: 4F automated import boundaries, contract regression and browser acceptance, then frontend migration.
+
+## Phase 4F accepted
+- Added AST boundary checks covering aliased/package/nested private imports, pure finance and router persistence restrictions; positive public-facade integration uses isolated synthetic data and shared in-memory SQLite. Added full OpenAPI snapshot regression from the pre-module baseline (no credentials/data records).
+- `make check`: **132 passed in 7.90s**, 18 frontend tests, Ruff/Biome lint/format/CI, TypeScript and production build pass. Native `browser_smoke.py`: **passed**, zero pageerrors, restart/report persistence, holdings, 20 templates, Canadian labels, mobile and forced widget retry. Backend modularization accepted.
