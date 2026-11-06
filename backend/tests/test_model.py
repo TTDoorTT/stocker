@@ -373,3 +373,118 @@ def test_year_history_tool_roundtrip_fits_context_without_losing_provenance(monk
     )
     assert ModelClient(model_settings()).complete("profile", {}, {}, toolset) == {}
     assert len(requests) == 2
+
+
+def test_higher_output_and_timeout_are_forwarded(monkeypatch):
+    settings = model_settings().model_copy(update={"llm_max_tokens": 8192, "llm_timeout": 600})
+
+    def handler(request):
+        assert json.loads(request.content)["max_tokens"] == 8192
+        assert request.extensions["timeout"]["read"] > 120
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    transport(monkeypatch, handler)
+    client = ModelClient(settings)
+    for _ in range(6):
+        assert client.complete("profile", {}, {}, tools()) == {}
+    # Missing usage cannot reclaim output reservations, but six stages still fit.
+    assert client.reserved_output_tokens == 6 * 8192
+
+
+@pytest.mark.parametrize("budget", ["llm_run_output_tokens", "llm_run_total_tokens"])
+def test_configured_exhausted_budget_prevents_network(monkeypatch, budget):
+    transport(monkeypatch, lambda request: pytest.fail("Budget must stop HTTP"))
+    client = ModelClient(model_settings())
+    if budget == "llm_run_output_tokens":
+        client.reserved_output_tokens = getattr(client.settings, budget)
+    else:
+        client.tokens = getattr(client.settings, budget)
+    with pytest.raises(ModelError, match="budget exhausted"):
+        client.complete("profile", {}, {}, tools())
+
+
+def test_context_guard_includes_tool_schema(monkeypatch):
+    transport(monkeypatch, lambda request: pytest.fail("Tool definitions must count toward context"))
+    toolset = tools()
+    toolset.definitions = [{"description": "x" * 131072}]
+    with pytest.raises(ModelError, match="context budget exhausted"):
+        ModelClient(model_settings()).complete("profile", {}, {}, toolset)
+
+
+def test_truncated_output_is_rejected_even_when_json_parses(monkeypatch):
+    transport(
+        monkeypatch,
+        lambda request: httpx.Response(
+            200, json={"choices": [{"finish_reason": "length", "message": {"content": "{}"}}]}
+        ),
+    )
+    with pytest.raises(ModelError, match="truncated.*shorter complete JSON"):
+        ModelClient(model_settings()).complete("profile", {}, {}, tools())
+
+
+def test_run_deadline_stops_tool_loop_after_response(monkeypatch):
+    client = ModelClient(model_settings())
+    toolset = tools()
+
+    def handler(request):
+        client.deadline = 0
+        return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
+
+    transport(monkeypatch, handler)
+    with pytest.raises(ModelError, match="wall-clock"):
+        client.complete("profile", {}, {}, toolset)
+    assert toolset.count == 0
+
+
+@pytest.mark.parametrize(
+    "updates",
+    [
+        {"llm_max_tokens": 0},
+        {"llm_max_tokens": 65537},
+        {"llm_timeout": 3601},
+        {"research_run_timeout": 86401},
+        {"llm_max_tokens": 8192, "llm_context_window_tokens": 8192},
+        {"llm_run_output_tokens": 128},
+        {"llm_run_total_tokens": 128},
+    ],
+)
+def test_invalid_or_unbounded_budgets_are_rejected(updates):
+    with pytest.raises(ValueError):
+        Settings(_env_file=None, **updates)
+
+
+def test_configured_cumulative_context_budget_prevents_next_request(monkeypatch):
+    transport(monkeypatch, lambda request: pytest.fail("Cumulative context must stop HTTP"))
+    client = ModelClient(model_settings())
+    client.transmitted_context_bytes = client.settings.llm_run_context_bytes
+    with pytest.raises(ModelError, match="context budget exhausted"):
+        client.complete("profile", {}, {}, tools())
+
+
+def test_expired_deadline_prevents_network(monkeypatch):
+    transport(monkeypatch, lambda request: pytest.fail("Expired deadline must stop HTTP"))
+    client = ModelClient(model_settings())
+    client.deadline = 0
+    with pytest.raises(ModelError, match="wall-clock"):
+        client.complete("profile", {}, {}, tools())
+
+
+def test_reported_usage_reclaims_output_and_stops_at_configured_total(monkeypatch):
+    settings = model_settings().model_copy(update={"llm_run_total_tokens": 20000})
+    transport(
+        monkeypatch,
+        lambda request: httpx.Response(
+            200,
+            json={
+                "choices": [{"message": {"content": "{}"}}],
+                "usage": {"prompt_tokens": 21000, "completion_tokens": 1, "total_tokens": 21001},
+            },
+        ),
+    )
+    client = ModelClient(settings)
+    with pytest.raises(ModelError, match="reported total token budget exhausted"):
+        client.complete("profile", {}, {}, tools())
+    transport(monkeypatch, lambda request: pytest.fail("Exhausted reported total must stop HTTP"))
+    with pytest.raises(ModelError, match="budget exhausted"):
+        client.complete("profile", {}, {}, tools())
+    assert client.calls == 1

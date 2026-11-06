@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.modules.market_data.symbols import symbol_market
 from app.modules.research.agents.client import FixtureModel, ModelClient
 from app.modules.research.agents.tools import ResearchTools
-from app.modules.research.errors import ModelError
+from app.modules.research.errors import ModelBudgetError, ModelError
 from app.modules.research.reports import render_report
 from app.modules.research.schemas import SCHEMAS, STAGES
 from app.modules.research.validation import validate_output
@@ -51,6 +51,8 @@ class ResearchOrchestrator:
         model = self.injected_model or (
             FixtureModel() if self.settings.data_mode == "fixtures" else ModelClient(self.settings)
         )
+        if isinstance(model, ModelClient):
+            model.deadline = start + self.settings.research_run_timeout
         outputs = {}
 
         def emit(event, **fields):
@@ -62,8 +64,8 @@ class ResearchOrchestrator:
         def execute_stage(stage, correction=None):
             feedback = [correction] if correction else []
             for attempt in range(1, 4):
-                if monotonic() - start > 600:
-                    raise ModelError("Run wall-clock budget exhausted")
+                if monotonic() - start >= self.settings.research_run_timeout:
+                    raise ModelBudgetError("Run wall-clock budget exhausted")
                 entry = {
                     "stage": stage,
                     "attempt": attempt,
@@ -119,6 +121,8 @@ class ResearchOrchestrator:
                 save()
                 try:
                     raw = model.complete(stage, context, SCHEMAS[stage].model_json_schema(), tools)
+                    if monotonic() - start >= self.settings.research_run_timeout:
+                        raise ModelBudgetError("Run wall-clock budget exhausted")
                     entry["output"] = raw
                     emit("stage_output", stage=stage, attempt=attempt)
                     output = validate_output(stage, raw, run["evidence"], run["calculations"])
@@ -134,6 +138,8 @@ class ResearchOrchestrator:
                     entry.update(status="failed", validation_errors=feedback, finished_at=now())
                     emit("validation_failed", stage=stage, attempt=attempt, errors=feedback)
                     save()
+                    if isinstance(exc, ModelBudgetError):
+                        raise
                     if attempt < 3:
                         emit("stage_retry", stage=stage, attempt=attempt + 1, feedback=feedback)
             run["gaps"].append(f"{stage}: exhausted bounded validation attempts")

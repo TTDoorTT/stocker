@@ -136,3 +136,17 @@ docker compose cp backend:/tmp/stockscope-backup-UNIQUE.db \
 ```
 
 Repeat for `/data/live-acceptance.db` if preserving the separate diagnostic archive. Keep copies private and outside Git; verify permissions/integrity before destructive storage changes. The temporary container file disappears on recreation, while the exported private copy remains. Final migration exports were verified against the original row fingerprints and are user-owned 0600 files. No default command deletes volumes.
+
+## Local model research budgets
+
+New settings and `.env.example` default to `LLM_MAX_TOKENS=8192`, `LLM_TIMEOUT=600`, `LLM_CONTEXT_WINDOW_TOKENS=131072`, `LLM_RUN_OUTPUT_TOKENS=196608`, `LLM_RUN_TOTAL_TOKENS=1048576`, `LLM_RUN_CONTEXT_BYTES=8388608`, `RESEARCH_RUN_TIMEOUT=7200`. Existing `.env` values take precedence; defaults alone never overwrite them. The live acceptance session adopted 8192/600 in the two authorized project budget fields after a private rollback backup. To adopt these values in the normal application, edit only the desired project `.env` budget fields and recreate the backend with `docker compose up -d --force-recreate backend`. Never change Strata globally to accommodate a StockScope request.
+
+Output caps must be positive (128–65536), leave input space plus a 2048-token margin in the configured context, and fit both run token budgets. HTTP timeout is at most 3600 seconds, research duration at most 86400 seconds. Context-byte accounting is conservative and includes tools; it is not exact tokenization. Deadlines are cooperative around synchronous calls; the HTTP timeout bounds network inactivity, not absolute elapsed time. Late model output is rejected. All retry/tool/call limits and evidence validation remain enabled.
+
+Explicit live acceptance (calls real providers/model; never run from fixture CI) uses a new dedicated database, refuses existing database paths, and prints safe stage/summary results:
+
+```bash
+docker compose exec -T -e DATA_MODE=live -e LLM_MAX_TOKENS=8192 -e LLM_TIMEOUT=600 backend python /workspace/scripts/live_research_check.py --database /data/live-budget-new.db
+```
+
+The run remains honestly `incomplete` when data gaps exist even when all six stages and the sourced report pass. Inspect the dedicated database's persisted run, events, evidence and report rather than equating a report with full financial coverage.
