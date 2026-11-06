@@ -99,3 +99,24 @@ See [Compose service reference](https://docs.docker.com/reference/compose-file/s
 ## Quality tools
 
 Phase 3 uses Ruff (110 columns, Python 3.11 target) and exact-pinned Biome 2.6.6 (2 spaces, single quotes, semicolons, import organization). Frontend `npm run typecheck` runs TypeScript; `lint` runs Biome. `format`, `format:check`, `check`, and `ci` are distinct commands. The initial Biome rules enforce unused declarations/imports, hook placement and JSX keys; expand rules incrementally without changing financial behavior. `make format` now formats both languages; formatting changes are committed separately from moves or behavior. See [Biome configuration](https://biomejs.dev/reference/configuration/) and [Ruff formatter](https://docs.astral.sh/ruff/formatter/).
+
+## CI and Docker acceptance
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to main/the migration branch, with read-only repository permissions and SHA-pinned checkout/setup actions. Backend jobs target Python 3.11/3.13; frontend uses Node 22. No personal credentials, provider keys or Strata are required. Docker CI builds and starts an isolated fixture stack, seeds a synthetic research/portfolio record, recreates containers, and compares the persisted report/events/positions. Remote GitHub execution is pending an authorized push; local equivalent checks are recorded in PROGRESS.md.
+
+With native/live Compose stopped, repeat the isolated persistence acceptance:
+
+```bash
+docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml up -d --wait
+backend/.venv/bin/python scripts/compose_smoke.py seed /tmp/stockscope-smoke.json
+docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml down
+docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml up -d --wait
+backend/.venv/bin/python scripts/compose_smoke.py verify /tmp/stockscope-smoke.json
+docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml down
+```
+
+The smoke refuses live data mode or live research history. Never use the fixture override on the live project name. The full native browser harness additionally checks actual restart persistence, download filename/content, mobile layout and external-widget failure/retry; stop all Compose stacks on 8000/5173 before `make smoke`. Pixel-level screenshot review remains separately unverified.
+
+For source rollback, stop Compose, preserve current local state with verified backups, and use the migration branch's coherent commits. Do not overwrite `.env` or databases during checkout; never reset/clean user changes automatically. `.git-blame-ignore-revs` records the format-only commit.
+
+Docker frontend sets `WATCH_USE_POLLING=true` with a 200ms interval because final WSL2 bind-mount verification found missed restore events and stale Vite transforms. Native Vite retains event-based watching. Polling trades some CPU for reliable development reload and does not require Compose Watch. See [Vite server.watch](https://vite.dev/config/server-options#server-watch). Against an isolated running fixture stack, `backend/.venv/bin/python scripts/reload_smoke.py` verifies backend reload and frontend HMR/restoration without rebuilding. It refuses live mode and restores temporary source edits even on failure.

@@ -319,3 +319,17 @@
 
 - New frontend boundary test initially failed TypeScript because Node filesystem type declarations are not dependencies. Reworked source collection to Vite's typed raw-source glob and standard URL resolution, using existing dependencies only. This failure was isolated to the newly added test; prior 18-test/page-move/browser acceptance remains valid. Final boundary check rerun pending before amending the checkpoint.
 - Final frontend boundary correction passes: TypeScript, **21 tests in 2.76s** (18 preserved + 3 architecture checks), Biome CI/import/format gate. Page/layout checkpoint amended with this verified test implementation; no Node type dependency added.
+
+## Phase 6 CI/local acceptance in progress — 2026-11-06 15:25 EST
+- Added read-only, SHA-pinned GitHub Actions jobs for Python 3.11/3.13, Node 22 frontend quality/tests/build, and isolated fixture Docker build/proxy/research/persistence. Action tags verified against official remote refs; no credentials/Strata dependency. No push; GitHub execution remains unrun.
+- Added reusable `scripts/compose_smoke.py` with explicit fixture-mode refusal guards. Actual final-image seed/recreation/verify **passed**: health/proxy/search, watchlist/positions, six stages/report/events persist identically. Full `make check` **passed**: 132 backend (8.46s) / 21 frontend tests, Ruff/Biome lint/format/CI, TypeScript/build.
+- Initial optional YAML parse command could not run because PyYAML is absent; no dependency added. Validating with checksum-verified standalone official actionlint in /tmp instead. Final container HMR/reload/browser probe running.
+
+- Official actionlint 1.7.12 archive checksum verified and isolated under /tmp; workflow validation **passed**. No global tooling installed.
+- Final source probe observed backend reload/restore and frontend HMR update, but rapid edit/restore timed out waiting for the restored heading (5-second browser expectation). Source restored correctly (Git clean for app files). Repeating only the HMR restore check after allowing the first transform exchange to finish; no application behavior change proposed.
+
+## Final reload regression diagnosis
+- Confirmed stale Vite transform cache: host and container source both restored (`reload probe` absent), but transformed HTTP response still contained the probe; frontend logs recorded only the first change. A fresh browser reproduced it. Backend reload/restore works.
+- Enabled `WATCH_USE_POLLING=true` only in Compose and conditional Vite watcher polling (200ms); native defaults remain unchanged. Added `scripts/reload_smoke.py` to verify actual backend reload, frontend update/restore, fixture banner and mobile/no-pageerrors with guaranteed source restoration. No networking/security changes. Rerun pending.
+
+- Reload correction verified: `scripts/reload_smoke.py` **PASS** on final fixture containers — backend edit/restore, frontend HMR edit/restore, synthetic banner, 390px no overflow and zero pageerrors. The stale-transform failure is resolved by Docker-only polling; native behavior unchanged.
