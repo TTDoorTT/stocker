@@ -16,7 +16,7 @@ export function Sidebar() {
       <NavLink className="brand" to="/">
         <span className="brand-mark">S</span>
         <span>
-          StockScope<span className="brand-ai"> AI</span>
+          Stocker
           <small>RESEARCH WORKSPACE</small>
         </span>
       </NavLink>

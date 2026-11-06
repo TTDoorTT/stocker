@@ -1,6 +1,6 @@
 # Architecture
 
-StockScope is a feature-oriented modular monolith: one React/TypeScript/Vite application, one FastAPI backend, and one SQLite database. The six logical specialist roles run inside the backend, not separate containers. External Strata iq3_s and financial providers remain outside Docker. The official TradingView embed is an isolated visual and never supplies data to agents.
+Stocker is a feature-oriented modular monolith: one React/TypeScript/Vite application, one FastAPI backend, and one SQLite database. The six logical specialist roles run inside the backend, not separate containers. External Strata iq3_s and financial providers remain outside Docker. The official TradingView embed is an isolated visual and never supplies data to agents.
 
 ## Development runtime
 
@@ -12,7 +12,7 @@ Browser localhost:5173 -> frontend Vite -> /api proxy -> backend:8000
 
 Compose publishes only host loopback ports 5173/8000. Source bind mounts support Vite HMR and Uvicorn reload with ordinary `docker compose up -d`. Dependencies stay inside digest-pinned Python 3.13.11/Node 22.23.3 images. The Vite proxy permits the exact backend service hostname; existing host/origin restrictions and model endpoint validation stay enabled. Backend credentials never reach browser code or image build contexts.
 
-`stockscope_stockscope_data` persists across `docker compose down`. Native SQLite/configuration files remain untouched. The originally configured default database was empty; separate diagnostic research is preserved as `/data/live-acceptance.db`, without silently merging histories. Private SQLite-backup-API snapshots and configuration copies live outside Git. See DEVELOPMENT.md for safe import/selection and rollback.
+SQLite persists across `docker compose down`. Configuration and native histories are separate from the Docker volume; existing histories must be explicitly backed up/imported rather than silently merged. See [development](DEVELOPMENT.md) for persistence identifiers, safe selection and rollback.
 
 ## Backend ownership
 
@@ -58,6 +58,6 @@ Endpoint functions stay in feature/app API files; shared HTTP only handles reque
 
 ## Enforced gates
 
-Backend AST tests reject private cross-feature imports, persistence in routers and side-effect dependencies in finance. Frontend TypeScript-AST tests guard shared ownership, endpoint-only HTTP and public feature imports. A complete pre-migration OpenAPI snapshot detects route/schema/status/validation changes. Public-facade integration and original API/provider/model/browser tests verify behavior and persistence.
+Backend AST tests reject private cross-feature imports, persistence in routers and side-effect dependencies in finance. Frontend TypeScript-AST tests guard shared ownership, endpoint-only HTTP and public feature imports. A complete OpenAPI snapshot detects route/schema/status/validation changes; its only cleanup change is the display title, now Stocker. Public-facade integration and original API/provider/model/browser tests verify behavior and persistence.
 
-Ruff targets Python 3.11 with 110-column formatting; Biome 2.6.6 owns frontend formatting/lint/import organization; strict TypeScript remains separate. GitHub Actions uses SHA-pinned actions, read-only permissions and credential-free fixture checks, including Docker recreation/persistence. `make check` provides local equivalents. Remote Actions execution is unverified until an authorized push.
+Ruff targets Python 3.11 with 110-column formatting; Biome 2.6.6 owns frontend formatting/lint/import organization; strict TypeScript remains separate. GitHub Actions uses SHA-pinned actions, read-only permissions and credential-free fixture checks, including Docker recreation/persistence. `make check` provides local equivalents. Remote baseline CI passed on main at `93d0ee4`; see [validation](VALIDATION.md) for the exact run and current acceptance limits.

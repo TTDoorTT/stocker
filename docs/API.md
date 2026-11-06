@@ -1,4 +1,4 @@
-# Local API
+# Stocker local API
 
 Base URL `http://127.0.0.1:8000/api`; OpenAPI interactive contracts at `/docs`. All configuration credentials stay server-side. Mutations accept JSON. Supported listing markets are US and CA (.TO/.V suffixes); Canadian fundamentals/current quotes remain unavailable; invalid requests return 422, unknown run IDs 404, missing providers 503, unavailable reports 409, full research queue 429. The local queue holds at most four jobs with one worker.
 
@@ -25,3 +25,5 @@ Selected intelligence APIs:
 - `POST /intelligence/news/summary`: explicit headline-only AI summary of at most12 retrieved live headlines, using the shared model client and evidence validation. Returns `{answer,evidence,mode,gaps}`; fixture mode/missing model/no headlines =>503, invalid unsupported model output =>502. Never auto-launches research or treats article contents as retrieved.
 
 Canadian exact-symbol search results are explicitly unverified listing candidates, not verified company identity. Live stock objects and research runs retain CA market metadata; unsupported fundamentals and quotes remain explicit gaps. Fixture mode remains the original synthetic U.S. demo with no fabricated Canadian fixtures.
+
+The complete contract is protected by `backend/tests/contracts/openapi.json` and its API regression test. The Stocker cleanup changes only OpenAPI `info.title`; routes, request/response schemas and error contracts are preserved.

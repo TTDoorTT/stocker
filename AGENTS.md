@@ -1,19 +1,13 @@
-# StockScope implementation
+# Stocker contributor rules
 
-Before changing code, read `CODEX_STOCK_RESEARCH_IMPLEMENTATION_PLAN.md` and `docs/PROGRESS.md`. Resume from the recorded next action and preserve existing work.
+Read `README.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md` and `docs/VALIDATION.md` before changing code. Record incremental work and validation in PR/issue descriptions or feature branches; keep main documentation focused on current use and contribution.
 
-Update `docs/PROGRESS.md` at phase boundaries, after meaningful milestones and test runs, on blockers, and before ending a session. Record architecture changes in `docs/DECISIONS.md`.
+Keep new code in its owned backend `app/modules/{market_data,research,portfolio,intelligence}` or frontend `src/features/*` module. Keep routers thin, provider access behind normalized market-data services and finance calculations pure. Share stable public contracts; preserve enforced import boundaries and API/DTO compatibility.
 
-Financial fixtures must remain visibly labeled synthetic. Live facts require source metadata; derived values come from deterministic calculations. Reference clones stay ignored; OpenStock is conceptual reference only (AGPL).
+Keep fixtures visibly synthetic. Live facts require source metadata; derived values use deterministic calculations. Preserve explicit unavailable/incomplete coverage, runtime model prompts and existing tests. Reference clones stay ignored; OpenStock is conceptual reference only (AGPL). Retain industry attribution.
 
-For image inspection, use `vision-analyze IMAGE_PATH "specific question"`. It requires HTTPS; report network failures. Keep all implementation within this project and preserve user-wide Codex/LiteLLM configuration.
+Preserve ignored configuration/databases and user-wide Codex/Strata/LiteLLM settings. Back up persistence before storage changes. Keep loopback bindings and restrictive host/origin/endpoint policies. Preserve legacy Compose/volume/SQLite and internal identifiers unless a separate migration explicitly authorizes changes.
 
-## Docker/modular migration
+Run `docker compose config --quiet` and `make check` before declaring a gate complete; TypeScript is separate from Biome lint. Commit formatter-only changes separately from moves/behavior and document new dependency rationale. Native browser smoke needs free ports and local browser dependencies; `scripts/compose_smoke.py` is only for an isolated fixture stack. Report actual local and remote CI results, with unrun gates explicit.
 
-Read `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md`, `docs/ARCHITECTURE.md`, `docs/API.md` and current progress before migration changes. Complete Docker acceptance before module moves. Use the dedicated migration branch and small verified commits; no pushes without authorization. Preserve ignored `.env` and SQLite history with verified backups outside Git. Never change user-wide Strata/Codex/LiteLLM settings. Keep ports on host loopback and validation/host/origin policies restrictive. The existing live iq3_s token-budget limitation is outside this migration.
-
-## Module and quality conventions
-
-New feature code belongs to its owned market-data/research/portfolio/intelligence module. Keep HTTP routers thin, provider access behind normalized market-data interfaces and finance calculations pure. Avoid private imports across feature modules; share only stable contracts. Preserve public API types, routes, persistence and all evidence/fixture/coverage guarantees. Run `make check` (isolated fixture containers) before declaring a gate complete; TypeScript is separate from Biome lint. Commit formatter output separately from moves/behavior; document any new dependency rationale. Native browser smoke requires free ports.
-
-The feature migration is implemented. Current backend owners are `app/modules/{market_data,research,portfolio,intelligence}`; stable DTOs are `app/contracts`, SQLite lifecycle is `app/core/database.py`. Frontend owners are `src/features/*` with app composition and generic shared code. Follow enforced import boundaries; extend public contracts deliberately rather than bypassing adapters. `make check` covers unit/integration/boundary/API snapshot/format/lint/type/build checks. `scripts/compose_smoke.py` is only for an isolated fixture Compose project. Remote GitHub Actions results must not be claimed without actual execution.
+For image inspection use `vision-analyze IMAGE_PATH "specific question"`; it requires HTTPS. Report missing credentials/network failures and claim only observed visual details. Keep implementation within this project.
