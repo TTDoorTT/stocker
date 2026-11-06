@@ -175,6 +175,7 @@ describe('Stocker flows', () => {
   it('shows explicit fixture mode and navigates from research to a stock', async () => {
     mount('/research');
     expect(screen.getByRole('link', { name: /Stocker RESEARCH WORKSPACE/ })).toBeInTheDocument();
+    expect(screen.getByText('STOCKER / U.S. MARKETS')).toBeInTheDocument();
     expect(screen.getByText(/Stocker · U.S. \/ Canadian research workspace/)).toBeInTheDocument();
     expect(await screen.findByText('Demo · synthetic fixtures')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'AAPL ↗' }));
