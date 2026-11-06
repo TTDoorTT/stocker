@@ -48,3 +48,7 @@ docker compose run --rm --no-deps -T backend python /workspace/scripts/model_con
 ```
 
 Require HTTP 200 with the configured model listed. Reconfirm Phase 1 startup/proxy/persistence, then implement Phase 2 in order. The default active Docker DB corresponds to the configured native default, which was empty. Historical diagnostic research is preserved separately, not silently merged into the default history. Development docs explain selecting a separate history database explicitly.
+
+## Resolved — 2026-11-06 14:53 EST
+
+User confirmed Strata was down, restored the existing service and updated the ignored project API key. Both native and container `scripts/model_connectivity.py` now return HTTP 200 / configured_model_listed=true. No endpoint, security or service configuration changes by the migration. Phase 1 accepted; continue Phase 2. New private backup protects the updated `.env`: `../stocker-backups/migration-resume-20261106-1453`.

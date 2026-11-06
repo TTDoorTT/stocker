@@ -1,6 +1,6 @@
 # StockScope AI — Implementation Progress
 
-## Migration status — 2026-11-06 14:44 EST
+## Migration status — 2026-11-06 14:54 EST
 - Active specification: `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md` (supplied root file relocated unchanged). Branch `chore/docker-modular-migration`, base `cb83b66`; Phase 0 commit `35e03dd`. No push.
 - Phase 0 **complete**: required documents read; original user work preserved; native 117 tests/Ruff + 18 frontend tests/TypeScript/build + full browser smoke passed (zero pageerrors). Initial tree had only the untracked migration plan. Historical claims below about untracked code/no commits are superseded.
 - Private backups: `/home/siche/uni/dh399/stocker-backups/migration-phase0-20261106-verified`, containing ignored root `.env` and all five discovered SQLite files, with SQLite backup API/integrity/version/count/content-fingerprint verification. Original `.env` byte fingerprint and every original database still match. Native configured `backend/stockscope.db` and root DB were empty; `backend/live-acceptance.db` holds 4 runs/67 events. Initial partial cache-table verification failure was corrected before accepted backup.
@@ -10,6 +10,13 @@
 - Final default acceptance: `docker compose up --build -d --wait`, `docker compose down`, `docker compose up -d --wait`, `ps`, direct/proxied health and startup logs **passed**. Post-recreation volume integrity/v1/counts confirmed (default empty; diagnostic 4 runs/67 events); no `.env` file in backend image. Default two-container stack left running at localhost:5173; external services untouched. Scripts Ruff (`--config backend/pyproject.toml`) and `git diff --check` pass.
 - Changed runtime/docs and exact command evidence: `docs/migration/PHASE_1_ACCEPTANCE.md`; startup, test isolation and safe import: `docs/DEVELOPMENT.md`. No formula/API/schema/agent/Canadian coverage changes; `.env` ignored and no credentials displayed/committed.
 - **Exact next action:** restore reachability of the currently configured external Strata endpoint; rerun `PYTHONPATH=backend backend/.venv/bin/python scripts/model_connectivity.py` and `docker compose run --rm --no-deps -T backend python /workspace/scripts/model_connectivity.py`, require HTTP 200/configured model listed. Reconfirm Phase 1 then proceed to Phase 2 commands. Do not start module restructuring before that gate.
+
+## Migration resume — 2026-11-06 14:54 EST
+- User restored existing Strata and updated the ignored project API key. Actual native and Docker `scripts/model_connectivity.py` now **PASS**, HTTP 200 with configured model listed. No endpoint/security/global-service changes. Earlier read-only Windows diagnosis found the configured address existed; service was down, confirmed by user. Previous blocker above is resolved.
+- Refreshed private `.env`/SQLite backup at `/home/siche/uni/dh399/stocker-backups/migration-resume-20261106-1453`; all five databases integrity verified. Older backup remains intact; no credentials printed.
+- Phase 1 **complete**: existing Docker fixture/reload/persistence acceptance plus current native/container model discovery. `docker compose up -d --wait` refreshes the running backend environment to the updated key; health/proxy recheck pending command completion. Full sourced research token-budget acceptance remains out of scope.
+- Phase 2 **in progress**: root Makefile wraps real Compose commands. Checks use separate `stockscope-check` project, fixture env override and per-container `/tmp` SQLite DB; no live DB/model/provider requests. Existing Ruff formatting checks are expected to flag the unformatted baseline before Phase 3; frontend formatter is added in Phase 3.
+- Next: exercise developer targets, verify stop/start preserves volume, commit Phase 2, then add format/tooling baseline in separate commits.
 
 ## Previous implementation status
 - Phase: user-authorized provider revision implemented and verified; sourced financial/full-model acceptance pending
@@ -223,3 +230,13 @@
 - Latest real iq3_s orchestrator probe finished **incomplete**, three profile ReadTimeout failures at the existing 45-second per-request limit, 186.599 seconds total, no report. Actual usage and attempts are in docs/LIVE_MODEL_CHECK.json; the earlier invalid-argument failure is summarized there too. No source facts or successful six-stage live report are claimed. The endpoint/model/key and run bounds were preserved.
 - Final verification: 115 backend tests + Ruff; 18 frontend tests + TypeScript/build; real browser fixture/restart/widget/mobile smoke with zero pageerrors; actual AAPL/USD and RY.TO/CAD Yahoo history with cache preservation; actual two Valet series; pip dependency consistency and diff whitespace checks passed. Frontend audit/evaluation and screenshot perception were not rerun for this revision. No servers are intentionally left running; the temporary model-check database was cleaned up.
 - Exact next actions: (1) supply genuine SEC_USER_AGENT and an authorized Finnhub free key to verify U.S. facts/quotes/news; Alpha Vantage and FRED are optional, not blockers; (2) diagnose local-model response latency/tool behavior before retrying full sourced orchestration, without changing user-wide Strata/Codex settings; (3) pursue issuer-authorized Canadian reports or licensed distribution if Canadian-only statements are needed. Do not scrape SEDAR+ or assume free Canadian Finnhub quotes; continue exposing those gaps. TSXV history remains mapped but not live-probed. Other Later features remain deferred.
+
+## Phase 2 verification — 2026-11-06 14:56 EST
+- `make test`: 118 backend tests (7.66s) and 18 frontend tests passed in isolated one-off fixture containers. `make lint` initially failed on different isort classification of `app` in mounted scripts; configured explicit first-party ownership for consistent native/container results; rerun pending.
+- `make format-check` correctly failed on the pre-format baseline (31 Python files). No automatic formatting yet; Phase 3 will establish that baseline in its own commit. Typecheck/build and stop/dev/persistence checks running.
+- Running default backend itself passes authenticated model discovery; updated key works beyond just one-off containers.
+
+## Phase 2 accepted — 2026-11-06 14:58 EST
+- Root `make test`, `lint`, `typecheck`, `build`, `status`, `stop`, `dev` exercised successfully. Tests: 118 backend / 18 frontend; Ruff/TypeScript/build passed. SQLite content fingerprints for both named-volume databases match before/after stop/dev. Make is optional; normal Compose startup remains sufficient.
+- Formatter commands are real and correctly return baseline diagnostics (31 files), intentionally resolved by Phase 3. Native/container lint ownership is now explicit for `app`. `smoke` retains the existing native harness's occupied-port refusal. No finance/model/DB behavior changes.
+- Next: Phase 3 tooling config/dependency commit, then separate format-only commit and regression checks.

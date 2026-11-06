@@ -24,7 +24,7 @@ The backend validates each stage independently and persists every attempt, failu
 
 After one-time image setup, use `docker compose up -d` and open http://localhost:5173 (API docs: http://localhost:8000/docs). First run: `docker compose up --build -d`. Source bind mounts enable Vite HMR and backend reload. `docker compose down` stops both and retains SQLite on the named volume.
 
-Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Fixture Docker checks pass; external Strata connectivity is currently blocked from WSL and Docker, so the modular migration is paused at Phase 1.
+Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Docker fixture checks and native/container Strata discovery pass. The developer-command and modular migration continues on the dedicated branch.
 
 ## Native fallback
 

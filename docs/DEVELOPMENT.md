@@ -91,3 +91,7 @@ services:
 Start with `docker compose -f compose.yaml -f /absolute/path/to/history-override.yaml up -d`. This selects that database without merging/deleting either history. Subsequent invocations must use the same override to retain the selection; ordinary `docker compose up -d` uses `/data/stockscope.db`.
 
 See [Compose service reference](https://docs.docker.com/reference/compose-file/services/) and [Docker Desktop WSL2 integration](https://docs.docker.com/desktop/features/wsl/).
+
+## Optional Make commands
+
+`make dev`, `stop`, `status`, `logs`, and `rebuild` wrap the normal Compose lifecycle. Make is optional; `docker compose up -d` remains sufficient. `make test`, `lint`, `typecheck`, and `build` use one-off fixture containers with isolated temporary SQLite storage and do not require stopping the live stack. `make format` / `format-check` currently apply Ruff to Python; the planned Phase 3 adds frontend formatting. `make check` runs all quality/test/build targets; format-check intentionally reports existing baseline differences until Phase 3. `make smoke` uses the native browser harness and refuses occupied ports: stop Compose first. Backend source/test/script bind mounts allow explicit format writes; normal checks keep tests/scripts read-only.
