@@ -260,3 +260,8 @@
 - Full root `make check` **passed**: Ruff lint/format; Biome lint/format/CI/import organization; strict TypeScript; 118 backend tests (8.30s, existing deprecation warning), 18 frontend tests; 209-module production build. Formatter mount/cache and copied-tsconfig issues resolved with explicit format override/read-only config mount. No financial or agent behavior changes.
 - Formatter baseline commit `e9cfd5b` is recorded in `.git-blame-ignore-revs`; import organization follows separately. Exact-pinned Biome installation audit reported 0 vulnerabilities.
 - Phase 4A next: extract feature APIRouters preserving create_app injection and the full OpenAPI contract captured outside Git at `/tmp/stockscope-baseline-openapi.json`. No module moves started before Docker/tooling gates passed.
+
+## Phase 4A accepted — 2026-11-06 15:02 EST
+- Extracted APIRouter factories for market_data, portfolio, research and intelligence; create_app composition/lifespan/test injection and middleware preserved. Full OpenAPI document exactly equals pre-extraction baseline.
+- Native full backend suite: **118 passed in 8.73s**, Ruff lint/format passed. No route/schema/status/security behavior change. Portfolio SQL and research scheduling remain in extracted transport temporarily until their ordered service-extraction subphases.
+- Next: 4B market-data facade/provider ownership, preserving normalized contracts, caching, provider failures and tests.
