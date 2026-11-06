@@ -55,3 +55,5 @@ Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript a
 - [Future work](docs/ROADMAP.md)
 
 Vibe Research (MIT) inspired the methodology/topic concepts; its attribution is retained in the industry guide. OpenStock (AGPL) was conceptual reference only; no implementation was copied. The official TradingView embed retains its attribution and terms.
+
+[Development history archive](https://github.com/TTDoorTT/stocker/tree/archive/stocker-development-history-2026-11-06) preserves the synchronized original plans, progress, acceptance records and diagnostics.
