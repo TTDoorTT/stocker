@@ -120,3 +120,19 @@ The smoke refuses live data mode or live research history. Never use the fixture
 For source rollback, stop Compose, preserve current local state with verified backups, and use the migration branch's coherent commits. Do not overwrite `.env` or databases during checkout; never reset/clean user changes automatically. `.git-blame-ignore-revs` records the format-only commit.
 
 Docker frontend sets `WATCH_USE_POLLING=true` with a 200ms interval because final WSL2 bind-mount verification found missed restore events and stale Vite transforms. Native Vite retains event-based watching. Polling trades some CPU for reliable development reload and does not require Compose Watch. See [Vite server.watch](https://vite.dev/config/server-options#server-watch). Against an isolated running fixture stack, `backend/.venv/bin/python scripts/reload_smoke.py` verifies backend reload and frontend HMR/restoration without rebuilding. It refuses live mode and restores temporary source edits even on failure.
+
+## Back up the active Docker database
+
+`backup_local_state.py` protects project-native files and `.env`; it cannot see the named Docker volume. Export that separately after research finishes and while portfolio edits are paused. Use new snapshot/destination names each time (the helper refuses existing targets):
+
+```bash
+mkdir -m 700 ../stocker-backups/docker-UNIQUE
+# SQLite backup API, with integrity/schema/content verification inside the container:
+docker compose exec -T backend python /workspace/scripts/sqlite_transfer.py \
+  /data/stockscope.db /tmp/stockscope-backup-UNIQUE.db
+# Compose cp creates the local copy owned by the invoking user; don't use archive ownership mode.
+docker compose cp backend:/tmp/stockscope-backup-UNIQUE.db \
+  ../stocker-backups/docker-UNIQUE/stockscope.db
+```
+
+Repeat for `/data/live-acceptance.db` if preserving the separate diagnostic archive. Keep copies private and outside Git; verify permissions/integrity before destructive storage changes. The temporary container file disappears on recreation, while the exported private copy remains. Final migration exports were verified against the original row fingerprints and are user-owned 0600 files. No default command deletes volumes.
