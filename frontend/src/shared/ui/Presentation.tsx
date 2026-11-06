@@ -22,7 +22,7 @@ export function PageTitle({
   return (
     <header className="page-title">
       <div>
-        <p className="eyebrow">{eyebrow || 'STOCKSCOPE / U.S. MARKETS'}</p>
+        <p className="eyebrow">{eyebrow || 'STOCKER / U.S. MARKETS'}</p>
         <h1>{title}</h1>
       </div>
       {children}
