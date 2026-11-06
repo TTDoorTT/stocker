@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 type WidgetStatus = 'loading' | 'loaded' | 'failed';
-const messageType = 'stockscope-heatmap-status';
+const messageType = 'stocker-heatmap-status';
 
 function widgetDocument(attempt: number) {
   const config = {
