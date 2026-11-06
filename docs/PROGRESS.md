@@ -1,6 +1,15 @@
 # StockScope AI — Implementation Progress
 
-## Current status
+## Migration status — 2026-11-06 14:33 EST
+- Active specification: `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md` (user-supplied root file relocated unchanged to the requested documentation path).
+- Phase 0 complete: dedicated branch `chore/docker-modular-migration`, base `cb83b66` (`main`). Initial working tree had only the untracked migration specification; preserved it. Historical statements below about untracked code/no commits are superseded by this audit.
+- Native baseline: backend `./.venv/bin/pytest -q && ./.venv/bin/ruff check .` **117 passed in 8.07s**, Ruff passed, one existing Starlette/httpx warning. Frontend `npm run lint && npm run test && npm run build` **18 passed**, TypeScript/build passed (209 modules). `backend/.venv/bin/python backend/tests/browser_smoke.py` **passed**, zero pageerrors, restart persistence, synthetic six-stage workflow, widget failure/retry and 390px checks. Screenshot perception not run.
+- Docker client/daemon 29.8.2 and Compose 5.5.1 reachable on WSL2. No Docker application stack existed at baseline.
+- Local state backed up privately outside Git at `/home/siche/uni/dh399/stocker-backups/migration-phase0-20261106-verified`: root `.env` plus all five discovered SQLite files, using SQLite backup API, integrity checks, schema versions, counts and content fingerprints. Native configured `backend/stockscope.db` is empty v1; root `stockscope.db` also empty; `backend/live-acceptance.db` holds 4 runs/67 events; two provider-cache databases included. Original files unchanged. First backup attempt hit a cache WITHOUT ROWID table; corrected verification supports it; partial directory retained separately, not the accepted backup.
+- `.env` is ignored; no databases/env tracked; no credentials printed. No remote push or global-service configuration changes.
+- Next: Phase 1 Docker stack on the existing code; verify isolated fixture build/start/proxy/reload/persistence and existing external Strata reachability before module moves. Live iq3_s token-budget repair is explicitly out of scope.
+
+## Previous implementation status
 - Phase: user-authorized provider revision implemented and verified; sourced financial/full-model acceptance pending
 - Last updated: 2026-11-06 03:56 EST (America/Toronto)
 - Overall: Runnable React/Vite + FastAPI + SQLite application with six-stage research, persisted evidence/calculations/events, chat, watchlist/positions, isolated official heatmap, history and selected intelligence. Explicit synthetic fixture mode requires no keys.
