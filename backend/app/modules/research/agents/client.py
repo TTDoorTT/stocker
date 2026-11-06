@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
+from time import monotonic
 
 import httpx
 
 from app.modules.research.agents.tools import ToolArgumentsError
-from app.modules.research.errors import ModelError
+from app.modules.research.errors import ModelBudgetError, ModelError
 
 PROMPTS = Path(__file__).parent / "prompts"
 
@@ -12,12 +13,17 @@ PROMPTS = Path(__file__).parent / "prompts"
 class ModelClient:
     def __init__(self, settings):
         self.settings = settings
+        self.deadline = monotonic() + settings.research_run_timeout
         self.calls = 0
         self.tokens = 0
         self.reserved_output_tokens = 0
         self.transmitted_context_bytes = 0
         self.usage = []
         self.response_format_with_tools = True
+
+    def check_deadline(self):
+        if monotonic() >= self.deadline:
+            raise ModelBudgetError("Run wall-clock budget exhausted")
 
     def complete(self, stage, context, schema, tools):
         """Bounded tool loop. Raw provider errors never enter reports (may contain keys)."""
@@ -35,16 +41,27 @@ class ModelClient:
             {"role": "user", "content": json.dumps(context)},
         ]
         for _ in range(4):
+            self.check_deadline()
+            remaining = self.settings.llm_run_output_tokens - self.reserved_output_tokens
+            remaining_total = self.settings.llm_run_total_tokens - self.tokens
+            if self.calls >= 24 or remaining <= 0 or remaining_total <= 0:
+                raise ModelBudgetError("Per-run model budget exhausted")
+            # UTF-8 bytes conservatively bound text tokens, including tool definitions.
+            # Reserve framing room; the provider remains the exact tokenizer authority.
+            context_bytes = len(
+                json.dumps({"messages": messages, "tools": tools.definitions}).encode("utf-8")
+            )
+            output_limit = min(self.settings.llm_max_tokens, remaining, remaining_total - context_bytes)
+            if output_limit <= 0:
+                raise ModelBudgetError("Per-run reported total token budget exhausted")
+            if (
+                context_bytes + output_limit + 2048 > self.settings.llm_context_window_tokens
+                or self.transmitted_context_bytes + context_bytes > self.settings.llm_run_context_bytes
+            ):
+                raise ModelBudgetError("Serialized model context budget exhausted")
             self.calls += 1
-            remaining = 16000 - self.reserved_output_tokens
-            if self.calls > 24 or remaining <= 0:
-                raise ModelError("Per-run model budget exhausted")
-            output_limit = min(self.settings.llm_max_tokens, remaining)
             self.reserved_output_tokens += output_limit
-            context_bytes = len(json.dumps(messages).encode("utf-8"))
             self.transmitted_context_bytes += context_bytes
-            if context_bytes > 150000 or self.transmitted_context_bytes > 600000:
-                raise ModelError("Serialized model context budget exhausted")
             try:
                 payload = {
                     "model": self.settings.llm_model,
@@ -55,7 +72,10 @@ class ModelClient:
                 }
                 if self.response_format_with_tools:
                     payload["response_format"] = {"type": "json_object"}
-                with httpx.Client(timeout=self.settings.llm_timeout, follow_redirects=False) as client:
+                with httpx.Client(
+                    timeout=min(self.settings.llm_timeout, self.deadline - monotonic()),
+                    follow_redirects=False,
+                ) as client:
                     response = client.post(
                         self.settings.llm_base_url.rstrip("/") + "/chat/completions",
                         headers={"Authorization": f"Bearer {self.settings.llm_api_key}"},
@@ -73,6 +93,7 @@ class ModelClient:
                             continue
                     response.raise_for_status()
                     result = response.json()
+                self.check_deadline()
                 usage = result.get("usage")
                 if usage:
                     if not isinstance(usage, dict) or any(
@@ -83,13 +104,19 @@ class ModelClient:
                         raise ModelError("Model returned invalid token usage")
                     self.usage.append(usage)
                     self.tokens += usage.get("total_tokens", 0)
-                    if self.tokens > 32000:
-                        raise ModelError("Per-run reported total token budget exhausted")
+                    if self.tokens > self.settings.llm_run_total_tokens:
+                        raise ModelBudgetError("Per-run reported total token budget exhausted")
                     # Reclaim unused output allocation only when the provider reports it.
                     used_output = usage.get("completion_tokens")
                     if isinstance(used_output, int) and 0 <= used_output <= output_limit:
                         self.reserved_output_tokens -= output_limit - used_output
-                message = result["choices"][0]["message"]
+                choice = result["choices"][0]
+                if choice.get("finish_reason") == "length":
+                    raise ModelError(
+                        "Model output truncated at output/context limit; return a shorter complete JSON object "
+                        "with fewer material claims and only cited IDs."
+                    )
+                message = choice["message"]
                 calls = message.get("tool_calls", [])
                 if len(calls) > 8:
                     raise ModelError("Too many tool calls in one response")
@@ -97,6 +124,7 @@ class ModelClient:
                     return json.loads(message["content"])
                 messages.append(message)
                 for call in calls:
+                    self.check_deadline()
                     try:
                         value = tools.call(
                             call["function"]["name"], json.loads(call["function"]["arguments"])

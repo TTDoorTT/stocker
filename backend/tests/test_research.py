@@ -234,3 +234,38 @@ def test_failed_risk_reassessment_does_not_render_stale_risk_findings(setup):
     assert "Original risk review awaiting upstream correction." not in run["report"]
     risk_section = run["report"].split("## Risks and counterevidence", 1)[1]
     assert "Unavailable: this stage did not pass validation." in risk_section
+
+
+def test_exhausted_budget_does_not_trigger_validation_retries(setup):
+    from app.modules.research.errors import ModelBudgetError
+
+    class ExhaustedModel(FixtureModel):
+        def complete(self, stage, context, schema, tools):
+            raise ModelBudgetError("Per-run model budget exhausted")
+
+    run, events = execute(setup, model=ExhaustedModel())
+    assert run["status"] == "failed"
+    assert len(run["stages"]) == 1
+    assert run["stages"][0]["status"] == "failed"
+    assert not any(event["event"] == "stage_retry" for event in events)
+
+
+def test_run_timeout_accepts_long_local_execution_and_rejects_late_output(setup, monkeypatch):
+    from app.modules.research import orchestrator
+
+    settings, _, _ = setup
+    settings.research_run_timeout = 1200
+    elapsed = [0.0]
+    monkeypatch.setattr(orchestrator, "monotonic", lambda: elapsed[0])
+
+    class SlowModel(FixtureModel):
+        def complete(self, stage, context, schema, tools):
+            elapsed[0] += 200
+            return super().complete(stage, context, schema, tools)
+
+    run, events = execute(setup, model=SlowModel())
+    assert [s["stage"] for s in run["stages"]] == list(STAGES)
+    assert run["stages"][-2]["status"] == "complete"  # Past the former 600-second cap.
+    assert run["stages"][-1]["status"] == "failed"  # No late output accepted at deadline.
+    assert run["report"] is None
+    assert not any(event["event"] == "stage_retry" for event in events)
