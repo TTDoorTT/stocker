@@ -1,3 +1,7 @@
+**Historical artifact — reconciled 2026-11-06.** The deterministic fixture methodology/results below remain valid only for their stated scope; they do not establish live model superiority. Current status: [validation](VALIDATION.md).
+
+---
+
 # Offline workflow evaluation
 
 Run `cd backend && .venv/bin/python -m app.modules.research.evaluation` to regenerate [EVALUATION.json](EVALUATION.json). The command explicitly uses fixture mode and the deterministic fixture model stub. It does not call a live model, consult personal configuration files, or incur inference charges. Results are actual local executions, including measured runtime, rather than hand-entered expected scores.

@@ -1,3 +1,7 @@
+**Historical artifact — reconciled 2026-11-06.** Pinned reference SHAs and licensing boundaries below are preserved. StockScope is the historical product name, now Stocker; OpenStock remains conceptual reference only. Current status: [validation](VALIDATION.md).
+
+---
+
 # Reference audit
 
 Audited 2026-11-06. Both shallow clones exist under ignored `references/`. These are conceptual references, not dependencies or upstream code to merge.

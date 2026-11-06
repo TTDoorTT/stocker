@@ -1,3 +1,9 @@
+**Historical record — reconciled 2026-11-06.** The initial implementation and Docker/modular baseline are complete. Current owners are `app/modules/{market_data,research,portfolio,intelligence}`, `app/contracts`, `app/core/database.py` and frontend `src/features/*`. Main `93d0ee4` passed remote CI run 42298783499; local branding checks pass 150 backend / 21 frontend tests. See [current validation](VALIDATION.md). Original phase objectives, paths, failures and counts below are preserved as historical evidence. Later recorded AAPL live-budget acceptance produced six validated stages/report with incomplete evidence coverage; it was not independently repeated during cleanup.
+
+**Superseding status:** baseline Implemented, Verified locally and Verified on CI. Canadian data remains Partial coverage; broader data/features are Deferred. Live results are recorded prior acceptance, not independently verified by this cleanup. Earlier blocked credentials and pending-CI statements below describe their original checkpoints.
+
+---
+
 # Phase acceptance and remaining work
 
 This is an implementation, not another plan. All files stay under the selected project root. The original specification is preserved and reference clones are ignored. See PROGRESS.md for actual command results, failures, fixes and the exact resume step.

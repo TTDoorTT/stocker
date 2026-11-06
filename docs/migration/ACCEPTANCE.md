@@ -96,3 +96,7 @@ fac913b fix: use reliable Docker source watching on WSL2
 ## Remaining external acceptance
 
 After explicit push authorization, execute and inspect GitHub Actions, including Python 3.11. No push or background work is promised. Existing sourced iq3_s research output/total-token failures remain independently unresolved and were not worked on; Canadian statements/current quotes retain unavailable labels. No new providers/features or user-wide Strata/Codex/LiteLLM changes were introduced.
+
+## Superseding remote acceptance — 2026-11-06
+
+The earlier “not run / no push authorized” statements describe the original local checkpoint. GitHub Actions subsequently **succeeded** on main `93d0ee44656c9d711e4a581f6b3b3a700cd3705b`: [run 42298783499](https://github.com/TTDoorTT/stocker/actions/runs/42298783499), terminal state rechecked during cleanup. The later project-budget phase recorded a six-stage sourced AAPL report with incomplete coverage, superseding earlier model-budget blockers without changing this historical migration scope. Cleanup branding gate: 150 backend / 21 frontend tests, lint/format, TypeScript and build pass. See [validation](../VALIDATION.md).

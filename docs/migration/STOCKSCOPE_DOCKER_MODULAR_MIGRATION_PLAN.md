@@ -1,3 +1,7 @@
+**Migration completed — archival specification, 2026-11-06.** This is the original migration instruction set, preserved with its original status/paths and model-budget exclusion. Final local acceptance is [ACCEPTANCE.md](ACCEPTANCE.md); remote CI subsequently passed main `93d0ee4`, run 42298783499. Later project-model changes are a separate completed phase. Current public summary: [validation](../VALIDATION.md).
+
+---
+
 # StockScope AI — Docker Compose + Modular Monolith Migration
 
 **Status:** EXECUTION PLAN — not yet applied to the repository  

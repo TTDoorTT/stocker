@@ -1,5 +1,12 @@
-# Deferred work
+# Future work
 
-The user-authorized provider revision has delivered partial Canadian listing/history/CAD/macro support. Broader Phase 8 work is not started. First finish credentialed live acceptance and remaining Phase 7 checks in PROGRESS.md.
+The modular application, fixture checks, Docker persistence and CI form the accepted baseline. The following are separate improvements, subject to source rights and explicit scope:
 
-Later: Canadian TSX/TSXV quotes/fundamentals and automated dated FX conversion with valid rights; Bull/Bear debate; strategy backtesting; screener; cross-model comparison; report share cards; portfolio transaction ledger and risk checkups; historical crash replay; event calendar; reminders; document/PDF research; advanced chart drawing; price alerts. Chinese A-share-specific sentiment/trading features remain removed.
+- Expand interim/TTM facts, balance-sheet detail, issuer/listing identity checks, peer comparisons and licensed consensus coverage.
+- Improve live-model latency/reliability and independently repeat sourced multi-stage acceptance across more symbols; compare model strategies using identical evidence and human review.
+- Add permitted Canadian quotes/fundamentals and verify TSXV history; introduce explicit dated FX conversion only with defined accounting semantics.
+- Explore Bull/Bear debate, screening, backtesting, cross-model comparisons and report share cards.
+- Extend simple positions into transaction accounting and portfolio risk checks.
+- Consider event calendars, reminders, alerts, document/PDF research, historical replay and advanced chart drawing.
+
+Chinese A-share-specific trading sentiment remains outside the product scope.

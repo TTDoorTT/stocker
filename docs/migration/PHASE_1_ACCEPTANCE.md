@@ -1,3 +1,7 @@
+**Historical intermediate acceptance — superseded.** The blocked/resolved chronology below is preserved. The migration subsequently completed; see [final acceptance](ACCEPTANCE.md) and [validation](../VALIDATION.md).
+
+---
+
 # Migration acceptance — 2026-11-06
 
 Branch: `chore/docker-modular-migration`, base `cb83b66`. Source rollback uses Git; no pushes. The supplied root migration plan was relocated unchanged to its requested `docs/migration/` path. No pre-existing tracked user edits were present.

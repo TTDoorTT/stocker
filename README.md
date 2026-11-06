@@ -1,117 +1,57 @@
-# StockScope AI
+# Stocker
 
-Local, educational U.S. stock research with partial Canadian coverage with six specialist roles, evidence-linked calculations and a persistent execution trace. React/Vite + FastAPI + SQLite; no accounts or paid services required in explicit fixture mode.
+Local educational stock research for U.S. companies, with partial Canadian support. Stocker combines a React workspace, six specialist research stages, source-linked deterministic calculations and saved reports in SQLite. It runs locally with Docker; synthetic fixture mode needs no credentials.
 
-```mermaid
-flowchart LR
-  UI[React workspace] --> API[FastAPI on loopback]
-  API --> DB[(SQLite runs and evidence)]
-  API --> Data[SEC / Finnhub / yfinance / Alpha Vantage / FRED / Valet]
-  API --> P[Profile]
-  P --> F[Financials]
-  F --> E[Expectations]
-  E --> V[Valuation]
-  V --> R[Risk]
-  R --> Report[Cited report]
-  R -->|one bounded correction| F
-  Model[OpenAI-compatible client] --- P
-  Model --- Report
-```
+## Quick start
 
-The backend validates each stage independently and persists every attempt, failure, retry and handoff. All numeric claims bind to captured evidence or deterministic calculations. Missing consensus or evidence keeps a run `incomplete`, even when all six stages finish. The heatmap is a separate official TradingView visual and never feeds data to agents.
-
-## Docker development
-
-After one-time image setup, use `docker compose up -d` and open http://localhost:5173 (API docs: http://localhost:8000/docs). First run: `docker compose up --build -d`. Source bind mounts enable Vite HMR and backend reload. `docker compose down` stops both and retains SQLite on the named volume.
-
-Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Docker fixture checks, persistent storage, source reload and native/container Strata discovery pass. Feature modules and quality/CI gates are implemented; see progress for remaining remote verification.
-
-## Native fallback
-
-Requires Node 22+, npm, Python 3.11+. Tested on WSL2 with Node 22.23.3/Python 3.13.11. Keep both servers bound to loopback. In the project root:
+Install Docker with Compose (on WSL2, enable your distribution's Docker integration), then:
 
 ```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.lock
-python -m pip install -e '.[dev]'
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+git clone https://github.com/TTDoorTT/stocker.git
+cd stocker
+docker compose up --build -d
 ```
 
-In a second terminal:
+Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/docs**. First startup builds dependencies. For later starts use `docker compose up -d`; stop with `docker compose down`, which retains the database volume. If `.env` already exists, its settings take precedence: preserve it and check the UI's data-mode banner.
+
+## What works
+
+- Stock search, company views, daily history, SPY/QQQ ETF proxies and an isolated official TradingView heatmap.
+- Watchlists and simple USD/CAD position snapshots with unrealized P&L when a matching quote exists.
+- Profile → financials → expectations → valuation → risk → report, with independent validation, bounded retries and a persisted execution trace.
+- Stock-context chat, research history and Markdown report downloads.
+- Limited daily review/news, explicit headline-only live summaries, optional macro indicators and 20 guided industry topics.
+
+`DATA_MODE=fixtures` is the default: invented, visibly **synthetic** data and a deterministic model stub exercise the workflow. The independent TradingView widget uses external data and may be blocked without preventing research. `DATA_MODE=live` uses configured providers/model and never silently falls back to fixtures.
+
+## Configuration
+
+The root `.env` is optional. For live use, copy `.env.example` only if `.env` does not already exist, then configure the desired server-side variables. A genuine `SEC_USER_AGENT` enables SEC access; `FINNHUB_API_KEY` enables authorized U.S. quotes/news; `LLM_BASE_URL`, `LLM_MODEL` and, where required, `LLM_API_KEY` select an OpenAI-compatible model outside Docker. Optional Yahoo daily history and Bank of Canada macro need no key; Alpha Vantage and FRED are optional alternatives/additions.
+
+Recreate the backend after changing settings. Keep credentials out of frontend `VITE_*` variables. See [development](docs/DEVELOPMENT.md) for native setup, exact configuration, model networking and safe backups, and [providers](docs/DATA_PROVIDERS.md) for coverage and access limits.
+
+## Limitations
+
+This is local educational software, not a hosted multiuser service or investment advice. Synthetic results are not financial facts. Six validated stages can still produce an overall `incomplete` run when material evidence is missing.
+
+A previous live AAPL run recorded all six validated stages and a sourced report; it is historical acceptance evidence, **not independently rerun for this cleanup** or proof of general model accuracy. Licensed consensus, interim/TTM coverage, peer comparisons and other evidence remain incomplete. Annual ratios are not TTM; there are no trading actions or target-price features.
+
+Canadian support covers explicit `.TO`/`.V` daily-history mapping, CAD positions and Bank of Canada context. Canadian fundamentals/current quotes and automatic currency conversion are unavailable; TSXV history has not been live-probed. Market-data access and redistribution depend on provider rights. Widget prices never feed agents.
+
+## Tests
 
 ```bash
-cd frontend
-npm ci --legacy-peer-deps
-npm run dev -- --host 127.0.0.1
+make check
 ```
 
-Open http://127.0.0.1:5173. API contracts: http://127.0.0.1:8000/docs. Vite proxies `/api` to the backend. The Python lock records tested versions; npm's lockfile pins the frontend graph. The legacy-peer-deps option avoids an observed npm 10 optional-peer resolver error while using a patched Vitest version compatible with Vite 6.
+Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript and a production build without live credentials. Current verified baseline: **150 backend / 21 frontend tests**. [Validation](docs/VALIDATION.md) separates reproducible checks, actual CI evidence and external acceptance limits.
 
-Default `DATA_MODE=fixtures` uses clearly labeled **invented synthetic** AAPL/MSFT/NVDA and ETF inputs and a deterministic model stub. These are test data, not historical financial facts, live quotes or real AI analysis. It needs no keys. The third-party heatmap still uses its own external data and may fail when blocked; search and research continue to work.
+## Docs
 
-Features: market ETF proxies/heatmap; stock search and sourced annual facts; simple positions and unrealized P&L; watchlists; six-stage research; stock-context chat; stored reports, inputs, validation attempts/events and Markdown download; limited daily review/news with explicit headline-only AI summaries when a live model is configured; three optional FRED indicators and two no-key Bank of Canada indicators; 20 guided industry topics. Representative-company runs use the same pipeline. All unsupported coverage is labeled.
+- [Development and configuration](docs/DEVELOPMENT.md)
+- [Architecture](docs/ARCHITECTURE.md) and [API](docs/API.md)
+- [Data providers](docs/DATA_PROVIDERS.md)
+- [Fixture demo](docs/DEMO.md) and [industry topics / attribution](docs/INDUSTRIES.md)
+- [Future work](docs/ROADMAP.md)
 
-## Configure live data and AI
-
-Optionally create a root `.env` from `.env.example`. Credentials remain server-side; no frontend `VITE_` keys. This project never reads personal Codex or other projects' LiteLLM configuration.
-
-| Variable | Purpose |
-|---|---|
-| DATA_MODE | fixtures (default) or live; no automatic fixture fallback |
-| DATABASE_URL | SQLite path, default `sqlite:///./stockscope.db` relative to backend process working directory |
-| LLM_BASE_URL | OpenAI-compatible `/v1` endpoint; loopback/link-local IPv4 HTTP or HTTPS |
-| LLM_MODEL / LLM_API_KEY | Real model identifier / provider key (key can be empty for an authorized local server) |
-| LLM_TIMEOUT / LLM_MAX_TOKENS | Bounded request timeout/output limit |
-| SEC_USER_AGENT | Genuine descriptive identity and contact email for SEC access |
-| FINNHUB_API_KEY | Authorized U.S. quotes and news; plan rights must be verified |
-| HISTORY_PROVIDER | auto (default), yfinance or alpha_vantage; missing sources leave history unavailable |
-| ALPHA_VANTAGE_API_KEY | Optional alternative U.S. compact daily history, at most 100 observations |
-| FRED_API_KEY | Optional Treasury yield, federal funds rate and WTI series |
-| BANK_OF_CANADA_ENABLED | true (default); no-key Canadian FX and policy-rate observations |
-
-Optional no-key history support (from the project root):
-
-```bash
-backend/.venv/bin/python -m pip install -r backend/requirements-history.lock
-backend/.venv/bin/python -m pip install -e 'backend[history]'
-```
-
-`HISTORY_PROVIDER=auto` tries installed yfinance, then optional Alpha Vantage for U.S. history. yfinance is an unofficial Yahoo wrapper for personal/educational research; its software licence does not grant data redistribution rights. Exact Canadian symbols such as `RY.TO` (TSX) and `.V` (TSXV) are accepted for optional daily history and CAD positions. Canadian identity/statements and Finnhub free current quotes remain unavailable; these gaps carry through research. SEDAR+ scraping is not implemented. Bank of Canada macro needs no key. Missing optional integrations never prevent startup.
-
-Restart the backend after configuration changes. Settings lists missing variable names without revealing secrets. A local LiteLLM proxy is optional; WSL `127.0.0.1:4000` works only if the proxy is reachable in the same network namespace. Check your configured service without changing it. See [provider access and quotas](docs/DATA_PROVIDERS.md).
-
-The existing Strata iq3_s connection has passed real inference and a tool-using validated profile stage. Actual yfinance AAPL/USD and RY.TO/CAD daily history and Bank of Canada FXUSDCAD/V39079 observations now pass live checks. SEC facts/identity/filings and Finnhub quotes now pass for AAPL/MSFT/NVDA; AAPL company news also passes (docs/LIVE_PROVIDER_ACCEPTANCE.json). Full sourced six-stage research remains pending: lossless history metadata packing fixes observed context overflow, but a previous run exhausted the total-token budget; the user-authorized 120-second timeout now permits a validated sourced profile; financials still hit output/total-token limits and no report was produced (docs/LIVE_SOURCED_RUN.json). No additional U.S. credentials are needed to continue model-integration work. No paid entitlement or model-quality advantage is claimed. SEC does not provide analyst consensus. There are no forecasts, target prices, trading actions or Canadian fundamentals. Annual EPS ratios are labeled annual, not TTM. SEC filing fiscal years are kept separate from fact period dates; unknown publication dates remain unavailable. Yahoo history explicitly uses auto_adjust=False Close and is not a total-return series; split handling is provider-specific. Alpha Vantage compact daily data has its own documented adjustment policy.
-
-## Verify and demonstrate
-
-From the root, `make check` runs isolated fixture tests, Ruff/Biome lint/format/import checks, strict TypeScript and the frontend build. `make dev`, `stop`, `status`, `logs`, `rebuild` are optional Compose wrappers; Make is not needed for startup. Backend and frontend now own market/research/portfolio/intelligence feature modules with enforced import boundaries. See [architecture](docs/ARCHITECTURE.md).
-
-
-```bash
-cd backend
-source .venv/bin/activate
-pytest -q
-ruff check .
-python -m app.modules.research.evaluation
-```
-
-```bash
-cd frontend
-npm run ci
-npm run typecheck
-npm run test
-npm run build
-npm audit
-```
-
-Verified: 132 backend tests and 21 frontend tests pass; production build and Ruff/TypeScript checks pass; the previous dependency audit reported 0 frontend vulnerabilities (not rerun for this backend provider revision). See [phase acceptance](docs/IMPLEMENTATION_STATUS.md), [actual checks and remaining work](docs/PROGRESS.md), [demo walkthrough](docs/DEMO.md), [baseline evaluation](docs/EVALUATION.md), [API](docs/API.md) and [architecture](docs/ARCHITECTURE.md). Evaluation currently measures deterministic fixture workflows on identical evidence; it establishes no live six-agent advantage. The [real browser smoke](docs/BROWSER_SMOKE.md) verifies navigation, mutations, six stages, restart persistence, mobile overflow and forced heatmap failure/retry with zero runtime errors. Screenshot perception remains unverified because vision-analyze lacks its NVIDIA key. The structural migration preserves the full OpenAPI contract and original financial/model behavior. GitHub Actions is configured but has not run because this branch has not been pushed.
-
-SQLite schema v1 initializes additively; unknown future schema versions are rejected until explicitly migrated. Reports store immutable evidence snapshots. On restart, interrupted runs become incomplete and can be relaunched. This is local development software, not a public multiuser service. Research queue and model calls have bounded budgets; model/provider errors expose sanitized failures.
-
-## References and scope
-
-Vibe Research (MIT) inspired six-stage methodology; OpenStock (AGPL-3.0) supplied conceptual dashboard ideas only. No OpenStock code is copied. [Reference audit with pinned SHAs](docs/REFERENCE_AUDIT.md) records inspected paths; [industry acknowledgments](docs/INDUSTRIES.md) cover adapted topic concepts. The official TradingView widget retains attribution and separate terms. Source rights/plan permissions apply to live data.
-
-The [roadmap](docs/ROADMAP.md) keeps Canadian current quotes/fundamentals, backtesting, full portfolio accounting, alerts and other Later features deferred. China-specific A-share trading sentiment is excluded. Read the authoritative implementation specification and progress file before resuming development.
+Vibe Research (MIT) inspired the methodology/topic concepts; its attribution is retained in the industry guide. OpenStock (AGPL) was conceptual reference only; no implementation was copied. The official TradingView embed retains its attribution and terms.

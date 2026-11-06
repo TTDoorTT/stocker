@@ -1,3 +1,7 @@
+**Historical artifact — reconciled 2026-11-06.** The measured browser results and earlier missing vision credential below are preserved. Browser/pixel checks were not rerun for cleanup; later recorded live acceptance is separate from the older credential blockers. Current status: [validation](VALIDATION.md).
+
+---
+
 # Real-browser smoke verification
 
 Status: **passed**, 2026-11-06. `backend/.venv/bin/python backend/tests/browser_smoke.py` exited0 using Playwright1.64.1 and project-local Chromium156. The test runs actual Vite/FastAPI servers on loopback with an isolated temporary SQLite database and explicit synthetic fixture mode. It does not use provider or model credentials. Server processes terminate in a finally block; port checks confirmed8000/5173 were free afterward.

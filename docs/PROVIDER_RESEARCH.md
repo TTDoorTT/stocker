@@ -1,3 +1,7 @@
+**Historical artifact — reconciled 2026-11-06.** This research captures source contracts/probes at its original checkpoint. Subsequent application probes and recorded live-budget acceptance supersede older untested-integration statements; provider rights are not inherited from those results. Current status: [validation](VALIDATION.md).
+
+---
+
 # Provider research — 2026-11-06
 
 Research scope: primary documentation and limited unauthenticated HTTP probes. No project secrets, `.env`, account settings, or authenticated provider APIs were accessed. Documentation establishes a provider contract; it does not prove that this project's account has the entitlement or that a live application integration succeeds.

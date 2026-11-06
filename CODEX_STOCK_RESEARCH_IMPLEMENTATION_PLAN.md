@@ -1,3 +1,7 @@
+**Historical record — reconciled 2026-11-06.** The initial implementation and Docker/modular baseline are complete. Current owners are `app/modules/{market_data,research,portfolio,intelligence}`, `app/contracts`, `app/core/database.py` and frontend `src/features/*`. Main `93d0ee4` passed remote CI run 42298783499; local branding checks pass 150 backend / 21 frontend tests. See [current validation](docs/VALIDATION.md). Original phase objectives, paths, failures and counts below are preserved as historical evidence. Later recorded AAPL live-budget acceptance produced six validated stages/report with incomplete evidence coverage; it was not independently repeated during cleanup.
+
+---
+
 # StockScope AI — Codex Implementation Plan
 
 **Purpose:** Build a university multi-agent stock research application inspired by Vibe Research and OpenStock, with a U.S.-first implementation and a future Canadian/TSX extension.

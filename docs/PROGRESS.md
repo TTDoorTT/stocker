@@ -377,3 +377,22 @@ The previous 16000 reserved-output, 32000 reported-total, 120-second request and
 ## Phase 6 accepted; Phase 7 final verification
 - CI workflow passes official actionlint 1.7.12; actions pinned to verified refs, contents read-only, no personal credentials required. Local equivalent quality/test/build and Docker proxy/recreation checks passed. GitHub execution remains **not run** because no push is authorized; Python 3.11 CI lane is configured, not claimed as locally executed.
 - Final image rebuild/start passed. One verification command mistakenly selected the older ad-hoc state file format (`KeyError: run`); this did not mutate data. Re-seeding a fresh fixture state file and rerunning the supported recreation/verify/reload sequence. No live database involved.
+
+## Repository cleanup started — 2026-11-06
+
+Starting remote main: `93d0ee44656c9d711e4a581f6b3b3a700cd3705b`; work branch `chore/stocker-public-docs`. Supplied handoff moved outside Git to /tmp with user approval. Branding changes are display metadata only; normalized OpenAPI comparison confirms only info.title differs. Tests pending. Preserve original branches, configuration, prompts and persistent identifiers. Full current reconciliation must retain the later recorded live-budget AAPL acceptance and its incomplete coverage, superseding earlier failed diagnostics without erasing them.
+
+## Documentation reconciliation / archive preparation — 2026-11-06
+
+- Starting main is `93d0ee44656c9d711e4a581f6b3b3a700cd3705b`, identical to the supplied cleanup inspection baseline. Branding commit `109ab11` changes only browser/sidebar/footer/API display metadata and assertions. Normalized OpenAPI comparison proves info.title is the only changed contract field.
+- `docker compose config --quiet` and isolated `make check` passed: **150 backend tests (8.12s), 21 frontend tests**, Ruff/Biome lint/format/import/CI, strict TypeScript and 233-module production build. Existing Starlette/httpx warning only. Native/browser/screenshot/live-provider/model probes not rerun; no live stack was stopped.
+- Queried actual GitHub Actions run **42298783499**: completed/success on main `93d0ee4` (2026-11-06). This supersedes older remote-unrun notes. Cleanup PR/post-merge checks still require actual execution.
+- Reconciled every Markdown class: 10 public/contributor files (README, AGENTS and eight docs including new VALIDATION); 11 original historical Markdown records retain their original content with superseding annotations/checkpoints; seven executable prompt files are inventoried and untouched. JSON diagnostics preserve their original failed/incomplete outcomes. Optional cleanup plan is copied to archive-only history.
+- The newest recorded live-budget AAPL acceptance in the opening checkpoint supersedes earlier pending statements, but this cleanup has not independently inspected private report/database artifacts or repeated live inference. Preserve incomplete coverage, unavailable consensus/interim/TTM/Canadian facts/current quotes and unverified optional entitlements/TSXV paths.
+- Next: complete privacy/link/reference review and pre-archive checks, commit synchronized docs, then push and SHA-verify the frozen archive **before** removing any history. Preserve .env/SQLite histories/prompts and original migration/optimization branches. No architecture/runtime change.
+
+## Archive gate review — 2026-11-06
+
+Privacy scan reviewed 604 reachable Git objects with credential-value patterns: no matches; all seven diagnostic JSON files reviewed with no private/link-local address occurrences. Ignored .env, databases and private backup directories were not opened. Public relative Markdown/image links: zero broken targets. Seven runtime prompt files, Compose/config templates and fixtures compare byte-identical with starting main. All OpenAPI fields except info.title match. Removal inventory has 20 exact files (12 historical Markdown including the copied cleanup plan, 8 diagnostic JSON). Runtime evaluation only writes EVALUATION.json as a generated output; it does not read the historical file, so deleting the committed output preserves its command and coverage. Archive freezes before the cleanup deletion commit.
+
+Pre-archive rerun: `docker compose config --quiet` and complete `make check` passed again (150 backend / 21 frontend, lint/format/import, TypeScript, build). Exact output retained outside Git in `/tmp/stocker-prearchive-check.log`; no live/browser requests. Ready for synchronized documentation commit B and frozen remote archive verification.
