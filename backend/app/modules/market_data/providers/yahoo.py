@@ -10,9 +10,9 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from importlib import import_module
 
+from app.contracts.market import PriceBar
 from app.core.config import ROOT
-from app.data.http import DataUnavailable
-from app.models.market import PriceBar
+from app.modules.market_data.errors import DataUnavailable
 
 
 class YFinanceHistory:

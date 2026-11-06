@@ -5,11 +5,11 @@ from datetime import UTC, datetime, timedelta
 import httpx
 import pytest
 
+from app.contracts.market import NewsItem
 from app.core.config import Settings
-from app.data.http import ProviderHTTP
-from app.data.service import DataService
 from app.db.repository import Repository
-from app.models.market import NewsItem
+from app.modules.market_data.providers.http import ProviderHTTP
+from app.modules.market_data.service import DataService
 from app.orchestrator.engine import ResearchOrchestrator, new_run
 from app.services.intelligence import IntelligenceService
 
@@ -90,7 +90,9 @@ def test_mocked_real_format_macro_observations_and_missing_values():
             },
         )
 
-    service.data.http = ProviderHTTP(httpx.Client(transport=httpx.MockTransport(handler)))
+    service.data = DataService(
+        service.settings, ProviderHTTP(httpx.Client(transport=httpx.MockTransport(handler)))
+    )
     result = service.signals()
     for row in result["items"]:
         assert row["value"] == 4.1
@@ -161,7 +163,9 @@ def test_fred_cached_observations_keep_original_network_timestamp():
             },
         )
 
-    service.data.http = ProviderHTTP(httpx.Client(transport=httpx.MockTransport(handler)))
+    service.data = DataService(
+        service.settings, ProviderHTTP(httpx.Client(transport=httpx.MockTransport(handler)))
+    )
     first, second = service.signals(), service.signals()
     assert len(calls) == 3
     for initial, cached in zip(first["items"], second["items"], strict=True):

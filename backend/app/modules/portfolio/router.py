@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException
 
 from app.core.config import Settings
-from app.data.http import DataUnavailable
-from app.data.service import DataService, normalize_symbol
 from app.db.repository import Repository
 from app.finance.metrics import unrealized_pnl
 from app.models.api import PositionRequest, SymbolRequest
+from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.service import DataService
+from app.modules.market_data.symbols import normalize_symbol
 
 
 def create_router(settings: Settings, service: DataService, repository: Repository) -> APIRouter:

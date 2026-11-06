@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.modules.market_data.errors import DataUnavailable
+
 POLICIES = {
     "www.sec.gov": {"interval": 0.2, "ttl": 21600},
     "data.sec.gov": {"interval": 0.2, "ttl": 21600},
@@ -19,10 +21,6 @@ POLICIES = {
     "www.bankofcanada.ca": {"interval": 1, "ttl": 21600},
 }
 ALLOWED_HOSTS = set(POLICIES)
-
-
-class DataUnavailable(ValueError):
-    pass
 
 
 @dataclass(frozen=True)

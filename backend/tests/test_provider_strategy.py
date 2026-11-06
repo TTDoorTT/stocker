@@ -7,13 +7,15 @@ import httpx
 import pytest
 
 from app.core.config import Settings
-from app.data.history import YFinanceHistory
-from app.data.http import DataUnavailable, ProviderHTTP
-from app.data.service import DataService, normalize_symbol, symbol_market
-from app.data.valet import valet_signals
 from app.db.repository import Repository
 from app.main import create_app
 from app.models.api import PositionRequest
+from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.providers.bank_of_canada import valet_signals
+from app.modules.market_data.providers.http import ProviderHTTP
+from app.modules.market_data.providers.yahoo import YFinanceHistory
+from app.modules.market_data.service import DataService
+from app.modules.market_data.symbols import normalize_symbol, symbol_market
 from app.orchestrator.engine import new_run
 
 
@@ -195,8 +197,11 @@ def test_yfinance_current_mapping_metadata_is_supported():
 
 def test_alpha_local_daily_budget_counts_only_network_calls_and_resets(monkeypatch):
     clock = [100000.0]
-    monkeypatch.setattr("app.data.http.time.monotonic", lambda: clock[0])
-    monkeypatch.setattr("app.data.http.time.sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    monkeypatch.setattr("app.modules.market_data.providers.http.time.monotonic", lambda: clock[0])
+    monkeypatch.setattr(
+        "app.modules.market_data.providers.http.time.sleep",
+        lambda seconds: clock.__setitem__(0, clock[0] + seconds),
+    )
     requests = []
 
     def handler(request):
@@ -235,7 +240,7 @@ def test_missing_optional_history_dependency_does_not_prevent_startup(monkeypatc
     def absent(name):
         raise ImportError(name)
 
-    monkeypatch.setattr("app.data.history.import_module", absent)
+    monkeypatch.setattr("app.modules.market_data.providers.yahoo.import_module", absent)
     service = DataService(Settings(_env_file=None, data_mode="live"))
     assert service.stock("AAPL").facts == []
     with pytest.raises(DataUnavailable, match="Optional yfinance dependency absent"):

@@ -6,9 +6,9 @@ from unittest.mock import Mock
 import pytest
 
 from app.agents.client import ModelError
+from app.contracts.market import NewsItem
 from app.core.config import Settings
-from app.data.http import DataUnavailable
-from app.models.market import NewsItem
+from app.modules.market_data.errors import DataUnavailable
 from app.services.news_summary import summarize_news
 
 

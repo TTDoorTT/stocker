@@ -6,9 +6,9 @@ import pytest
 
 from app.agents.client import FixtureModel
 from app.core.config import Settings
-from app.data.service import DataService
 from app.db.repository import Repository
 from app.models.research import STAGES
+from app.modules.market_data.service import DataService
 from app.orchestrator.engine import ResearchOrchestrator, new_run
 from app.orchestrator.validation import validate_output
 

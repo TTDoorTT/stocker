@@ -2,10 +2,11 @@
 
 from app.agents.client import ModelClient, ModelError
 from app.agents.tools import ResearchTools
-from app.data.http import DataUnavailable
-from app.data.service import evidence_id, normalize_symbol
-from app.models.market import Evidence
+from app.contracts.market import Evidence
 from app.models.research import SCHEMAS
+from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.provenance import evidence_id
+from app.modules.market_data.symbols import normalize_symbol
 from app.orchestrator.validation import validate_output
 
 

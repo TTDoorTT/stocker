@@ -8,14 +8,14 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.agents.client import ModelError
 from app.core.config import Settings
-from app.data.http import DataUnavailable
-from app.data.service import DataService
 from app.db.repository import Repository
 from app.models.api import (
     HealthResponse,
 )
 from app.modules.intelligence.router import create_router as intelligence_router
+from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.router import create_router as market_router
+from app.modules.market_data.service import DataService
 from app.modules.portfolio.router import create_router as portfolio_router
 from app.modules.research.router import create_router as research_router
 from app.orchestrator.engine import now

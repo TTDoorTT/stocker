@@ -5,7 +5,7 @@ import json
 from datetime import date
 from math import isfinite
 
-from app.models.market import Calculation, FinancialFact, Stock
+from app.contracts.market import Calculation, FinancialFact, Stock
 
 
 def percentage_change(current: float, previous: float) -> float | None:

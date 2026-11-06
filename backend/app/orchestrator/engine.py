@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from app.agents.client import FixtureModel, ModelClient, ModelError
 from app.agents.tools import ResearchTools
-from app.data.service import symbol_market
 from app.models.research import SCHEMAS, STAGES
+from app.modules.market_data.symbols import symbol_market
 from app.orchestrator.validation import validate_output
 
 

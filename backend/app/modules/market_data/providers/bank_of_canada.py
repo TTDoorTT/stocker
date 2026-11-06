@@ -3,7 +3,7 @@
 from datetime import UTC, date, datetime, timedelta
 from math import isfinite
 
-from app.data.http import DataUnavailable
+from app.modules.market_data.errors import DataUnavailable
 
 SERIES = (
     {

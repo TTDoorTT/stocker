@@ -4,8 +4,6 @@ import httpx
 import pytest
 
 from app.core.config import Settings
-from app.data.http import DataUnavailable, ProviderHTTP
-from app.data.service import DataService, normalize_symbol, parse_sec_facts
 from app.finance.metrics import (
     build_calculations,
     comparable,
@@ -14,6 +12,11 @@ from app.finance.metrics import (
     profit_margin,
     unrealized_pnl,
 )
+from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.providers.http import ProviderHTTP
+from app.modules.market_data.providers.sec import parse_sec_facts
+from app.modules.market_data.service import DataService
+from app.modules.market_data.symbols import normalize_symbol
 
 
 def settings(**kwargs):
@@ -284,7 +287,7 @@ def test_cached_stock_and_history_preserve_original_network_fetch_time(monkeypat
             payload = {"Time Series (Daily)": {today: {"4. close": "200"}}}
         return httpx.Response(200, json=payload)
 
-    monkeypatch.setattr("app.data.http.time.sleep", lambda delay: None)
+    monkeypatch.setattr("app.modules.market_data.providers.http.time.sleep", lambda delay: None)
     service = DataService(
         settings(
             data_mode="live",
@@ -398,7 +401,7 @@ def test_expired_cache_does_not_silently_serve_stale_data_on_provider_failure(mo
             httpx.Response(503),
         ]
     )
-    monkeypatch.setattr("app.data.http.time.sleep", lambda delay: None)
+    monkeypatch.setattr("app.modules.market_data.providers.http.time.sleep", lambda delay: None)
     provider = ProviderHTTP(httpx.Client(transport=httpx.MockTransport(lambda request: next(responses))))
     assert provider.fetch("https://data.sec.gov/example", ttl=-1, interval=0).data == {"value": 1}
     with pytest.raises(DataUnavailable, match="503"):

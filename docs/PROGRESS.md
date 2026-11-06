@@ -265,3 +265,16 @@
 - Extracted APIRouter factories for market_data, portfolio, research and intelligence; create_app composition/lifespan/test injection and middleware preserved. Full OpenAPI document exactly equals pre-extraction baseline.
 - Native full backend suite: **118 passed in 8.73s**, Ruff lint/format passed. No route/schema/status/security behavior change. Portfolio SQL and research scheduling remain in extracted transport temporarily until their ordered service-extraction subphases.
 - Next: 4B market-data facade/provider ownership, preserving normalized contracts, caching, provider failures and tests.
+
+## Phase 4B extraction verification in progress
+- Extracted SEC/Finnhub/Alpha Vantage/Yahoo/Valet adapters, fixture owner and normalized DataService facade; moved stable market DTOs to `app/contracts/market.py`. Updated source/test imports and monkeypatch paths, preserving assertions.
+- Initial extraction helper selected the symbol-normalization exception block instead of the provider-search block; corrected helper before migration completed. First full migrated test run: **4 failed / 114 passed** (fixture-search delegation absent; a method rename accidentally changed literal SEC `company_tickers.json` path). Restored the exact endpoint and fixture search behavior; rerun pending. No failed checkpoint committed.
+
+- Second 4B run: 2 failed / 116 passed; fixture-search correction had replaced the empty-query guard too. Restored the separate empty-query and explicit fixture-mode branches. Rerun and direct baseline-equivalence check pending; original test assertions retained.
+
+- Public availability exception now lives outside provider internals. FRED parsing moved behind the same DataService signals facade as Valet. First macro-extraction run: 2 failed / 116 passed because two tests replaced `data.http` after adapters were constructed. Updated only their injection setup to construct DataService with mocked transport; all assertions/cache/freshness expectations remain unchanged. Rerun pending.
+
+## Phase 4B accepted — 2026-11-06 15:07 EST
+- Final full backend suite **118 passed in 8.13s**, Ruff lint/format passed; full OpenAPI remains identical. Five synthetic stock snapshots, all history ranges, search and news compared directly with the committed original implementation at a fixed capture time and matched exactly. Every original provider URL literal preserved.
+- DataService owns normalized market/stock/history/search/news/macro facade; adapters under `modules/market_data/providers` own SEC/Finnhub/Alpha Vantage/Yahoo/FRED/Valet and unchanged transport policies. Stable DTOs in `contracts/market.py`; availability exception, symbols and evidence identity have deliberate public ownership. Research/intelligence consume public contracts, not provider helpers. Tests retain original assertions; only imports/transport injection setup changed.
+- Next: Phase 4C portfolio service/repository ownership, preserving existing SQLite queries and currency handling.

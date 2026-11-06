@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.data.service import normalize_symbol, symbol_market
+from app.modules.market_data.symbols import normalize_symbol, symbol_market
 
 
 class SymbolRequest(BaseModel):

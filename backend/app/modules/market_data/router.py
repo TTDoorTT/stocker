@@ -2,8 +2,9 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.data.service import DataService, normalize_symbol, symbol_market
-from app.models.market import PriceBar, Stock
+from app.contracts.market import PriceBar, Stock
+from app.modules.market_data.service import DataService
+from app.modules.market_data.symbols import normalize_symbol, symbol_market
 
 
 def create_router(service: DataService) -> APIRouter:
