@@ -1,6 +1,6 @@
 # Stocker — Development History
 
-Current milestone: runtime AI configuration and permanent archive workflow (2026-11-06). Read the latest entries at the end for current results/next action; earlier acceptance and instructions are historical. Current source/architecture comes from main or the recorded verified feature commit.
+Current milestone: runtime AI configuration merged into main at d9283c9 (2026-11-06). Read the latest entries at the end for current results/next action; earlier acceptance and instructions are historical. Current source/architecture comes from main or the recorded verified feature commit.
 
 ## Live integrations and local model budgets — verified 2026-11-06 16:37 EST
 
@@ -431,3 +431,11 @@ Pre-archive rerun: `docker compose config --quiet` and complete `make check` pas
 - Archive merge d0be817 contains verified feature 65758e9. Compared every tracked feature blob against archive: all identical; 21 extra history-only files retained. Main 0d38f9c and dated archive ced5568 unchanged. Runtime prompts, fixtures and deterministic calculations compare byte-identical with main. Public Markdown targets resolve; working trees clean after this record.
 - Final Compose config --quiet passes. Only original stockscope backend/frontend remain running on 127.0.0.1:8000/5173. Isolated acceptance containers/network stopped; synthetic volume retained. Existing .env, SQLite histories, volume identifiers and user-wide configuration preserved.
 - Current next action: obtain publication authorization, push archive/stocker-development-history and feat/ai-configuration, open/review feature PR and inspect actual CI before merging. Then merge main's integration commit into the same permanent archive and record it. No feature implementation remains pending locally. Limits: no fresh real Strata/live-provider acceptance, no full native browser rerun, no screenshot perception (missing NVIDIA_API_KEY), remote CI unrun for this revision.
+
+
+## Main integration — user-authorized branch placement
+- User requested functionality in main and progress/history documents in the archive. Merged feat/ai-configuration into the normal main checkout with a non-destructive merge, preserving all feature commits. Main integration: d9283c936f14422c4fe7c6f682032462ce9354e9. No conflicts or uncommitted user changes.
+- Verified main's complete Git tree exactly matches tested feature 65758e9. Prior full gate therefore applies unchanged: 169 backend tests, 26 frontend tests, format/lint/type/boundary/OpenAPI/build, isolated Docker persistence/security and focused real-browser acceptance. No redundant test run or new live-model claims.
+- Merged main into archive/stocker-development-history. Progress, decisions, original plans, migration/acceptance records and historical validation remain archive-only; main contains current application/user/contributor documentation. Main has no docs/PROGRESS.md, docs/DECISIONS.md, docs/history/ or docs/migration/.
+- Existing ignored .env, SQLite files and volumes were not modified by branch integration. No manual service recreation, remote push, force push or history rewrite performed.
+- Next action: when publication is authorized, push the permanent archive and main using normal protected-branch workflow; inspect actual remote CI. Local main already contains the requested functionality. Recreate local Compose when activating the changed AI_CONFIG_FILE/host-alias service configuration; UI settings thereafter need no rebuild/recreation. Previously recorded visual/live-provider limits remain unchanged.
