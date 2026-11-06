@@ -20,7 +20,13 @@ flowchart LR
 
 The backend validates each stage independently and persists every attempt, failure, retry and handoff. All numeric claims bind to captured evidence or deterministic calculations. Missing consensus or evidence keeps a run `incomplete`, even when all six stages finish. The heatmap is a separate official TradingView visual and never feeds data to agents.
 
-## Run locally
+## Docker development
+
+After one-time image setup, use `docker compose up -d` and open http://localhost:5173 (API docs: http://localhost:8000/docs). First run: `docker compose up --build -d`. Source bind mounts enable Vite HMR and backend reload. `docker compose down` stops both and retains SQLite on the named volume.
+
+Before the first live start, preserve/import native databases; keep your ignored `.env` unchanged. See [development and safe data migration](docs/DEVELOPMENT.md) for the backup/import procedure, isolated fixture commands, logs, rebuilds and Strata networking. Current acceptance status is recorded in [progress](docs/PROGRESS.md). Fixture Docker checks pass; external Strata connectivity is currently blocked from WSL and Docker, so the modular migration is paused at Phase 1.
+
+## Native fallback
 
 Requires Node 22+, npm, Python 3.11+. Tested on WSL2 with Node 22.23.3/Python 3.13.11. Keep both servers bound to loopback. In the project root:
 

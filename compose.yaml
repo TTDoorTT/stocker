@@ -1,0 +1,51 @@
+name: stockscope
+services:
+  backend:
+    image: stockscope-backend:dev
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file:
+      - path: ${STOCKSCOPE_ENV_FILE:-.env}
+        required: false
+    environment:
+      DATABASE_URL: sqlite:////data/stockscope.db
+      PYTHONDONTWRITEBYTECODE: "1"
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - stockscope_data:/data
+      - ./backend/app:/workspace/backend/app
+      - ./backend/tests:/workspace/backend/tests:ro
+      - ./backend/pyproject.toml:/workspace/backend/pyproject.toml:ro
+      - ./fixtures:/workspace/fixtures:ro
+      - ./scripts:/workspace/scripts:ro
+    working_dir: /workspace/backend
+    command: ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    init: true
+  frontend:
+    image: stockscope-frontend:dev
+    build:
+      context: ./frontend
+    environment:
+      API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html:ro
+      - ./frontend/vite.config.ts:/app/vite.config.ts:ro
+      - ./frontend/vitest.config.ts:/app/vitest.config.ts:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    working_dir: /app
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
+    init: true
+volumes:
+  stockscope_data:

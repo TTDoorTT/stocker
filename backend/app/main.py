@@ -56,7 +56,7 @@ def create_app(settings=None, data=None, repo=None):
     app.state.repo = repository
     app.state.data = service
     app.state.settings = settings
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1', 'localhost', 'testserver'])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1', 'localhost', 'testserver', 'backend'])
     app.add_middleware(CORSMiddleware, allow_origins=['http://127.0.0.1:5173', 'http://localhost:5173'],
                        allow_methods=['GET', 'POST', 'DELETE'], allow_headers=['Content-Type'])
 
