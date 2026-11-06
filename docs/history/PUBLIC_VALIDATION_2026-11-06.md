@@ -11,7 +11,7 @@ docker compose config --quiet
 make check
 ```
 
-`make check` runs isolated `stockscope-check` one-off containers with explicit fixtures and temporary SQLite; it does not publish ports or require live credentials. On 2026-11-06, the branding gate passed **150 backend tests** (8.12s), **21 frontend tests**, Ruff/Biome lint/format/import checks, strict TypeScript and the production build (233 modules). One existing Starlette/httpx deprecation warning remains. Both sidebar/footer branding assertions and the full OpenAPI snapshot pass; the normalized snapshot diff from `93d0ee4` is exactly `info.title` → `Stocker`.
+`make check` runs isolated `stocker-check` one-off containers with explicit fixtures and temporary SQLite; it does not publish ports or require live credentials. On 2026-11-06, the branding gate passed **150 backend tests** (8.12s), **21 frontend tests**, Ruff/Biome lint/format/import checks, strict TypeScript and the production build (233 modules). One existing Starlette/httpx deprecation warning remains. Both sidebar/footer branding assertions and the full OpenAPI snapshot pass; the normalized snapshot diff from `93d0ee4` is exactly `info.title` → `Stocker`.
 
 Optional browser and isolated Compose persistence commands are in [development](../DEVELOPMENT.md). Earlier migration acceptance recorded real restart/report persistence, Markdown download, widget failure/retry, source reload and mobile DOM-overflow checks. Those browser checks and screenshot perception were not rerun for this cleanup. Existing screenshots are historical artifacts and may show the previous brand. Fixture persistence will also run in PR CI.
 

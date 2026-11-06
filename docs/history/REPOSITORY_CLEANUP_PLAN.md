@@ -30,7 +30,7 @@ The archive branch is **not** a second active development codebase. It is a reco
 - Never use `git reset --hard`, `git clean -fd`, force pushes, history rewriting, or automatic stashing; stop on unexpected uncommitted changes/conflicts. Never delete original branches.
 - Never modify or print ignored `.env`, model tokens, provider keys, real SQLite data, personal global Codex/Strata/LiteLLM configuration, or private backup directories.
 - Do not change financial calculations, providers, AI prompts, orchestration, budgets, API routes/DTOs, schema/persistence, authentication/security restrictions, or runtime configuration for a documentation/brand cleanup.
-- **Do not rename** the Compose `name: stockscope`, `stockscope_data` named volume, `stockscope.db` database paths, `STOCKSCOPE_ENV_FILE`, fixture project names, internal state identifiers, or file paths during this task. These are persistence/compatibility identifiers. They may retain legacy spelling; explain once in developer documentation. A separate migration with backups/volume mapping is necessary if renaming is wanted later.
+- **Do not rename** the Compose `name: stocker`, `stocker_data` named volume, `stocker.db` database paths, `STOCKER_ENV_FILE`, fixture project names, internal state identifiers, or file paths during this task. These are persistence/compatibility identifiers. They may retain legacy spelling; explain once in developer documentation. A separate migration with backups/volume mapping is necessary if renaming is wanted later.
 - The Markdown files under `backend/app/modules/research/agents/prompts/` are **executable agent prompts**. Inventory them but do **not** rewrite, delete, or archive them as mere documentation.
 - Keep `backend/tests/contracts/openapi.json`, synthetic fixtures, tests, CI workflow, Dockerfiles, scripts, source code, configuration templates, license/attribution requirements, and user-facing screenshots on `main`.
 - Changes to the FastAPI **display title** and corresponding OpenAPI golden snapshot are permitted. The only intended contract-snapshot difference is `info.title`; fail if any other OpenAPI fields change.
@@ -70,7 +70,7 @@ cat docs/migration/ACCEPTANCE.md
 cat .github/workflows/ci.yml
 cat compose.yaml
 cat .env.example
-rg -n -i 'stockscope|stock[ -]?scope|remote (ci|github actions).*(pending|unrun)|not (run|pushed)|phase [0-9]|PROGRESS\.md|CODEX_STOCK_RESEARCH_IMPLEMENTATION_PLAN|docs/migration' --glob '!**/package-lock.json' .
+rg -n -i 'stocker|stock[ -]?scope|remote (ci|github actions).*(pending|unrun)|not (run|pushed)|phase [0-9]|PROGRESS\.md|CODEX_STOCK_RESEARCH_IMPLEMENTATION_PLAN|docs/migration' --glob '!**/package-lock.json' .
 ```
 
 Also review **latest** sections of `docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/DEVELOPMENT.md`, `docs/DATA_PROVIDERS.md`, and final live research JSON status summaries. Use `tail`, focused `rg`, or a pager instead of reading only an early phase. Re-run `git ls-files '*.md'` after cleanup to confirm new files and retained prompt Markdown.
@@ -78,8 +78,8 @@ Also review **latest** sections of `docs/PROGRESS.md`, `docs/DECISIONS.md`, `doc
 ### Known, grounded findings to reconcile
 
 - Working architecture: FastAPI modular monolith (`app/modules/{market_data,research,portfolio,intelligence}`), React/Vite feature folders, SQLite, Docker Compose dev stack, separate external model and provider services.
-- The current user-visible product name is **StockScope AI** in `README.md`, `frontend/index.html`, `frontend/src/app/layout/Sidebar.tsx`, `frontend/src/app/layout/Shell.tsx`, and `backend/app/main.py`'s FastAPI title. Search for additional UI/test occurrences before changing.
-- `compose.yaml` and DB paths contain compatibility names `stockscope` and must remain unchanged in this pass.
+- The current user-visible product name is **Stocker** in `README.md`, `frontend/index.html`, `frontend/src/app/layout/Sidebar.tsx`, `frontend/src/app/layout/Shell.tsx`, and `backend/app/main.py`'s FastAPI title. Search for additional UI/test occurrences before changing.
+- `compose.yaml` and DB paths contain compatibility names `stocker` and must remain unchanged in this pass.
 - Automated baseline documented locally as 132 backend / 21 frontend tests, checks, build, fixture Docker persistence, and browser smoke. Verify current counts rather than blindly copying them. The latest **actual remote main CI run succeeded** at commit `93d0ee4`; older README, AGENTS, and acceptance/progress text wrongly imply GitHub CI was never run.
 - Live SEC/Finnhub AAPL/MSFT/NVDA, yfinance U.S./Canadian daily history and Bank of Canada macro probes were previously recorded as passing **for tested symbols/paths only**. Other paid/keyed integrations and TSXV history were not all independently verified.
 - Existing records describe **incomplete sourced six-stage Strata runs** with output/total-token/time limits. A recent `strata_optimization` merge altered model budget/timeout configuration; do not assume it proves a successful end-to-end sourced report. Document as "not yet independently accepted" unless an actual completed trace is demonstrated.
@@ -100,7 +100,7 @@ Change only **display/marketing name**:
 3. `frontend/src/app/layout/Shell.tsx` footer brand: `Stocker`.
 4. `backend/app/main.py` FastAPI title: `Stocker` (pure metadata only).
 5. `frontend/src/app/App.test.tsx`, any brand-specific snapshots/assertions, and `backend/tests/contracts/openapi.json`: update *only* intentional title expectations. Investigate any other test failures rather than weakening assertions.
-6. Search the entire codebase for additional **user-visible** `StockScope` text. Avoid a global search-replace; database, Compose, paths, test data, migration history, and original reference titles should remain historically accurate.
+6. Search the entire codebase for additional **user-visible** `Stocker` text. Avoid a global search-replace; database, Compose, paths, test data, migration history, and original reference titles should remain historically accurate.
 
 For the OpenAPI baseline, compare old/new normalized JSON and require every field other than `info.title` to be identical. A backend test should explicitly allow the intended one-field branding change while retaining protection against endpoint/schema changes. Prefer an additional explicit assertion rather than deleting the snapshot test.
 
@@ -147,7 +147,7 @@ Inventory every Markdown. Classify each as public reference, historical developm
 | `docs/EVALUATION.md` | Preserve fixture-evaluation methodology and its limits; don't claim financial/model superiority. |
 | `docs/PROVIDER_RESEARCH.md` | Maintain provenance/restrictions as a historical research artifact; correct statements if genuinely outdated. |
 | `docs/REFERENCE_AUDIT.md` | Preserve reference-code audit/attribution. |
-| `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md` | Add **migration completed; archival specification** header and final acceptance pointer. Do not globally rename historically correct migration filenames. |
+| `docs/migration/STOCKER_DOCKER_MODULAR_MIGRATION_PLAN.md` | Add **migration completed; archival specification** header and final acceptance pointer. Do not globally rename historically correct migration filenames. |
 | `docs/migration/ACCEPTANCE.md` | Append post-push evidence that remote GitHub Actions did run successfully (Nov 6 commit/run); preserve original "not run" statement as an earlier checkpoint, clearly superseded. |
 | `docs/migration/PHASE_1_ACCEPTANCE.md` | Preserve intermediate blocked/resolved chronology; mark superseded by final acceptance. |
 | `backend/app/modules/research/agents/prompts/*.md` | **Keep untouched**: these are runtime prompt assets, not progress documentation. |
@@ -274,7 +274,7 @@ Do not leave numerous links that make the public documentation feel like a migra
 
 ### Repository metadata
 
-The GitHub repository URL is already named `stocker`; **do not rename the repository** or its remote. If the GitHub repository description still mentions StockScope, propose a short update in the final report, but avoid changing account/repository settings as part of source cleanup unless expressly directed.
+The GitHub repository URL is already named `stocker`; **do not rename the repository** or its remote. If the GitHub repository description still mentions Stocker, propose a short update in the final report, but avoid changing account/repository settings as part of source cleanup unless expressly directed.
 
 ## 6. Link/name validation, staging, and cleanup commit
 
@@ -282,7 +282,7 @@ Run at minimum:
 
 ```bash
 # Old name in current tracked files: classify all hits; don't globally replace legacy identifiers.
-git grep -n -i 'StockScope' -- ':!backend/tests/contracts/openapi.json' || true
+git grep -n -i 'Stocker' -- ':!backend/tests/contracts/openapi.json' || true
 # Broken references to files deleted from main must be fixed in remaining docs/config/scripts.
 rg -n 'PROGRESS\.md|IMPLEMENTATION_STATUS\.md|DECISIONS\.md|BROWSER_SMOKE\.md|EVALUATION\.(md|json)|PROVIDER_RESEARCH\.md|REFERENCE_AUDIT\.md|LIVE_.*\.json|CODEX_STOCK_RESEARCH_IMPLEMENTATION_PLAN|docs/migration' --glob '*.md' . || true
 # Confirm all remaining .md docs are intended and model prompts still present.

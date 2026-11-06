@@ -2,7 +2,7 @@
 
 ---
 
-# StockScope AI — Docker Compose + Modular Monolith Migration
+# Stocker — Docker Compose + Modular Monolith Migration
 
 **Status:** EXECUTION PLAN — not yet applied to the repository  
 **Repository:** https://github.com/TTDoorTT/stocker  
@@ -77,7 +77,7 @@ Docker Compose (single local project)
   ├── backend: Python 3.13 + FastAPI/uvicorn, localhost:8000
   │       ├── app modules: market_data, research, portfolio, intelligence
   │       ├── pure finance calculations
-  │       └── SQLite file -> named Docker volume (e.g. /data/stockscope.db)
+  │       └── SQLite file -> named Docker volume (e.g. /data/stocker.db)
   └── named data volume (not a separate database container)
 
 Backend outbound connections:
@@ -278,7 +278,7 @@ cd ..
 
 If virtual environment/dependencies absent, first follow README's documented install or establish a clean documented environment. Do not claim tests passed if they were not executed. Browser smoke starts ports 8000/5173; run it **with native servers stopped**, in a safe fixture context, if its local Playwright dependencies are available.
 
-**Database:** inspect the configured `DATABASE_URL` safely without printing secrets. Check file path (defaults to relative `backend/stockscope.db` for native backend cwd). Use Python `sqlite3.Connection.backup()` or `sqlite3 .backup` to make an integrity-verified copy outside the project root, only if user data exists; do not copy source trees. Document where it is, never commit it. Treat SQLite WAL mode/live connection consistency correctly—prefer the backup API over copying a live `.db` file. Do **not** run `docker compose down -v`.
+**Database:** inspect the configured `DATABASE_URL` safely without printing secrets. Check file path (defaults to relative `backend/stocker.db` for native backend cwd). Use Python `sqlite3.Connection.backup()` or `sqlite3 .backup` to make an integrity-verified copy outside the project root, only if user data exists; do not copy source trees. Document where it is, never commit it. Treat SQLite WAL mode/live connection consistency correctly—prefer the backup API over copying a live `.db` file. Do **not** run `docker compose down -v`.
 
 **Acceptance:** baseline command results recorded; branch exists; secrets ignored; database state/backups documented; no behavior change.
 
@@ -306,7 +306,7 @@ Use **Python 3.13** and **Node 22** to match existing tested environment, unless
 ### 4.2 Compose specification (implementation reference, not a fully built file)
 
 ```yaml
-name: stockscope
+name: stocker
 services:
   backend:
     build:
@@ -315,12 +315,12 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: sqlite:////data/stockscope.db
+      DATABASE_URL: sqlite:////data/stocker.db
       PYTHONDONTWRITEBYTECODE: "1"
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - stockscope_data:/data
+      - stocker_data:/data
       - ./backend/app:/workspace/backend/app
       - ./fixtures:/workspace/fixtures:ro
       # Add read-only test mounts only if tests are intended to run inside the container.
@@ -349,7 +349,7 @@ services:
     working_dir: /app
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
 volumes:
-  stockscope_data:
+  stocker_data:
 ```
 
 **Codex must adapt, validate, and finish this sketch:** Dockerfiles must install all needed packages, set workdirs consistently, copy required `fixtures/` and prompt files into backend image, avoid `.env` copying, and ensure dependency/lock compatibility. Verify that container runtime maps old `ROOT` fixture lookup correctly; if `config.py` moves later, replace brittle `parents[...]` logic with explicit project path resolution without breaking tests. If bind-mount behavior is unreliable, troubleshoot WSL integration; only then consider Compose Watch with a separate documented command. The *default everyday* UX must remain `docker compose up -d`.
@@ -366,7 +366,7 @@ Expose container ports only on host loopback. It is correct for Vite/Uvicorn to 
 
 ### 4.4 Database migration
 
-- Named SQLite volume path `sqlite:////data/stockscope.db` (four slashes for absolute `/data/..` in SQLite SQLAlchemy-like URL syntax used by the custom repository parser; test actual parsing and file creation).
+- Named SQLite volume path `sqlite:////data/stocker.db` (four slashes for absolute `/data/..` in SQLite SQLAlchemy-like URL syntax used by the custom repository parser; test actual parsing and file creation).
 - Inspect existing database and back it up outside repo. Validate it (`PRAGMA integrity_check`, `PRAGMA user_version`, table counts) and transfer/import *only with a verified, documented procedure*. Do not use raw `cp` against actively writing DB; prefer SQLite backup API and a container that can access the volume with services stopped.
 - Check run IDs, events, watchlist symbols and positions before/after import. If no existing database, create a new one explicitly and document this fact.
 - The project currently has no user auth; keep local-only host port binding. Treat saved research and position data as sensitive local state.
