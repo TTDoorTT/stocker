@@ -68,3 +68,12 @@ def test_research_restart_marks_interrupted(tmp_path):
         restored = client.get('/api/research-runs/' + run['run_id']).json()
         assert restored['status'] == 'incomplete'
         assert 'restart' in restored['gaps'][0]
+
+
+def test_docker_host_is_narrowly_allowed(tmp_path):
+    settings = Settings(_env_file=None, database_url=f'sqlite:///{tmp_path}/hosts.db')
+    with TestClient(create_app(settings)) as client:
+        assert client.get('/api/health', headers={'host': 'backend:8000'}).status_code == 200
+        assert client.get('/api/health', headers={'host': 'untrusted.example'}).status_code == 400
+        assert client.post('/api/watchlist', json={'symbol': 'AAPL'}, headers={
+            'host': 'backend:8000', 'origin': 'https://untrusted.example'}).status_code == 403

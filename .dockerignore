@@ -1,0 +1,17 @@
+**/.env
+**/.env.*
+.git
+references
+**/.venv
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/dist
+**/*.db*
+**/*.sqlite*
+**/*.tsbuildinfo
+.npm-cache
+.browser-cache
+.provider-cache
+docs
