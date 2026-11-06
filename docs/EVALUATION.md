@@ -1,6 +1,6 @@
 # Offline workflow evaluation
 
-Run `cd backend && .venv/bin/python -m app.services.evaluation` to regenerate [EVALUATION.json](EVALUATION.json). The command explicitly uses fixture mode and the deterministic fixture model stub. It does not call a live model, consult personal configuration files, or incur inference charges. Results are actual local executions, including measured runtime, rather than hand-entered expected scores.
+Run `cd backend && .venv/bin/python -m app.modules.research.evaluation` to regenerate [EVALUATION.json](EVALUATION.json). The command explicitly uses fixture mode and the deterministic fixture model stub. It does not call a live model, consult personal configuration files, or incur inference charges. Results are actual local executions, including measured runtime, rather than hand-entered expected scores.
 
 Each AAPL/MSFT/NVDA case captures one synthetic company snapshot and history bundle. Both six-stage research and the single-agent baseline receive identical evidence and deterministic calculations; SHA-256 digests in the JSON verify that invariant. Every run remains `incomplete`, because synthetic data and unavailable licensed analyst consensus are explicit gaps.
 

@@ -1,15 +1,63 @@
 # Architecture
 
-React + TypeScript + Vite talks to a loopback FastAPI REST service through `/api`. SQLite persists watchlists, simple positions, runs, stage attempts, evidence, calculations and append-only events. The backend owns credentials, provider requests, calculations and agent execution. The official TradingView widget is visual only and supplies no agent data.
+StockScope is a feature-oriented modular monolith: one React/TypeScript/Vite application, one FastAPI backend, and one SQLite database. The six logical specialist roles run inside the backend, not separate containers. External Strata iq3_s and financial providers remain outside Docker. The official TradingView embed is an isolated visual and never supplies data to agents.
 
-Research follows profile → financials → estimates → valuation → risk → report. Each session receives distinct instructions and scoped, validated prior outputs. One OpenAI-compatible client serves all roles. The orchestrator validates schemas, evidence references and numeric calculation bindings outside the model, retries at most twice, caps risk revisits, and persists each transition. Polling exposes actual stored events. Missing data makes an analysis incomplete. A deterministic model is available only in visibly labeled fixture mode.
+## Development runtime
 
-Providers normalize facts with unit/currency, fiscal period, publication/retrieval timestamps and stable evidence IDs. Live provider failures remain explicit; fixture fallback is never automatic. One process and SQLite suffice for local demo concurrency. Versioned additive schema initialization is used initially; incompatible future migrations require explicit migration scripts.
+```text
+Browser localhost:5173 -> frontend Vite -> /api proxy -> backend:8000
+                                                     |-> SQLite /data/stockscope.db
+                                                     |-> external Strata / providers
+```
 
-The existing DataService routes optional history to YFinanceHistory or Alpha Vantage without merging sources. Bank of Canada Valet uses the existing macro-signals contract and shared transport. Provider policies define per-host pacing/TTLs and a local Alpha Vantage daily budget.
+Compose publishes only host loopback ports 5173/8000. Source bind mounts support Vite HMR and Uvicorn reload with ordinary `docker compose up -d`. Dependencies stay inside digest-pinned Python 3.13.11/Node 22.23.3 images. The Vite proxy permits the exact backend service hostname; existing host/origin restrictions and model endpoint validation stay enabled. Backend credentials never reach browser code or image build contexts.
 
-U.S. equities retain SEC/Finnhub coverage. User-requested Canadian scope now includes explicit .TO/.V listings, optional daily history, CA/CAD runs/positions and no-key macro/FX. Canadian company identity, statements and current quotes stay explicitly unavailable until a permitted, verified provider exists. These gaps preserve incomplete research status. There is no SEDAR+ scraper or assumed SEC equivalence. Transaction accounting and other Later features remain roadmap items.
+`stockscope_stockscope_data` persists across `docker compose down`. Native SQLite/configuration files remain untouched. The originally configured default database was empty; separate diagnostic research is preserved as `/data/live-acceptance.db`, without silently merging histories. Private SQLite-backup-API snapshots and configuration copies live outside Git. See DEVELOPMENT.md for safe import/selection and rollback.
 
-Migration target: Docker Compose development with frontend/backend bind mounts, Vite HMR and Uvicorn reload, host loopback ports 5173/8000, persistent SQLite volume. Strata and provider services remain external. Feature-oriented modules will own market data, research, portfolio and intelligence within the single backend/frontend applications; this is a staged target, not yet an implemented directory structure. See the migration plan and current progress for accepted gates.
+## Backend ownership
 
-Compose runtime is implemented on the original source layout: frontend Vite proxies `/api` to the exact `backend` hostname, FastAPI allows that hostname alongside existing loopback/test hosts, and host ports remain loopback-only. Backend source/fixtures and frontend source/config are bind mounted; dependencies remain in images. SQLite lives at `/data/stockscope.db` on `stockscope_stockscope_data`; a separate fixture project uses its own volume and removes the live env file. Strata remains external; current native/container connectivity is blocked (see migration acceptance). Feature module extraction has not begun.
+```text
+backend/app/
+  main.py                    composition, lifespan, security, health
+  core/config.py             settings and stable project root
+  core/database.py           SQLite lifecycle/schema/transaction lock
+  contracts/{api,market}.py   stable public DTOs
+  finance/metrics.py         pure deterministic calculations
+  modules/
+    market_data/             normalized DataService, symbols/evidence/errors, synthetic fixtures
+      providers/             SEC, Finnhub, Yahoo, Alpha Vantage, FRED, Bank of Canada, shared HTTP
+    research/                scheduler/service, repository, orchestrator, schemas, validation, reports, chat
+      agents/                bounded model client/tools and unchanged specialist prompts
+    portfolio/               watchlist/positions router, service and repository
+    intelligence/            router/service, news processing, industry catalog
+```
+
+Routers handle transport validation/error mapping and call owned services. Feature services use public service/type/error contracts across modules; provider parsers and repositories stay private. Research receives normalized market data and pure calculations; portfolio uses listing-currency quotes without implicit FX. Intelligence uses normalized news/macro data and research's public captured-headline summary entrypoint. Main supplies industry lookup as a callback, avoiding an import cycle. No dependency-injection framework or extra Python distributions were introduced.
+
+Research follows profile → financials → estimates → valuation → risk → report. Each role gets distinct instructions, scoped context and validated prior output. Schema/evidence/numeric validation runs outside the model. Existing bounded retries, single risk revisit, tool/token/context/wall-time budgets, one worker/four-slot scheduling, event ordering and restart recovery remain unchanged. A deterministic model is used only in visibly synthetic fixture mode; live failures never trigger fixture fallback.
+
+SQLite retains schema v1 and existing runs/events/watchlist/positions tables. Research snapshots preserve immutable evidence/calculations; repositories share one connection/transaction lock. Unknown future schema versions require explicit migration. Interrupted runs become incomplete at startup.
+
+Providers preserve currency, units, fiscal periods, original retrieval/publication timestamps, source URLs/evidence IDs and explicit unavailable states. Cache hits retain network capture times; failures never silently use stale/fictional facts. U.S. SEC/Finnhub coverage, optional Yahoo/Alpha Vantage history and FRED/Valet semantics are unchanged. Canadian .TO/.V history, CAD positions and no-key macro are partial coverage; Canadian statements/current quotes remain unavailable without permitted verified sources. There is no SEDAR+ scraper or automatic FX conversion. Annual EPS ratios are not TTM.
+
+## Frontend ownership
+
+```text
+frontend/src/
+  app/                       root, router, health API, layout and Settings
+  features/
+    market/                  Home/Stock pages, search/chart/heatmap, market API/types
+    research/                landing/run/records, chat/progress, research API/types
+    portfolio/               My Stocks/positions preview, portfolio API/types
+    intelligence/            news/daily review/industries/signals, intelligence API/types
+  shared/                    generic HTTP/errors, resource hook, UI/evidence, formatting, stable DTOs
+  styles/global.css          original global styling
+```
+
+Endpoint functions stay in feature/app API files; shared HTTP only handles requests/errors. Shared DTOs are genuinely cross-feature source/evidence/currency contracts. Market consumes explicitly public research Chat and portfolio PositionsPreview components; other cross-feature imports use API/types. Routes, labels, 1500ms research polling, Markdown downloads, charts and iframe failure/retry behavior remain stable. No browser-facing provider keys exist.
+
+## Enforced gates
+
+Backend AST tests reject private cross-feature imports, persistence in routers and side-effect dependencies in finance. Frontend TypeScript-AST tests guard shared ownership, endpoint-only HTTP and public feature imports. A complete pre-migration OpenAPI snapshot detects route/schema/status/validation changes. Public-facade integration and original API/provider/model/browser tests verify behavior and persistence.
+
+Ruff targets Python 3.11 with 110-column formatting; Biome 2.6.6 owns frontend formatting/lint/import organization; strict TypeScript remains separate. GitHub Actions uses SHA-pinned actions, read-only permissions and credential-free fixture checks, including Docker recreation/persistence. `make check` provides local equivalents. Remote Actions execution is unverified until an authorized push.

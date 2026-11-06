@@ -1,0 +1,12 @@
+# Explicit formatting is the only check allowed to write tests/scripts/config.
+services:
+  backend:
+    volumes: !override
+      - ./backend/app:/workspace/backend/app
+      - ./backend/tests:/workspace/backend/tests
+      - ./backend/pyproject.toml:/workspace/backend/pyproject.toml:ro
+      - ./scripts:/workspace/scripts
+  frontend:
+    volumes: !override
+      - ./frontend:/app
+      - /app/node_modules

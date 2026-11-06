@@ -1,6 +1,16 @@
 # StockScope AI — Implementation Progress
 
-## Migration status — 2026-11-06 14:44 EST
+## Current migration status — 2026-11-06 15:37 EST
+- Phases 0–6 **implemented and locally accepted**. Phase 7 local acceptance/cleanup **complete**; G14 remote GitHub Actions execution remains **unrun**, because no push is authorized. Source rollback branch: `chore/docker-modular-migration`, base `cb83b66`. No push.
+- Final `make check` **PASS**: **132 backend tests in 8.09s**, **21 frontend tests in 2.78s**, Ruff/Biome lint/format/import/CI, strict TypeScript and production build (233 modules). Existing Starlette/httpx deprecation warning retained. Official checksum-verified actionlint 1.7.12 validates the CI workflow. Python 3.11 CI lane is configured, not locally executed.
+- Final Docker build/default `up --build -d --wait`, `down`, `up -d --wait`, direct/proxied health and authenticated running-backend model discovery **PASS** (HTTP 200/configured iq3_s listed). Two default application containers left running at localhost:5173; persistent SQLite on named volume.
+- Rebuilt isolated fixture seed/recreation/verify **PASS**; full synthetic run/report/events/positions persisted identically. Final real reload probe **PASS**: backend edit/restore, frontend HMR edit/restore, fixture UI, 390px no overflow, zero pageerrors. Docker-only 200ms Vite polling fixes a diagnosed missed restore event; native watching and all networking/security restrictions unchanged.
+- Full native browser smoke **PASS**, including real backend restart/report reopen, Markdown download filename/content, holdings, 20 templates, Canadian gaps and forced widget failure/retry. Screenshot perception not run; regenerated screenshots restored.
+- Finance functions, model client/stub, tools, orchestrator/new_run and report renderer ASTs exactly match base `cb83b66`; prompts byte-identical; full OpenAPI unchanged and protected by snapshot test. Existing live iq3_s token-budget limitation remains out of scope; no new Canadian coverage claim.
+- Updated `.env` byte fingerprint and all five original SQLite snapshots match private backup `../stocker-backups/migration-resume-20261106-1453`. Both Docker databases also match pre-check row fingerprints and were exported privately as `docker-stockscope.db` / `docker-live-acceptance.db` (0600, user-owned). Diagnostic 4 runs/67 events preserved separately; default database remains the originally empty history. No credentials exposed/committed or user-wide settings/services changed.
+- Final report: `docs/migration/ACCEPTANCE.md`; commands/backups: `docs/DEVELOPMENT.md`. No application migration code remains pending. Exact next external gate: after explicit push authorization, run the committed GitHub workflow and inspect all jobs, including Python 3.11. Do not claim remote success from local checks or begin the unrelated live-model token-budget repair.
+
+## Initial Docker checkpoint (historical) — 2026-11-06 14:54 EST
 - Active specification: `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md` (supplied root file relocated unchanged). Branch `chore/docker-modular-migration`, base `cb83b66`; Phase 0 commit `35e03dd`. No push.
 - Phase 0 **complete**: required documents read; original user work preserved; native 117 tests/Ruff + 18 frontend tests/TypeScript/build + full browser smoke passed (zero pageerrors). Initial tree had only the untracked migration plan. Historical claims below about untracked code/no commits are superseded.
 - Private backups: `/home/siche/uni/dh399/stocker-backups/migration-phase0-20261106-verified`, containing ignored root `.env` and all five discovered SQLite files, with SQLite backup API/integrity/version/count/content-fingerprint verification. Original `.env` byte fingerprint and every original database still match. Native configured `backend/stockscope.db` and root DB were empty; `backend/live-acceptance.db` holds 4 runs/67 events. Initial partial cache-table verification failure was corrected before accepted backup.
@@ -10,6 +20,13 @@
 - Final default acceptance: `docker compose up --build -d --wait`, `docker compose down`, `docker compose up -d --wait`, `ps`, direct/proxied health and startup logs **passed**. Post-recreation volume integrity/v1/counts confirmed (default empty; diagnostic 4 runs/67 events); no `.env` file in backend image. Default two-container stack left running at localhost:5173; external services untouched. Scripts Ruff (`--config backend/pyproject.toml`) and `git diff --check` pass.
 - Changed runtime/docs and exact command evidence: `docs/migration/PHASE_1_ACCEPTANCE.md`; startup, test isolation and safe import: `docs/DEVELOPMENT.md`. No formula/API/schema/agent/Canadian coverage changes; `.env` ignored and no credentials displayed/committed.
 - **Exact next action:** restore reachability of the currently configured external Strata endpoint; rerun `PYTHONPATH=backend backend/.venv/bin/python scripts/model_connectivity.py` and `docker compose run --rm --no-deps -T backend python /workspace/scripts/model_connectivity.py`, require HTTP 200/configured model listed. Reconfirm Phase 1 then proceed to Phase 2 commands. Do not start module restructuring before that gate.
+
+## Migration resume — 2026-11-06 14:54 EST
+- User restored existing Strata and updated the ignored project API key. Actual native and Docker `scripts/model_connectivity.py` now **PASS**, HTTP 200 with configured model listed. No endpoint/security/global-service changes. Earlier read-only Windows diagnosis found the configured address existed; service was down, confirmed by user. Previous blocker above is resolved.
+- Refreshed private `.env`/SQLite backup at `/home/siche/uni/dh399/stocker-backups/migration-resume-20261106-1453`; all five databases integrity verified. Older backup remains intact; no credentials printed.
+- Phase 1 **complete**: existing Docker fixture/reload/persistence acceptance plus current native/container model discovery. `docker compose up -d --wait` refreshes the running backend environment to the updated key; health/proxy recheck pending command completion. Full sourced research token-budget acceptance remains out of scope.
+- Phase 2 **in progress**: root Makefile wraps real Compose commands. Checks use separate `stockscope-check` project, fixture env override and per-container `/tmp` SQLite DB; no live DB/model/provider requests. Existing Ruff formatting checks are expected to flag the unformatted baseline before Phase 3; frontend formatter is added in Phase 3.
+- Next: exercise developer targets, verify stop/start preserves volume, commit Phase 2, then add format/tooling baseline in separate commits.
 
 ## Previous implementation status
 - Phase: user-authorized provider revision implemented and verified; sourced financial/full-model acceptance pending
@@ -223,3 +240,110 @@
 - Latest real iq3_s orchestrator probe finished **incomplete**, three profile ReadTimeout failures at the existing 45-second per-request limit, 186.599 seconds total, no report. Actual usage and attempts are in docs/LIVE_MODEL_CHECK.json; the earlier invalid-argument failure is summarized there too. No source facts or successful six-stage live report are claimed. The endpoint/model/key and run bounds were preserved.
 - Final verification: 115 backend tests + Ruff; 18 frontend tests + TypeScript/build; real browser fixture/restart/widget/mobile smoke with zero pageerrors; actual AAPL/USD and RY.TO/CAD Yahoo history with cache preservation; actual two Valet series; pip dependency consistency and diff whitespace checks passed. Frontend audit/evaluation and screenshot perception were not rerun for this revision. No servers are intentionally left running; the temporary model-check database was cleaned up.
 - Exact next actions: (1) supply genuine SEC_USER_AGENT and an authorized Finnhub free key to verify U.S. facts/quotes/news; Alpha Vantage and FRED are optional, not blockers; (2) diagnose local-model response latency/tool behavior before retrying full sourced orchestration, without changing user-wide Strata/Codex settings; (3) pursue issuer-authorized Canadian reports or licensed distribution if Canadian-only statements are needed. Do not scrape SEDAR+ or assume free Canadian Finnhub quotes; continue exposing those gaps. TSXV history remains mapped but not live-probed. Other Later features remain deferred.
+
+## Phase 2 verification — 2026-11-06 14:56 EST
+- `make test`: 118 backend tests (7.66s) and 18 frontend tests passed in isolated one-off fixture containers. `make lint` initially failed on different isort classification of `app` in mounted scripts; configured explicit first-party ownership for consistent native/container results; rerun pending.
+- `make format-check` correctly failed on the pre-format baseline (31 Python files). No automatic formatting yet; Phase 3 will establish that baseline in its own commit. Typecheck/build and stop/dev/persistence checks running.
+- Running default backend itself passes authenticated model discovery; updated key works beyond just one-off containers.
+
+## Phase 2 accepted — 2026-11-06 14:58 EST
+- Root `make test`, `lint`, `typecheck`, `build`, `status`, `stop`, `dev` exercised successfully. Tests: 118 backend / 18 frontend; Ruff/TypeScript/build passed. SQLite content fingerprints for both named-volume databases match before/after stop/dev. Make is optional; normal Compose startup remains sufficient.
+- Formatter commands are real and correctly return baseline diagnostics (31 files), intentionally resolved by Phase 3. Native/container lint ownership is now explicit for `app`. `smoke` retains the existing native harness's occupied-port refusal. No finance/model/DB behavior changes.
+- Next: Phase 3 tooling config/dependency commit, then separate format-only commit and regression checks.
+
+## Phase 3 in progress — 2026-11-06 15:00 EST
+- Adding exact-pinned Biome 2.6.6 and separate frontend lint/format/typecheck/CI scripts. Python Ruff target explicitly py311 (minimum supported), width 110; no new rule expansion mixed into formatter work. Biome initial rules enforce unused imports/variables, hook placement and JSX keys; strict TypeScript remains separate. Import organization enabled. No bulk source changes in this tooling checkpoint.
+- Formatting follows in a dedicated commit, then meaningful regression/type/build checks.
+
+- Phase 3 tooling checks: exact Biome installation audited **0 vulnerabilities**; frontend Biome lint and TypeScript pass before formatting. Initial config emitted a deprecated `recommended` setting notice; migrated to Biome 2.6's `preset: none` with the same explicit rules. One npm lint invocation used the root cwd and failed ENOENT; corrected frontend invocation passes. Image rebuild running.
+
+- Initial `make format` formatted 19 backend app files, then failed because Compose retained read-only flags when overriding test/script mounts. No functional edits. Corrected explicit `:rw` overrides and run formatting as host UID/GID to preserve source ownership; this command fix is committed separately from the source formatting baseline.
+
+- Formatter command correction: explicit one-off `:rw` flags also retained read-only mounts; host-UID run additionally required a writable Ruff cache. Replaced the mount set using `compose.format.yaml` with Compose `!override`, keeping normal checks read-only and formatting as host UID/GID with `/tmp` cache. Backend formatting now succeeds; frontend result and regressions pending.
+
+## Phase 3 format baseline — 2026-11-06 15:00 EST
+- `e9cfd5b` is formatter-only: 51 files, Python ASTs exactly match the preceding commit; 118 backend/18 frontend tests, Ruff/Biome lint, TypeScript and production build pass after formatting.
+- Container format-check exposed image-copied `tsconfig.json` lagging the formatted host version; added a read-only config bind mount. This is a configuration freshness issue, not a source formatting failure. Full `make check` rerun pending.
+- Biome import organization is a separate following change (14 files), not mixed with the format-only commit. Frontend `npm run ci` passes after import organization; no rules disabled to pass it.
+
+## Phase 3 accepted — 2026-11-06 15:00 EST
+- Full root `make check` **passed**: Ruff lint/format; Biome lint/format/CI/import organization; strict TypeScript; 118 backend tests (8.30s, existing deprecation warning), 18 frontend tests; 209-module production build. Formatter mount/cache and copied-tsconfig issues resolved with explicit format override/read-only config mount. No financial or agent behavior changes.
+- Formatter baseline commit `e9cfd5b` is recorded in `.git-blame-ignore-revs`; import organization follows separately. Exact-pinned Biome installation audit reported 0 vulnerabilities.
+- Phase 4A next: extract feature APIRouters preserving create_app injection and the full OpenAPI contract captured outside Git at `/tmp/stockscope-baseline-openapi.json`. No module moves started before Docker/tooling gates passed.
+
+## Phase 4A accepted — 2026-11-06 15:02 EST
+- Extracted APIRouter factories for market_data, portfolio, research and intelligence; create_app composition/lifespan/test injection and middleware preserved. Full OpenAPI document exactly equals pre-extraction baseline.
+- Native full backend suite: **118 passed in 8.73s**, Ruff lint/format passed. No route/schema/status/security behavior change. Portfolio SQL and research scheduling remain in extracted transport temporarily until their ordered service-extraction subphases.
+- Next: 4B market-data facade/provider ownership, preserving normalized contracts, caching, provider failures and tests.
+
+## Phase 4B extraction verification in progress
+- Extracted SEC/Finnhub/Alpha Vantage/Yahoo/Valet adapters, fixture owner and normalized DataService facade; moved stable market DTOs to `app/contracts/market.py`. Updated source/test imports and monkeypatch paths, preserving assertions.
+- Initial extraction helper selected the symbol-normalization exception block instead of the provider-search block; corrected helper before migration completed. First full migrated test run: **4 failed / 114 passed** (fixture-search delegation absent; a method rename accidentally changed literal SEC `company_tickers.json` path). Restored the exact endpoint and fixture search behavior; rerun pending. No failed checkpoint committed.
+
+- Second 4B run: 2 failed / 116 passed; fixture-search correction had replaced the empty-query guard too. Restored the separate empty-query and explicit fixture-mode branches. Rerun and direct baseline-equivalence check pending; original test assertions retained.
+
+- Public availability exception now lives outside provider internals. FRED parsing moved behind the same DataService signals facade as Valet. First macro-extraction run: 2 failed / 116 passed because two tests replaced `data.http` after adapters were constructed. Updated only their injection setup to construct DataService with mocked transport; all assertions/cache/freshness expectations remain unchanged. Rerun pending.
+
+## Phase 4B accepted — 2026-11-06 15:07 EST
+- Final full backend suite **118 passed in 8.13s**, Ruff lint/format passed; full OpenAPI remains identical. Five synthetic stock snapshots, all history ranges, search and news compared directly with the committed original implementation at a fixed capture time and matched exactly. Every original provider URL literal preserved.
+- DataService owns normalized market/stock/history/search/news/macro facade; adapters under `modules/market_data/providers` own SEC/Finnhub/Alpha Vantage/Yahoo/FRED/Valet and unchanged transport policies. Stable DTOs in `contracts/market.py`; availability exception, symbols and evidence identity have deliberate public ownership. Research/intelligence consume public contracts, not provider helpers. Tests retain original assertions; only imports/transport injection setup changed.
+- Next: Phase 4C portfolio service/repository ownership, preserving existing SQLite queries and currency handling.
+
+## Phase 4C acceptance — 2026-11-06 15:08 EST
+- Portfolio router delegates operations to PortfolioService/PortfolioRepository; existing SQL, position arithmetic and currency checks preserved. Shared SQLite lifecycle relocated unchanged to `core/database.py`; research-specific storage methods move out in 4D.
+- Initial service extraction suite: 118 passed (8.16s). After shared-storage move and two focused missing/wrong-currency quote regressions: results recorded at gate below. Full OpenAPI exactly matches baseline. No database schema or row changes.
+- Phase 4C final gate: **120 passed in 9.20s**, including both new portfolio regressions; Ruff lint/format passed. Phase 4D now in progress.
+
+## Phase 4D verification
+- Moved agents/prompts/orchestrator/schema validation/report/chat/evaluation under research; stable HTTP DTOs moved to shared `contracts/api.py`. SQLite connection/schema lifecycle stays in core; research repository owns unchanged run/event SQL, portfolio uses the same connection directly through its own repository. ResearchService owns the original one-worker/four-slot scheduling and restart recovery.
+- Initial import cleanup caught an overbroad constructor rename before tests; restored portfolio composition and import. Full suite after extraction: **120 passed in 8.30s**. Original/new fixture runs, full reports and every event compare exactly under fixed clock/ID; prompts byte-identical; full OpenAPI unchanged. Public domain errors now keep model transport internals out of other features; focused final rerun pending. No model budgets/prompts/validation behavior edited.
+- Phase 4D final gate: **120 passed in 8.10s**, Ruff passed; full OpenAPI unchanged after domain-error extraction. Phase 4D complete; 4E next.
+
+## Phase 4E accepted — 2026-11-06 15:13 EST
+- Intelligence owns service/router, news capture/deduplication and industry catalog. Headline-only model execution/validation uses research's supported `summarize_captured_headlines` application entrypoint; no second model/orchestrator path. Public typed interfaces keep providers/agent internals private. All 20 templates, coverage gaps, macro semantics and captured-news limitations retained.
+- Full backend **120 passed in 8.69s**; Ruff passed; full OpenAPI identical. Test monkeypatch targets follow the moved shared model entrypoint; assertions unchanged. Next: 4F automated import boundaries, contract regression and browser acceptance, then frontend migration.
+
+## Phase 4F accepted
+- Added AST boundary checks covering aliased/package/nested private imports, pure finance and router persistence restrictions; positive public-facade integration uses isolated synthetic data and shared in-memory SQLite. Added full OpenAPI snapshot regression from the pre-module baseline (no credentials/data records).
+- `make check`: **132 passed in 7.90s**, 18 frontend tests, Ruff/Biome lint/format/CI, TypeScript and production build pass. Native `browser_smoke.py`: **passed**, zero pageerrors, restart/report persistence, holdings, 20 templates, Canadian labels, mobile and forced widget retry. Backend modularization accepted.
+
+## Phase 5 shared frontend checkpoint in progress — 2026-11-06 15:17 EST
+- Split generic HTTP/error handling, resource hook, formatters, generic UI and evidence presentation into cohesive shared modules; endpoint wrappers now live in feature API modules and app health API. Original pages remain temporarily while imports migrate. No request shapes or UI text/behavior changes.
+- Initial Biome check flagged unused imports in generated endpoint wrappers; removed only those unused imports using the targeted rule. TypeScript/tests/build pending. Feature type ownership/page moves follow this verified checkpoint.
+
+- Shared frontend verification: TypeScript initially found the chart's co-located `./shared` import missed by the path rewrite; corrected only that import. Final frontend result is recorded at the checkpoint commit. Endpoint wrappers retain the original request expressions and shared fetch/error behavior.
+- Shared frontend checkpoint accepted: Biome check, strict TypeScript, **18 tests passed in 2.72s**, production build passed (218 modules). Next: owned pages/components/types and app layout/router extraction.
+
+## Phase 5 feature move in progress
+- Moved market/research/portfolio/intelligence pages/components and feature-owned DTOs, leaving source/evidence/currency contracts shared. App now composes Shell, router, Sidebar/Header and Settings; existing DOM/route labels retained. Generic HTTP module contains no endpoints; all wrappers are feature/app-owned. Polling remains 1500ms and download/chart/widget logic unchanged.
+- Initial TypeScript check caught a moved Heatmap test's stale import (the source had moved before its relative path was resolved); corrected only the import. Original assertions retained. Tests/build/browser rerun pending.
+
+## Phase 5 page/type/layout verification
+- Biome check, TypeScript, **18 frontend tests in 2.76s** and production build (233 modules) passed. Full native browser smoke **passed**, zero pageerrors, six-stage workflow/report, actual restart persistence, holdings, all templates, Canadian labels, 390px layout and forced widget failure/retry. Routes, request shapes, poll interval and render labels preserved.
+- Added direct browser verification of Markdown download filename/content against the persisted report (previous smoke only checked button visibility); targeted rerun pending.
+
+## Phase 5 accepted — 2026-11-06 15:23 EST
+- Feature-owned pages/components/API/types and app layout/router completed; original source implementations removed rather than duplicated. Generic shared modules remain reusable. Preserved routes, labels, requests, 1500ms polling, chart/widget isolation and download behavior.
+- Frontend TypeScript/Biome/tests/build pass after page moves (18 existing tests, 233-module build). Full native browser smoke passes, zero pageerrors; enhanced rerun additionally verifies downloaded Markdown filename and exact persisted content. Native restart/report persistence and mobile/widget checks still pass.
+- Added semantic frontend import gates for shared ownership, endpoint-only HTTP access and explicit public cross-feature UI contracts; latest results recorded below. Next: Phase 6 CI and final Compose fixture/recreation/reload checks.
+
+- New frontend boundary test initially failed TypeScript because Node filesystem type declarations are not dependencies. Reworked source collection to Vite's typed raw-source glob and standard URL resolution, using existing dependencies only. This failure was isolated to the newly added test; prior 18-test/page-move/browser acceptance remains valid. Final boundary check rerun pending before amending the checkpoint.
+- Final frontend boundary correction passes: TypeScript, **21 tests in 2.76s** (18 preserved + 3 architecture checks), Biome CI/import/format gate. Page/layout checkpoint amended with this verified test implementation; no Node type dependency added.
+
+## Phase 6 CI/local acceptance in progress — 2026-11-06 15:25 EST
+- Added read-only, SHA-pinned GitHub Actions jobs for Python 3.11/3.13, Node 22 frontend quality/tests/build, and isolated fixture Docker build/proxy/research/persistence. Action tags verified against official remote refs; no credentials/Strata dependency. No push; GitHub execution remains unrun.
+- Added reusable `scripts/compose_smoke.py` with explicit fixture-mode refusal guards. Actual final-image seed/recreation/verify **passed**: health/proxy/search, watchlist/positions, six stages/report/events persist identically. Full `make check` **passed**: 132 backend (8.46s) / 21 frontend tests, Ruff/Biome lint/format/CI, TypeScript/build.
+- Initial optional YAML parse command could not run because PyYAML is absent; no dependency added. Validating with checksum-verified standalone official actionlint in /tmp instead. Final container HMR/reload/browser probe running.
+
+- Official actionlint 1.7.12 archive checksum verified and isolated under /tmp; workflow validation **passed**. No global tooling installed.
+- Final source probe observed backend reload/restore and frontend HMR update, but rapid edit/restore timed out waiting for the restored heading (5-second browser expectation). Source restored correctly (Git clean for app files). Repeating only the HMR restore check after allowing the first transform exchange to finish; no application behavior change proposed.
+
+## Final reload regression diagnosis
+- Confirmed stale Vite transform cache: host and container source both restored (`reload probe` absent), but transformed HTTP response still contained the probe; frontend logs recorded only the first change. A fresh browser reproduced it. Backend reload/restore works.
+- Enabled `WATCH_USE_POLLING=true` only in Compose and conditional Vite watcher polling (200ms); native defaults remain unchanged. Added `scripts/reload_smoke.py` to verify actual backend reload, frontend update/restore, fixture banner and mobile/no-pageerrors with guaranteed source restoration. No networking/security changes. Rerun pending.
+
+- Reload correction verified: `scripts/reload_smoke.py` **PASS** on final fixture containers — backend edit/restore, frontend HMR edit/restore, synthetic banner, 390px no overflow and zero pageerrors. The stale-transform failure is resolved by Docker-only polling; native behavior unchanged.
+
+## Phase 6 accepted; Phase 7 final verification
+- CI workflow passes official actionlint 1.7.12; actions pinned to verified refs, contents read-only, no personal credentials required. Local equivalent quality/test/build and Docker proxy/recreation checks passed. GitHub execution remains **not run** because no push is authorized; Python 3.11 CI lane is configured, not claimed as locally executed.
+- Final image rebuild/start passed. One verification command mistakenly selected the older ad-hoc state file format (`KeyError: run`); this did not mutate data. Re-seeding a fresh fixture state file and rerunning the supported recreation/verify/reload sequence. No live database involved.
