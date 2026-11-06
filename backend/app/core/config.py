@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./stockscope.db"
     llm_base_url: str = "http://127.0.0.1:4000/v1"
     llm_model: str = ""
-    llm_api_key: str = ""
+    llm_api_key: str = Field(default="", repr=False)
+    ai_config_file: Path | None = None
     llm_timeout: float = Field(default=600, gt=0, le=3600)
     llm_max_tokens: int = Field(default=8192, ge=128, le=65536)
     llm_context_window_tokens: int = Field(default=131072, ge=4096, le=262144)
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
     @classmethod
     def model_endpoint(cls, value):
         parsed = urlparse(value)
-        local_http = parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        local_http = parsed.hostname in {"localhost", "127.0.0.1", "::1", "host.docker.internal"}
         try:
             address = ip_address(parsed.hostname or "")
             local_http = local_http or (address.version == 4 and address.is_link_local)
@@ -61,6 +62,6 @@ class Settings(BaseSettings):
             or (parsed.scheme != "https" and not (parsed.scheme == "http" and local_http))
         ):
             raise ValueError(
-                "Model endpoint must be HTTPS or loopback/link-local IPv4 HTTP without embedded credentials"
+                "Model endpoint must be HTTPS or loopback/link-local IPv4 or host.docker.internal HTTP without embedded credentials"
             )
         return value

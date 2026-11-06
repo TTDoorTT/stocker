@@ -1,1 +1,1 @@
-"""StockScope educational research backend."""
+"""Stocker educational research backend."""

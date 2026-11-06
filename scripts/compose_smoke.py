@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-BASE = "http://127.0.0.1:5173"
+BASE = os.environ.get("STOCKER_SMOKE_BASE", "http://127.0.0.1:5173")
 
 
 def request(path: str, body: dict | None = None):
@@ -27,6 +27,7 @@ def request(path: str, body: dict | None = None):
 def snapshot(run_id: str) -> dict:
     fields = ("id", "symbol", "shares", "average_cost", "currency", "quote_price", "unrealized_pnl", "mode")
     return {
+        "ai": request("/api/settings/ai"),
         "watchlist": request("/api/watchlist"),
         "positions": [{key: row[key] for key in fields} for row in request("/api/positions")],
         "run": request(f"/api/research-runs/{run_id}"),
@@ -62,6 +63,18 @@ def main():
                 break
             time.sleep(0.1)
         assert saved["status"] == "incomplete" and len(saved["stages"]) == 6 and saved["report"]
+        # Synthetic credential only: prove private settings survive container recreation.
+        configured = request(
+            "/api/settings/ai",
+            {
+                "base_url": "http://127.0.0.1:14000/v1",
+                "model_id": "synthetic-persistence-model",
+                "api_key": "synthetic-persistence-key",
+            },
+        )
+        assert configured["source"] == "saved" and configured["has_api_key"]
+        assert "synthetic-persistence-key" not in json.dumps(configured)
+        assert request("/api/health")["mode"] == "fixtures"
         state = snapshot(run_id)
         assert state["positions"][0]["unrealized_pnl"] == 40
         os.umask(0o077)
@@ -70,7 +83,9 @@ def main():
     else:
         expected = json.loads(args.state.read_text())
         assert snapshot(expected["run"]["run_id"]) == expected
-        print("PASS: watchlist/positions/full run/report/events identical after container recreation")
+        print(
+            "PASS: AI settings/watchlist/positions/full run/report/events identical after container recreation"
+        )
 
 
 if __name__ == "__main__":

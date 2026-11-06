@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { useResource } from '../../shared/hooks/useResource';
 import { ModeBadge } from '../../shared/ui/Presentation';
 import { appApi } from '../api';
@@ -6,6 +6,10 @@ import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 export function Shell({ children }: { children: ReactNode }) {
   const health = useResource(appApi.health);
+  useEffect(() => {
+    window.addEventListener('ai-configuration-saved', health.reload);
+    return () => window.removeEventListener('ai-configuration-saved', health.reload);
+  }, [health.reload]);
   return (
     <div className="app-shell">
       <Sidebar />

@@ -68,9 +68,9 @@ The importer refuses an existing destination, checks v1/integrity, and verifies 
 
 ## External Strata connectivity
 
-The backend uses the existing configured endpoint/model/auth unchanged. Test `/models` from inside the backend with a bounded authenticated request, printing status only; never log auth or `.env`. A successful connection is distinct from full six-stage research acceptance. Existing project budgets are documented below. A prior live AAPL report passed all stages with incomplete evidence coverage; this cleanup does not rerun live inference or alter budgets.
+Without saved UI settings, the backend uses the environment endpoint/model/auth unchanged. Test `/models` from inside the backend with a bounded authenticated request, printing status only; never log auth or `.env`. A successful connection is distinct from full six-stage research acceptance. Existing project budgets are documented below. A prior live AAPL report passed all stages with incomplete evidence coverage; this cleanup does not rerun live inference or alter budgets.
 
-If connection fails, compare native and container reachability, route and service bindings before changing any address/security setting. The application still permits only HTTPS or loopback/link-local IPv4 HTTP model endpoints without embedded credentials. Do not disable validation or broadly relax HTTP/CORS/host restrictions. Vite uses `API_PROXY_TARGET=http://backend:8000`; native fallback remains `127.0.0.1:8000`. Only the exact `backend` service hostname was added to TrustedHost; untrusted hosts/origins stay rejected.
+If connection fails, compare native and container reachability, route and service bindings before changing any address/security setting. The application permits HTTPS, existing loopback/link-local IPv4 HTTP, and exact `host.docker.internal` HTTP model endpoints without embedded credentials. Do not disable validation or broadly relax HTTP/CORS/host restrictions. Vite uses `API_PROXY_TARGET=http://backend:8000`; native fallback remains `127.0.0.1:8000`. Only the exact `backend` service hostname was added to TrustedHost; untrusted hosts/origins stay rejected.
 
 The reusable status-only probe is:
 
@@ -177,3 +177,44 @@ The npm option preserves the tested lockfile resolution for the Vite/Vitest opti
 ## Compatibility names
 
 The product is **Stocker**. Existing Compose project `stockscope`, volume key `stockscope_data` (normally `stockscope_stockscope_data`), `stockscope.db` paths, `STOCKSCOPE_ENV_FILE`, package names, fixture project names and widget message identifiers intentionally retain legacy spelling. These are storage/configuration or internal compatibility identifiers. Renaming them requires a separate migration with backups and explicit mapping; a display-name update must not select an empty volume or lose history.
+
+## AI configuration and host networking
+
+The initial setup window appears when neither saved settings nor `LLM_MODEL` configures a model. Skip it for synthetic fixture use; it can reappear on a fresh page session until configured. Settings → AI is always available. Enter the base URL including `/v1` where required, exact model identifier and optional key. Test Connection makes a small real chat-completion request (it can consume provider tokens); Save persists only after a successful test in this UI. Changing any field requires retesting. A saved key is never populated into an input. Blank keeps it for the same endpoint; the no-key checkbox clears it. Changing endpoints requires a new key or explicit no-key choice.
+
+Saved UI fields override only `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`. Environment budgets, providers and `DATA_MODE` remain intact. Reset with Use environment configuration. Existing `.env` values are never edited. Saving does not rebuild/restart containers and affects new operations; queued/running research keeps its original settings. Fixture mode continues to use deterministic synthetic outputs even after AI is configured. Enable live mode/providers separately through `.env` if desired.
+
+Inside Docker, `127.0.0.1` means the backend container. For a model running on the host, use `http://host.docker.internal:PORT/v1`. Compose supplies the exact host-gateway alias for Linux; Docker Desktop also supports host access. On Windows/WSL2, the host model must listen on an interface reachable from Docker, and Windows firewall/WSL networking must permit that connection. A model bound only to Windows or WSL loopback may remain unreachable; the alias does not rebind external services. Check the model's bind address and Docker Desktop WSL integration. Keep Stocker's published ports on loopback and firewall access limited to the Docker network. Use HTTPS for remote providers; do not broaden endpoint/host/origin validation to troubleshoot reachability. The existing `.env` endpoint remains unchanged until explicitly replaced.
+
+Compose persists private credentials at `/data/ai-settings/config.json` in the existing volume, with 0600 file/0700 directory permissions. Native defaults to ignored `.ai-settings/config.json` at the repository root. `AI_CONFIG_FILE` must point to a dedicated private directory, on persistent storage for Docker. Secrets are access-controlled plaintext: protect volume exports and backups; local OS/Docker administrators can read them. No encryption key management dependency is introduced. Never print this file or include it in diagnostics. Back up the file separately from SQLite, using `docker compose cp backend:/data/ai-settings/config.json /absolute/private/backup/ai-config.json` into a private 0700 backup directory; set the exported file to 0600 and compare with `cmp` silently after restoring to a private staging path. Restoring requires stopping the backend, preserving the current file, copying the backup to the configured path, restoring 0600/0700 permissions and starting the backend. Never commit backups. A corrupt file fails startup safely rather than silently discarding credentials.
+
+## Development history workflow
+
+`main` owns current application source, tests/CI, Docker setup, user guides, architecture/API contracts, roadmap and limitations. `archive/stocker-development-history` is the single long-lived branch for detailed progress, plans, migration acceptance, debugging/execution records and decision history. The old dated archive remains an untouched snapshot. This replaces the earlier freeze-only archive policy.
+
+At a major milestone, commit and validate application work on a feature branch/main first. In a separate clean archive worktree, merge that exact verified commit with a normal merge (no squash, force push or reset), then update archive-only `docs/PROGRESS.md` and `docs/DECISIONS.md`. Record commit, test results, failures/limits and the precise next action. After main receives the feature, merge main there as well to include its integration commit. Keep application/config/test trees identical to the selected source commit. Archive history is retrieved with:
+
+```bash
+git fetch origin archive/stocker-development-history
+git show origin/archive/stocker-development-history:docs/PROGRESS.md
+git show origin/archive/stocker-development-history:docs/DECISIONS.md
+# Create a separate worktree once; reuse it for subsequent milestones.
+git worktree add /tmp/stocker-history archive/stocker-development-history
+# Run inside that archive worktree, using the exact verified source ref:
+git merge --no-ff main
+# Edit archive-only progress/decisions, commit, then verify synchronized source:
+git diff main -- backend frontend fixtures scripts compose.yaml compose.fixture.yaml Makefile .github
+```
+
+If the local branch is absent after fetching, create the worktree with `git worktree add -b archive/stocker-development-history /tmp/stocker-history origin/archive/stocker-development-history`. A freshly provisioned remote may initially have only the dated snapshot: create the permanent branch from that snapshot, merge main, and restore archive-only deleted records from the pre-merge archive commit before committing. Resolve only reviewed conflicts; preserve historical records and take current application source from main. Never merge the archive branch into main. The first permanent archive and feature commits are local until an authorized push; publishing/merging follow repository protections and require user authorization. Future milestones reuse this branch, rather than creating new dated archives.
+
+Use `git show` for historical context instead of copying old plans into the public branch. Verify public Markdown links resolve or explicitly target archived content. Archive-only documents may retain historical product names and obsolete instructions; current main architecture/contributor instructions take precedence.
+
+AI-specific browser acceptance on an isolated fixture stack uses a synthetic loopback responder (never start this in live mode):
+
+```bash
+docker compose -p stockscope-fixture -f compose.yaml -f compose.fixture.yaml exec -d backend python /workspace/backend/tests/fixture_model_server.py
+backend/.venv/bin/python scripts/ai_configuration_smoke.py
+```
+
+The harness refuses non-fixture data and real model settings, verifies setup/skip/test/save/reset, secret absence, mobile overflow and page errors. `STOCKER_SMOKE_BASE` can point to alternate fixture ports; the harness sends the exact supported UI origin without changing application policy. It changes only synthetic AI preferences. The general Compose smoke also verifies a synthetic saved AI configuration survives container recreation. Never run either smoke against the live project. The loopback responder ends when its fixture backend container is stopped.

@@ -17,3 +17,5 @@ coverage/
 .browser-cache/
 .provider-cache/
 *.tsbuildinfo
+
+.ai-settings/

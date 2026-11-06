@@ -53,6 +53,7 @@ def main():
         env = os.environ.copy()
         env.update(
             DATA_MODE="fixtures",
+            AI_CONFIG_FILE=f"{temporary}/ai/config.json",
             DATABASE_URL=f"sqlite:///{temporary}/smoke.db",
             LLM_MODEL="",
             LLM_API_KEY="",
@@ -90,6 +91,7 @@ def main():
                 page.on("pageerror", lambda error: errors.append(error.stack or str(error)))
                 page.set_default_timeout(15000)
                 page.goto(BASE)
+                page.get_by_role("button", name="Skip AI setup").click()
                 expect(page.get_by_role("heading", name="Market workspace")).to_be_visible()
                 expect(page.locator(".mode-banner")).to_contain_text("Synthetic sample data")
                 expect(page.get_by_text("ETF proxy", exact=True)).to_have_count(2)
@@ -201,6 +203,7 @@ def main():
                 steps.append("Settings shows partial Canadian coverage and unavailable fundamentals")
                 page.set_viewport_size({"width": 390, "height": 844})
                 page.goto(BASE)
+                page.get_by_role("button", name="Skip AI setup").click()
                 expect(page.get_by_role("heading", name="Market workspace")).to_be_visible()
                 page.screenshot(path=str(screenshots / "home-mobile.png"), full_page=True)
                 width = page.evaluate(
