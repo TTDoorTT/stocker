@@ -25,11 +25,14 @@ lint:
 	$(FRONTEND) npm run lint
 format:
 	$(RUN) -v ./backend/tests:/workspace/backend/tests -v ./scripts:/workspace/scripts backend ruff format --config pyproject.toml app tests /workspace/scripts
+	$(RUN) -v ./frontend:/app -v /app/node_modules frontend npm run format
 format-check:
-	$(BACKEND) ruff format --config pyproject.toml --check app tests /workspace/scripts
+	$(BACKEND) ruff format --config pyproject.toml --check --silent app tests /workspace/scripts
+	$(FRONTEND) npm run format:check
 typecheck:
-	$(FRONTEND) npm exec tsc -- --noEmit
+	$(FRONTEND) npm run typecheck
 check: lint format-check typecheck test build
+	$(FRONTEND) npm run ci
 build:
 	$(FRONTEND) npm run build
 # This native harness refuses occupied ports and uses temporary fixture storage.

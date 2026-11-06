@@ -240,3 +240,9 @@
 - Root `make test`, `lint`, `typecheck`, `build`, `status`, `stop`, `dev` exercised successfully. Tests: 118 backend / 18 frontend; Ruff/TypeScript/build passed. SQLite content fingerprints for both named-volume databases match before/after stop/dev. Make is optional; normal Compose startup remains sufficient.
 - Formatter commands are real and correctly return baseline diagnostics (31 files), intentionally resolved by Phase 3. Native/container lint ownership is now explicit for `app`. `smoke` retains the existing native harness's occupied-port refusal. No finance/model/DB behavior changes.
 - Next: Phase 3 tooling config/dependency commit, then separate format-only commit and regression checks.
+
+## Phase 3 in progress — 2026-11-06 15:00 EST
+- Adding exact-pinned Biome 2.6.6 and separate frontend lint/format/typecheck/CI scripts. Python Ruff target explicitly py311 (minimum supported), width 110; no new rule expansion mixed into formatter work. Biome initial rules enforce unused imports/variables, hook placement and JSX keys; strict TypeScript remains separate. Import organization enabled. No bulk source changes in this tooling checkpoint.
+- Formatting follows in a dedicated commit, then meaningful regression/type/build checks.
+
+- Phase 3 tooling checks: exact Biome installation audited **0 vulnerabilities**; frontend Biome lint and TypeScript pass before formatting. Initial config emitted a deprecated `recommended` setting notice; migrated to Biome 2.6's `preset: none` with the same explicit rules. One npm lint invocation used the root cwd and failed ENOENT; corrected frontend invocation passes. Image rebuild running.

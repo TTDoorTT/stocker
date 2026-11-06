@@ -95,3 +95,7 @@ See [Compose service reference](https://docs.docker.com/reference/compose-file/s
 ## Optional Make commands
 
 `make dev`, `stop`, `status`, `logs`, and `rebuild` wrap the normal Compose lifecycle. Make is optional; `docker compose up -d` remains sufficient. `make test`, `lint`, `typecheck`, and `build` use one-off fixture containers with isolated temporary SQLite storage and do not require stopping the live stack. `make format` / `format-check` currently apply Ruff to Python; the planned Phase 3 adds frontend formatting. `make check` runs all quality/test/build targets; format-check intentionally reports existing baseline differences until Phase 3. `make smoke` uses the native browser harness and refuses occupied ports: stop Compose first. Backend source/test/script bind mounts allow explicit format writes; normal checks keep tests/scripts read-only.
+
+## Quality tools
+
+Phase 3 uses Ruff (110 columns, Python 3.11 target) and exact-pinned Biome 2.6.6 (2 spaces, single quotes, semicolons, import organization). Frontend `npm run typecheck` runs TypeScript; `lint` runs Biome. `format`, `format:check`, `check`, and `ci` are distinct commands. The initial Biome rules enforce unused declarations/imports, hook placement and JSX keys; expand rules incrementally without changing financial behavior. `make format` now formats both languages; formatting changes are committed separately from moves or behavior. See [Biome configuration](https://biomejs.dev/reference/configuration/) and [Ruff formatter](https://docs.astral.sh/ruff/formatter/).
