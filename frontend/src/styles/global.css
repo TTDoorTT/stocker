@@ -1190,3 +1190,32 @@ footer {
     animation: none;
   }
 }
+
+.ai-setup {
+  width: min(640px, calc(100vw - 32px));
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--panel, #151b27);
+  color: inherit;
+  border: 1px solid #657085;
+  border-radius: 12px;
+  padding: 24px;
+}
+.ai-setup::backdrop {
+  background: #0009;
+}
+.ai-fields {
+  display: grid;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  margin: 16px 0;
+}
+.ai-fields label {
+  display: grid;
+  gap: 6px;
+}
+.ai-fields input:not([type="checkbox"]) {
+  width: 100%;
+  min-width: 0;
+}

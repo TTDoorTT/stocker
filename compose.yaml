@@ -10,7 +10,10 @@ services:
         required: false
     environment:
       DATABASE_URL: sqlite:////data/stockscope.db
+      AI_CONFIG_FILE: /data/ai-settings/config.json
       PYTHONDONTWRITEBYTECODE: "1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

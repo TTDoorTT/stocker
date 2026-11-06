@@ -13,7 +13,7 @@ Base URL `http://127.0.0.1:8000/api`; OpenAPI interactive contracts at `/docs`. 
 - `GET /research-runs?limit=50&offset=0`, `GET /research-runs/{id}`, `GET /research-runs/{id}/events`, `GET /research-runs/{id}/report`: saved artifacts and timestamped real execution trace. Poll detail/events every 1.5 seconds while queued/running. Stages can pass while overall analysis is incomplete due to missing data.
 - `POST /chat`: `{symbol,message}`; stock-context answer with validated evidence/numbers. Does not launch research. Fixture mode returns a visibly labeled deterministic stub.
 
-No frontend keys, arbitrary provider URL input or public unauthenticated hosting is supported.
+Saved provider keys are never returned. Local AI settings accept validated OpenAI-compatible endpoints; public unauthenticated hosting remains unsupported.
 
 Selected intelligence APIs:
 
@@ -27,3 +27,12 @@ Selected intelligence APIs:
 Canadian exact-symbol search results are explicitly unverified listing candidates, not verified company identity. Live stock objects and research runs retain CA market metadata; unsupported fundamentals and quotes remain explicit gaps. Fixture mode remains the original synthetic U.S. demo with no fabricated Canadian fixtures.
 
 The complete contract is protected by `backend/tests/contracts/openapi.json` and its API regression test. The Stocker cleanup changes only OpenAPI `info.title`; routes, request/response schemas and error contracts are preserved.
+
+## AI configuration
+
+- `GET /settings/ai`: `{base_url,model_id,has_api_key,configured,source}`; source is `environment` or `saved`. No key value.
+- `POST /settings/ai/test`: `{base_url,model_id,api_key?:string|null}`; small bounded chat-completion request, returns `{ok,message}`. Never saves. HTTP failures/provider bodies are sanitized. A successful probe verifies connectivity/model access, not research quality.
+- `POST /settings/ai`: same request shape; persists atomically and returns status. Applies to new operations immediately. UI requires a successful test of the current fields first; API clients may save directly.
+- `DELETE /settings/ai`: removes the saved override and returns environment status. Does not edit `.env`.
+
+Omitted/null `api_key` retains the effective key only for the same endpoint; an empty string explicitly clears it. A changed endpoint requires an explicit key or empty string. Requests reject embedded URL credentials, query/fragment and non-HTTPS URLs except the existing loopback/link-local IPv4 allowance and exact `host.docker.internal` HTTP hostname. Invalid fields return sanitized 422 errors. Settings responses use `Cache-Control: no-store`; existing host/origin checks apply. Storage failures return 503 and keep active settings unchanged. Fixtures and financial provider settings remain independent.

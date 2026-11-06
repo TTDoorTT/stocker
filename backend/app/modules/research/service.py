@@ -24,10 +24,12 @@ class ResearchService:
         data: DataService,
         settings: Settings,
         industry: Callable[[str], dict],
+        current_settings: Callable[[], Settings] | None = None,
     ):
         self.repository = repository
         self.data = data
         self.settings = settings
+        self.current_settings = current_settings or (lambda: self.settings)
         self.industry = industry
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="research")
         self.capacity = BoundedSemaphore(4)
@@ -58,14 +60,15 @@ class ResearchService:
             raise IndustryNotFound("Industry template not found") from None
         if not self.capacity.acquire(blocking=False):
             raise ResearchQueueFull("Local research queue is full; wait for an existing run")
-        run = new_run(body.symbol, self.settings, body.strategy)
+        settings = self.current_settings()
+        run = new_run(body.symbol, settings, body.strategy)
         if industry:
             run["industry"] = industry
         self.repository.save_run(run)
 
         def execute():
             try:
-                ResearchOrchestrator(self.repository, self.data, self.settings).execute(run["run_id"])
+                ResearchOrchestrator(self.repository, self.data, settings).execute(run["run_id"])
             finally:
                 self.capacity.release()
 
@@ -85,7 +88,7 @@ class ResearchService:
         return self.repository.events(run_id)
 
     def chat(self, body: ChatRequest) -> dict:
-        return answer_chat(body, self.data, self.settings)
+        return answer_chat(body, self.data, self.current_settings())
 
 
 def summarize_captured_headlines(

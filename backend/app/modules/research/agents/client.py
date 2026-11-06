@@ -78,7 +78,9 @@ class ModelClient:
                 ) as client:
                     response = client.post(
                         self.settings.llm_base_url.rstrip("/") + "/chat/completions",
-                        headers={"Authorization": f"Bearer {self.settings.llm_api_key}"},
+                        headers={"Authorization": f"Bearer {self.settings.llm_api_key}"}
+                        if self.settings.llm_api_key
+                        else {},
                         json=payload,
                     )
                     if response.status_code == 400 and self.response_format_with_tools:
