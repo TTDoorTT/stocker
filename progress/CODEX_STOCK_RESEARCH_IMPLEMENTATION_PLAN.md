@@ -115,7 +115,7 @@ These clones must remain reference-only and excluded from the current project's 
 
 ### 1.4 Source map — inspect these exact files
 
-**Vibe Research — research methodology and orchestration**  
+**Vibe Research — research methodology and orchestration**<br>
 Repository: https://github.com/simonlin1212/Vibe-Research
 
 | Path in `references/Vibe-Research/` | Why inspect it |
@@ -144,7 +144,7 @@ Repository: https://github.com/simonlin1212/Vibe-Research
 | `desktop/src/verticals/finance/pages/` | Existing Home, DailyReview, Research, Intel, Signals, Sectors pages |
 | `desktop/src/verticals/finance/data/sectors.json` | **Original 20 sector templates**; adapt for Western markets |
 
-**OpenStock — dashboard/visualization reference only**  
+**OpenStock — dashboard/visualization reference only**<br>
 Repository: https://github.com/Open-Dev-Society/OpenStock
 
 | Path in `references/OpenStock/` | Why inspect it |
@@ -431,7 +431,7 @@ Do not claim these commands work until the corresponding scaffold and dependenci
 8. Provide compact recorded **fixture** datasets for AAPL, MSFT and NVDA (synthetic or clearly documented historical snapshots) to test all workflows offline. Never display a fixture as a live quote.
 9. Implement `/api/stocks/*`, `/api/markets/overview`, and tests with mocked HTTP providers.
 
-**SEC source**: https://www.sec.gov/search-filings/edgar-application-programming-interfaces  
+**SEC source**: https://www.sec.gov/search-filings/edgar-application-programming-interfaces<br>
 **SEC fair access**: https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data
 
 **Acceptance**: In live mode, at least one test symbol returns real, sourced profile/financials and (when configured) quote/history; invalid data and missing keys result in honest errors; in fixture mode all math tests pass and source metadata is visible.
@@ -477,7 +477,7 @@ Implement one **shared model client**, six **role-specific agent sessions** and 
 6. Integrate `/api/research-runs` and render real progress, stage validation status and final report. Handle failure and missing data gracefully.
 7. Display clear separation between **Demo/Fixture** and **Live** data.
 
-**TradingView heatmap**: https://www.tradingview.com/widget-docs/widgets/heatmaps/stock-heatmap/  
+**TradingView heatmap**: https://www.tradingview.com/widget-docs/widgets/heatmaps/stock-heatmap/<br>
 **TradingView data limitations**: https://www.tradingview.com/widget-docs/faq/data/
 
 **Acceptance**: User can navigate the UI, inspect AAPL/MSFT/NVDA, manage watchlist/positions, launch research, see actual progress, and open final reports. No fake heatmap-to-app link guarantee.

@@ -6,10 +6,10 @@
 
 # Stocker — Docker Compose + Modular Monolith Migration
 
-**Status:** EXECUTION PLAN — not yet applied to the repository  
-**Repository:** https://github.com/TTDoorTT/stocker  
-**Working directory:** `~/uni/dh399/stocker` (WSL2 Ubuntu on Windows 11)  
-**Date prepared:** 2026-11-06  
+**Status:** EXECUTION PLAN — not yet applied to the repository<br>
+**Repository:** https://github.com/TTDoorTT/stocker<br>
+**Working directory:** `~/uni/dh399/stocker` (WSL2 Ubuntu on Windows 11)<br>
+**Date prepared:** 2026-11-06<br>
 **Owner decision:** Development environment **B (Docker Compose)** and architecture **B (feature-oriented modular monolith)**.
 
 > This document is an instruction specification for Codex CLI. It is **not a claim that any proposed file or command already exists**. Codex should examine the live working tree before every change and implement this plan incrementally. Never replace working code with an empty scaffold merely to match a diagram.
