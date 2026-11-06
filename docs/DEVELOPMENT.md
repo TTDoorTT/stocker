@@ -94,7 +94,7 @@ See [Compose service reference](https://docs.docker.com/reference/compose-file/s
 
 ## Optional Make commands
 
-`make dev`, `stop`, `status`, `logs`, and `rebuild` wrap the normal Compose lifecycle. Make is optional; `docker compose up -d` remains sufficient. `make test`, `lint`, `typecheck`, and `build` use one-off fixture containers with isolated temporary SQLite storage and do not require stopping the live stack. `make format` / `format-check` currently apply Ruff to Python; the planned Phase 3 adds frontend formatting. `make check` runs all quality/test/build targets; format-check intentionally reports existing baseline differences until Phase 3. `make smoke` uses the native browser harness and refuses occupied ports: stop Compose first. Backend source/test/script bind mounts allow explicit format writes; normal checks keep tests/scripts read-only.
+`make dev`, `stop`, `status`, `logs`, and `rebuild` wrap the normal Compose lifecycle. Make is optional; `docker compose up -d` remains sufficient. `make test`, `lint`, `typecheck`, and `build` use one-off fixture containers with isolated temporary SQLite storage and do not require stopping the live stack. `make format` / `format-check` apply Ruff to Python and Biome to the frontend. `make check` runs all quality/test/build targets; format-check rejects unformatted source. `make smoke` uses the native browser harness and refuses occupied ports: stop Compose first. The explicit `compose.format.yaml` override allows formatter writes as the host UID/GID with a temporary Ruff cache; normal checks keep tests/scripts read-only.
 
 ## Quality tools
 

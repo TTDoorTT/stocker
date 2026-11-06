@@ -1,19 +1,19 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { PriceChart } from '../components/PriceChart';
 import {
+  dateTime,
   Empty,
   ErrorBox,
   EvidenceTable,
   Gaps,
   Loading,
   ModeBadge,
+  money,
   PageTitle,
   SourceLink,
-  dateTime,
-  money,
   useResource,
 } from '../components/shared';
 import type { ChatReply } from '../types';

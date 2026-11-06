@@ -1,5 +1,5 @@
 import type { PriceBar } from '../types';
-import { dateTime, money, Empty, SourceLink } from './shared';
+import { dateTime, Empty, money, SourceLink } from './shared';
 
 export function PriceChart({ bars, currency }: { bars: PriceBar[]; currency: string }) {
   const valid = bars.filter((bar) => Number.isFinite(bar.close));

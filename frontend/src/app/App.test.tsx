@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { App } from './App';
 import type { Evidence, Run, Stock } from '../types';
+import { App } from './App';
+
 const timestamp = '2025-01-01T00:00:00Z';
 const evidence: Evidence = {
   evidence_id: 'ev-test',

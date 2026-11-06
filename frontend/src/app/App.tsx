@@ -7,6 +7,7 @@ import { DailyReview, Industries, NewsRadar } from '../pages/Intelligence';
 import { MyStocks } from '../pages/MyStocks';
 import { ResearchRecords, ResearchRun } from '../pages/Research';
 import { ResearchLanding, StockPage } from '../pages/Stock';
+
 const navigation = [
   ['/', '◈', 'Home'],
   ['/daily-review', '◷', 'Daily Review'],

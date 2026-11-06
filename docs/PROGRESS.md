@@ -250,3 +250,13 @@
 - Initial `make format` formatted 19 backend app files, then failed because Compose retained read-only flags when overriding test/script mounts. No functional edits. Corrected explicit `:rw` overrides and run formatting as host UID/GID to preserve source ownership; this command fix is committed separately from the source formatting baseline.
 
 - Formatter command correction: explicit one-off `:rw` flags also retained read-only mounts; host-UID run additionally required a writable Ruff cache. Replaced the mount set using `compose.format.yaml` with Compose `!override`, keeping normal checks read-only and formatting as host UID/GID with `/tmp` cache. Backend formatting now succeeds; frontend result and regressions pending.
+
+## Phase 3 format baseline — 2026-11-06 15:00 EST
+- `e9cfd5b` is formatter-only: 51 files, Python ASTs exactly match the preceding commit; 118 backend/18 frontend tests, Ruff/Biome lint, TypeScript and production build pass after formatting.
+- Container format-check exposed image-copied `tsconfig.json` lagging the formatted host version; added a read-only config bind mount. This is a configuration freshness issue, not a source formatting failure. Full `make check` rerun pending.
+- Biome import organization is a separate following change (14 files), not mixed with the format-only commit. Frontend `npm run ci` passes after import organization; no rules disabled to pass it.
+
+## Phase 3 accepted — 2026-11-06 15:00 EST
+- Full root `make check` **passed**: Ruff lint/format; Biome lint/format/CI/import organization; strict TypeScript; 118 backend tests (8.30s, existing deprecation warning), 18 frontend tests; 209-module production build. Formatter mount/cache and copied-tsconfig issues resolved with explicit format override/read-only config mount. No financial or agent behavior changes.
+- Formatter baseline commit `e9cfd5b` is recorded in `.git-blame-ignore-revs`; import organization follows separately. Exact-pinned Biome installation audit reported 0 vulnerabilities.
+- Phase 4A next: extract feature APIRouters preserving create_app injection and the full OpenAPI contract captured outside Git at `/tmp/stockscope-baseline-openapi.json`. No module moves started before Docker/tooling gates passed.

@@ -1,22 +1,23 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, request } from '../api/client';
 import {
+  dateTime,
   Empty,
   ErrorBox,
   EvidenceTable,
+  formatNumber,
   Gaps,
   Loading,
   ModeBadge,
+  money,
   PageTitle,
   SourceLink,
-  dateTime,
-  formatNumber,
-  money,
   useResource,
 } from '../components/shared';
 import type { ChatReply, Mode, NewsItem, Quote } from '../types';
+
 function NewsList({ items }: { items: NewsItem[] }) {
   return items.length ? (
     <div className="news-list">

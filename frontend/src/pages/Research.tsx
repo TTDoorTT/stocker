@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client';
 import {
+  dateTime,
   Empty,
   ErrorBox,
   EvidenceTable,
@@ -11,10 +12,10 @@ import {
   ModeBadge,
   PageTitle,
   StatusBadge,
-  dateTime,
   useResource,
 } from '../components/shared';
 import type { Run, RunEvent } from '../types';
+
 const stages = ['profile', 'financials', 'estimates', 'valuation', 'risk', 'report'];
 export function ResearchRun() {
   const { id = '' } = useParams();

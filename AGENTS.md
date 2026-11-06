@@ -11,3 +11,7 @@ For image inspection, use `vision-analyze IMAGE_PATH "specific question"`. It re
 ## Docker/modular migration
 
 Read `docs/migration/STOCKSCOPE_DOCKER_MODULAR_MIGRATION_PLAN.md`, `docs/ARCHITECTURE.md`, `docs/API.md` and current progress before migration changes. Complete Docker acceptance before module moves. Use the dedicated migration branch and small verified commits; no pushes without authorization. Preserve ignored `.env` and SQLite history with verified backups outside Git. Never change user-wide Strata/Codex/LiteLLM settings. Keep ports on host loopback and validation/host/origin policies restrictive. The existing live iq3_s token-budget limitation is outside this migration.
+
+## Module and quality conventions
+
+New feature code belongs to its owned market-data/research/portfolio/intelligence module. Keep HTTP routers thin, provider access behind normalized market-data interfaces and finance calculations pure. Avoid private imports across feature modules; share only stable contracts. Preserve public API types, routes, persistence and all evidence/fixture/coverage guarantees. Run `make check` (isolated fixture containers) before declaring a gate complete; TypeScript is separate from Biome lint. Commit formatter output separately from moves/behavior; document any new dependency rationale. Native browser smoke requires free ports.

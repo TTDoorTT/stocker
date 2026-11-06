@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import type { Evidence, Mode } from '../types';
 
 export function useResource<T>(loader: () => Promise<T>, dependencies: unknown[] = []) {
