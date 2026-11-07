@@ -1,9 +1,14 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 
 from app.contracts.api import ChatResponse
 from app.modules.intelligence.service import IntelligenceService
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.research.errors import ModelError
+
+
+class RSSHighlightsRequest(BaseModel):
+    category: str = Field(default="ai", min_length=1, max_length=30, pattern=r"^[a-z]+$")
 
 
 def create_router(intel: IntelligenceService) -> APIRouter:
@@ -27,6 +32,30 @@ def create_router(intel: IntelligenceService) -> APIRouter:
             raise HTTPException(
                 502, "Headline summary failed evidence validation; no summary published"
             ) from None
+
+    @router.get("/api/intelligence/rss")
+    def rss(category: str = "ai") -> dict:
+        try:
+            return intel.rss_feed(category)
+        except ValueError:
+            raise HTTPException(422, "Unknown RSS industry category") from None
+
+    @router.post("/api/intelligence/rss/refresh")
+    def rss_refresh() -> dict:
+        return intel.rss_refresh()
+
+    @router.post("/api/intelligence/rss/highlights", response_model=ChatResponse)
+    def rss_highlights(body: RSSHighlightsRequest):
+        try:
+            intel.rss_collector.validate_category(body.category)
+        except ValueError:
+            raise HTTPException(422, "Unknown RSS industry category") from None
+        try:
+            return intel.rss_highlights(body.category)
+        except (ModelError, DataUnavailable):
+            raise
+        except ValueError:
+            raise HTTPException(502, "Industry highlights failed evidence validation") from None
 
     @router.get("/api/intelligence/signals")
     def signals() -> dict:
