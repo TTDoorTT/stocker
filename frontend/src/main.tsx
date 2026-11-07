@@ -5,6 +5,7 @@ import { App } from './app/App';
 import './styles/global.css';
 import './styles/themes.css';
 import './styles/rss.css';
+import './styles/stock-chart.css';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

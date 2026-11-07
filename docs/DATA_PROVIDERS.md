@@ -66,3 +66,11 @@ Previously recorded application probes returned SEC facts/identity/filings, Finn
 Primary references: [SEC APIs](https://www.sec.gov/search-filings/edgar-application-programming-interfaces), [SEC access policy](https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data), [Finnhub docs](https://finnhub.io/docs/api), [Finnhub pricing](https://finnhub.io/pricing), [yfinance](https://github.com/ranaroussi/yfinance), [Alpha Vantage support](https://www.alphavantage.co/support/), [FRED API keys](https://fred.stlouisfed.org/docs/api/api_key.html), [Valet guide](https://www.bankofcanada.ca/valet-api-how-to/), [SEDAR+ terms](https://www.sedarplus.com/onlinehelp/terms-of-use/).
 
 For planned stock research capabilities and provider limitations, see [Stock Research Providers](STOCK_RESEARCH_PROVIDERS.md). These new features are not implemented yet.
+
+## Interactive chart data
+
+OHLCV chart data uses the configured historical price providers.
+
+Yahoo/yfinance is an optional historical data source for supported U.S. and explicitly identified Canadian listings. Alpha Vantage provides a limited U.S. fallback when configured.
+
+Provider OHLC values and adjusted closing prices have different adjustment semantics. Chart data is not represented as total-return data. Provider limitations, coverage gaps, currency, and synthetic fixture status remain explicit.

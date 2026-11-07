@@ -40,3 +40,13 @@ The complete contract is protected by `backend/tests/contracts/openapi.json` and
 - `DELETE /settings/ai`: removes the saved override and returns environment status. Does not edit `.env`.
 
 Omitted/null `api_key` retains the effective key only for the same endpoint; an empty string explicitly clears it. A changed endpoint requires an explicit key or empty string. Requests reject embedded URL credentials, query/fragment and non-HTTPS URLs except the existing loopback/link-local IPv4 allowance and exact `host.docker.internal` HTTP hostname. Invalid fields return sanitized 422 errors. Settings responses use `Cache-Control: no-store`; existing host/origin checks apply. Storage failures return 503 and keep active settings unchanged. Fixtures and financial provider settings remain independent.
+
+## Interactive OHLCV price charts
+
+- `GET /stocks/{ticker}/candles`: normalized OHLCV price history.
+- Supported ranges: `1m`, `3m`, `6m`, `1y`, `2y`, `5y`.
+- Supported intervals: `1d`, `1wk`, `1mo`.
+- Responses include market, currency, source metadata, price-adjustment basis, and coverage limitations.
+- The original `/stocks/{ticker}/history` endpoint remains available.
+
+The frontend provides candlesticks, volume, moving averages, range and interval selection, and interactive zoom.
