@@ -1079,6 +1079,56 @@
         }
       }
     },
+    "/api/industries/ai-computing/filing-excerpts": {
+      "get": {
+        "summary": "Ai Computing Filing Excerpts",
+        "operationId": "ai_computing_filing_excerpts_api_industries_ai_computing_filing_excerpts_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 2100,
+                  "minimum": 2009
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Ai Computing Filing Excerpts Api Industries Ai Computing Filing Excerpts Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/industries/{slug}/sections/{section}": {
       "get": {
         "summary": "Saved Industry Section",

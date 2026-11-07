@@ -2,6 +2,7 @@ import { request } from '../../shared/api/client';
 import type { Mode, NewsItem } from '../../shared/types';
 import type { ChatReply } from '../research/types';
 import type {
+  FilingExcerptsResponse,
   Industry,
   IndustrySectionKey,
   Review,
@@ -25,6 +26,8 @@ export const intelligenceApi = {
   signals: () => request<{ mode: Mode; items: Signal[]; gaps: string[] }>('/intelligence/signals'),
   dailyReview: () => request<Review>('/daily-review'),
   industries: () => request<Industry[]>('/industries'),
+  filingExcerpts: (year: number) =>
+    request<FilingExcerptsResponse>(`/industries/ai-computing/filing-excerpts?year=${year}`),
   industry: (slug: string) => request<Industry>(`/industries/${encodeURIComponent(slug)}`),
   savedIndustrySection: (slug: string, section: IndustrySectionKey) =>
     request<SavedIndustrySection>(`/industries/${encodeURIComponent(slug)}/sections/${section}`),

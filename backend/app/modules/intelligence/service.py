@@ -116,6 +116,10 @@ class IntelligenceService:
     def generate_industry_section(self, slug: str, section: str) -> dict:
         return self.industry_research.generate(slug, section)
 
+    def ai_computing_filing_excerpts(self, year: int) -> dict:
+        """Show a few actual 10-K text matches; never calls the LLM."""
+        return self.data.sec_filing_excerpts(year)
+
     def signals(self) -> dict:
         return self.data.signals()
 

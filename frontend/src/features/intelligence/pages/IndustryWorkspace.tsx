@@ -5,6 +5,7 @@ import { ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
 import { PageTitle } from '../../../shared/ui/Presentation';
 import { researchApi } from '../../research/api';
 import { intelligenceApi } from '../api';
+import { FilingExcerpts } from '../components/FilingExcerpts';
 import { IndustryEvidence } from '../components/IndustryEvidence';
 import { IndustrySection } from '../components/IndustrySection';
 import type { IndustrySectionKey } from '../types';
@@ -76,6 +77,7 @@ export function IndustryWorkspace() {
             <section className="panel">
               <h2>Original SEC evidence and cached news</h2>
               <IndustryEvidence />
+              <FilingExcerpts />
             </section>
           )}
           <section className="panel">
