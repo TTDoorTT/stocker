@@ -58,4 +58,4 @@ Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript a
 
 Vibe Research (MIT) inspired the methodology/topic concepts; its attribution is retained in the industry guide. OpenStock (AGPL) was conceptual reference only; no implementation was copied. The official TradingView embed retains its attribution and terms.
 
-Development plans, progress, decisions and execution records live in [`progress/`](progress/README.md) on `main`, alongside the implementation. See the [progress workflow](docs/DEVELOPMENT.md#development-progress-workflow). Earlier archive branches are retained as historical snapshots and no longer require synchronization.
+Current documentation is maintained in `README.md`, `AGENTS.md` and `docs/`. Historical development records are preserved in [this Git snapshot](https://github.com/TTDoorTT/stocker/tree/7933922ca5e3b88fa43b345456e856f8cfc550ba/progress) and the archive branch `archive/progress-before-cleanup-2026-11-06`. Historical plans are not active implementation instructions.

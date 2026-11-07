@@ -190,13 +190,24 @@ Inside Docker, `127.0.0.1` means the backend container. For a model running on t
 
 Compose persists private credentials at `/data/ai-settings/config.json` in the existing volume, with 0600 file/0700 directory permissions. Native defaults to ignored `.ai-settings/config.json` at the repository root. `AI_CONFIG_FILE` must point to a dedicated private directory, on persistent storage for Docker. Secrets are access-controlled plaintext: protect volume exports and backups; local OS/Docker administrators can read them. No encryption key management dependency is introduced. Never print this file or include it in diagnostics. Back up the file separately from SQLite, using `docker compose cp backend:/data/ai-settings/config.json /absolute/private/backup/ai-config.json` into a private 0700 backup directory; set the exported file to 0600 and compare with `cmp` silently after restoring to a private staging path. Restoring requires stopping the backend, preserving the current file, copying the backup to the configured path, restoring 0600/0700 permissions and starting the backend. Never commit backups. A corrupt file fails startup safely rather than silently discarding credentials.
 
-## Development progress workflow
+## Documentation maintenance
 
-Keep application source, user/contributor documentation and development records on `main`. Put detailed progress, implementation plans, execution/debugging notes, migration acceptance and decision history in the root [`progress/`](../progress/README.md) folder. Keep current setup, architecture, API contracts, roadmap and limitations in `README.md` and `docs/`.
+Keep the README, contributor instructions and `docs/` aligned
+with actual application behavior. Source code, tests and API
+contracts take precedence over historical development plans.
 
-Read the latest entry in [`progress/PROGRESS.md`](../progress/PROGRESS.md) before resuming work. Update it at meaningful milestones, after test runs, on blockers and before ending a session, recording actual results, limitations and the precise next action. Record architecture decisions in [`progress/DECISIONS.md`](../progress/DECISIONS.md). Include these records in the same commit/PR workflow as the corresponding implementation; a temporary feature/PR branch may still be used for required checks.
+Document setup in `README.md`, architecture in
+`ARCHITECTURE.md`, API contracts in `API.md`, validation in
+`VALIDATION.md`, and outstanding work in `ROADMAP.md`.
 
-The separate archive synchronization workflow is retired. The existing archive branches remain unchanged as historical snapshots. Their imported Markdown is indexed in `progress/`; historical instructions do not override current `AGENTS.md` or current architecture. Raw JSON diagnostics remain accessible through the pinned snapshot links in the progress guide. Verify relocated Markdown links when adding or moving records, keep secrets/private backups outside Git, and follow repository branch protections when publishing.
+Record ongoing work through Git commits, issues and pull
+requests instead of maintaining cumulative progress logs.
+
+Historical development records remain available in
+[the pre-cleanup Git snapshot](https://github.com/TTDoorTT/stocker/tree/7933922ca5e3b88fa43b345456e856f8cfc550ba/progress).
+They are historical references, not active agent instructions.
+
+## AI configuration smoke testing
 
 AI-specific browser acceptance on an isolated fixture stack uses a synthetic loopback responder (never start this in live mode):
 
