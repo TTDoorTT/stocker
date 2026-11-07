@@ -15,32 +15,6 @@ export function Home() {
       <PageTitle title="Market workspace">
         <span className="badge">United States</span>
       </PageTitle>
-      <section className="hero">
-        <div>
-          <p className="eyebrow">RESEARCH WITH A RECORD</p>
-          <h2>
-            A clearer view.
-            <br />
-            An evidence trail.
-          </h2>
-          <p>
-            Follow six specialist agents from company identity to a cited report. Review every source,
-            calculation and validation decision.
-          </p>
-          <Link className="button" to="/research">
-            Explore stock research <span>↗</span>
-          </Link>
-        </div>
-        <div className="pipeline-mini" aria-label="Research stages">
-          {['Profile', 'Financials', 'Expectations', 'Valuation', 'Risk', 'Report'].map((stage, i) => (
-            <div key={stage}>
-              <span>0{i + 1}</span>
-              {stage}
-              <b>{i === 5 ? '✓' : '→'}</b>
-            </div>
-          ))}
-        </div>
-      </section>
       <div className="section-title">
         <h2>Market overview</h2>
         <p className="muted">Liquid ETF prices as market proxies; these are not index levels.</p>

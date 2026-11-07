@@ -41,7 +41,7 @@ button {
 }
 button:disabled {
   opacity: 0.6;
-  cursor: wait;
+  cursor: not-allowed;
 }
 h1,
 h2,

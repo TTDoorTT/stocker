@@ -1,0 +1,209 @@
+/* Theme switch: keep dark mode as the default and scope light overrides explicitly. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  color: #203144;
+  background: #f5f7fa;
+  --bg: #f5f7fa;
+  --panel: #ffffff;
+  --muted: #586a7e;
+  --accent: #126b54;
+  --border: #d8e0e8;
+  --negative: #bc3044;
+}
+:root[data-theme="light"] code {
+  color: #35516b;
+}
+:root[data-theme="light"] pre,
+:root[data-theme="light"] input,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] .sidebar,
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .ai-setup {
+  color: #203144;
+  background: #fff;
+  border-color: var(--border);
+}
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: #73839a;
+}
+:root[data-theme="light"] .brand,
+:root[data-theme="light"] .quote-price,
+:root[data-theme="light"] .stock-symbol {
+  color: #17293b;
+}
+:root[data-theme="light"] .brand-mark,
+:root[data-theme="light"] .button:not(.secondary) {
+  color: #fff;
+}
+:root[data-theme="light"] .sidebar-label,
+:root[data-theme="light"] .sidebar-bottom p,
+:root[data-theme="light"] .eyebrow,
+:root[data-theme="light"] .stage-number,
+:root[data-theme="light"] th,
+:root[data-theme="light"] footer {
+  color: #65768a;
+}
+:root[data-theme="light"] .sidebar nav a,
+:root[data-theme="light"] .sidebar-bottom,
+:root[data-theme="light"] .topbar-status,
+:root[data-theme="light"] .search form > span,
+:root[data-theme="light"] .source,
+:root[data-theme="light"] .chart-caption,
+:root[data-theme="light"] .run-meta,
+:root[data-theme="light"] .event-log summary,
+:root[data-theme="light"] .watch-grid button,
+:root[data-theme="light"] .position-form label {
+  color: #52677d;
+}
+:root[data-theme="light"] .sidebar nav a.active {
+  background: #e4f3eb;
+  color: var(--accent);
+}
+:root[data-theme="light"] .sidebar nav a:hover {
+  background: #edf3f7;
+}
+:root[data-theme="light"] .button.secondary,
+:root[data-theme="light"] .search-results,
+:root[data-theme="light"] .stage-card,
+:root[data-theme="light"] .signal-grid article {
+  background: #f1f5f9;
+  color: #203144;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .search-results {
+  background: #fff;
+  box-shadow: 0 12px 30px #20314419;
+}
+:root[data-theme="light"] .search-results a span:nth-child(2),
+:root[data-theme="light"] .panel > p,
+:root[data-theme="light"] td,
+:root[data-theme="light"] .markdown,
+:root[data-theme="light"] summary {
+  color: #344b61;
+}
+:root[data-theme="light"] td {
+  border-bottom-color: var(--border);
+}
+:root[data-theme="light"] .mode-banner {
+  background: #fff6e7;
+  color: #745523;
+  border-bottom-color: #efdfbd;
+}
+:root[data-theme="light"] .mode-banner.live {
+  background: #eaf8ef;
+  color: #256348;
+  border-bottom-color: #c4e6d2;
+}
+:root[data-theme="light"] .badge {
+  background: #f1f5f9;
+  color: #53667c;
+  border-color: #c9d6e0;
+}
+:root[data-theme="light"] .badge.fixture,
+:root[data-theme="light"] .badge.status-incomplete,
+:root[data-theme="light"] .badge.status-validation_failed {
+  background: #fff4db;
+  color: #76521b;
+  border-color: #e9d4a5;
+}
+:root[data-theme="light"] .badge.live,
+:root[data-theme="light"] .badge.status-complete {
+  background: #e6f6ed;
+  color: #246e49;
+  border-color: #add7bd;
+}
+:root[data-theme="light"] .badge.status-failed {
+  background: #ffedf0;
+  color: #a52e42;
+  border-color: #e9b3bd;
+}
+:root[data-theme="light"] .badge.status-running,
+:root[data-theme="light"] .badge.status-queued {
+  background: #eaf2fe;
+  color: #315e96;
+  border-color: #bfd2ef;
+}
+:root[data-theme="light"] .hero {
+  background: linear-gradient(120deg, #e8f6ef, #f5f9fd 65%, #edf4fa);
+  border-color: #bfd7cf;
+}
+:root[data-theme="light"] .hero p:not(.eyebrow),
+:root[data-theme="light"] .pipeline-mini > div {
+  color: #42596d;
+}
+:root[data-theme="light"] .hero .eyebrow,
+:root[data-theme="light"] .pipeline-mini span,
+:root[data-theme="light"] .pipeline-mini b {
+  color: #32765d;
+}
+:root[data-theme="light"] .pipeline-mini {
+  background: #ffffffb8;
+  border-color: #c9d9df;
+}
+:root[data-theme="light"] .pipeline-mini > div {
+  border-bottom-color: #d4e0e6;
+}
+:root[data-theme="light"] .ticker-links a {
+  background: #eaf5ef;
+  border-color: #b7d8c8;
+}
+:root[data-theme="light"] .empty {
+  color: #66788c;
+}
+:root[data-theme="light"] .notice {
+  background: #fff5e4;
+  color: #775422;
+  border-color: #ead6af;
+}
+:root[data-theme="light"] .notice.error {
+  background: #fff0f1;
+  color: #a23447;
+  border-color: #e8bec4;
+}
+:root[data-theme="light"] .markdown code {
+  background: #eaf0f7;
+}
+:root[data-theme="light"] .markdown pre code {
+  background: transparent;
+}
+:root[data-theme="light"] .markdown blockquote {
+  color: #5c6f80;
+}
+:root[data-theme="light"] .positive {
+  color: #18794e;
+}
+:root[data-theme="light"] footer {
+  border-top-color: var(--border);
+}
+
+/* Keep the theme switch visible at desktop and mobile widths. */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.theme-toggle:hover {
+  background: var(--panel);
+  border-color: var(--accent);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+}

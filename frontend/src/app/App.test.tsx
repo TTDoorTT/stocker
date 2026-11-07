@@ -180,6 +180,23 @@ beforeEach(() => {
   );
 });
 describe('Stocker flows', () => {
+  it('removes the old homepage hero without hiding market widgets', () => {
+    mount('/');
+    expect(screen.getByRole('heading', { name: 'Market overview' })).toBeInTheDocument();
+    expect(screen.queryByText('A clearer view.')).not.toBeInTheDocument();
+  });
+  it('toggles light and dark themes and restores the saved choice', () => {
+    window.localStorage.removeItem('stocker-theme');
+    const view = mount('/');
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light theme' }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(window.localStorage.getItem('stocker-theme')).toBe('light');
+    view.unmount();
+    mount('/research');
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to dark theme' }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    window.localStorage.removeItem('stocker-theme');
+  });
   it('shows explicit fixture mode and navigates from research to a stock', async () => {
     mount('/research');
     expect(screen.getByRole('link', { name: /Stocker RESEARCH WORKSPACE/ })).toBeInTheDocument();
