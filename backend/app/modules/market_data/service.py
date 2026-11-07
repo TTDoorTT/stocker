@@ -4,6 +4,7 @@ from app.contracts.market import NewsItem, PriceBar, Stock
 from app.core.config import ROOT, Settings
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.fixtures import FixtureData
+from app.modules.market_data.industry_sec import SECIndustryEvidence
 from app.modules.market_data.providers.alpha_vantage import AlphaVantageProvider
 from app.modules.market_data.providers.bank_of_canada import valet_signals
 from app.modules.market_data.providers.finnhub import FinnhubProvider
@@ -125,3 +126,7 @@ class DataService:
             "items": items,
             "gaps": ["These indicators describe macro conditions; no investment signals are inferred."],
         }
+
+    def sec_industry_snapshot(self, year: int) -> dict:
+        """Expose SEC industry evidence through the market-data service."""
+        return SECIndustryEvidence(self.sec, self.settings).snapshot(year)

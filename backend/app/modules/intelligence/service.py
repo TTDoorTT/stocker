@@ -75,16 +75,36 @@ class IntelligenceService:
     def rss_highlights(self, category: str) -> dict:
         self.rss_collector.validate_category(category)
         settings = self.current_settings()
-        # Initialize RSS tables even if the user has never opened the news feed.
         with closing(self.rss_collector.connect()):
             pass
-        # Snapshot before the model runs, so a simultaneous news refresh marks
-        # the eventual saved result stale rather than falsely up to date.
         fingerprint = self.highlight_cache.fingerprint(category)
         result = self.rss_collector.highlights(category, settings)
-        # Never erase a successful cached result if generation fails.
         self.highlight_cache.save(category, result, settings.llm_model, fingerprint)
         return result
+
+    def ai_computing_evidence(self, year: int) -> dict:
+        """Deterministic industry evidence preview; does not invoke a model."""
+        snapshot = self.data.sec_industry_snapshot(year)
+        stories = []
+        try:
+            for category in ("ai", "semi"):
+                feed = self.rss_collector.feed(category, schedule=False)
+                for item in feed["items"][:5]:
+                    stories.append(
+                        {
+                            "category": category,
+                            "headline": item["headline"],
+                            "source_name": item["source_name"],
+                            "source_url": item["source_url"],
+                            "published_at": item["published_at"],
+                        }
+                    )
+        except (OSError, ValueError) as exc:
+            snapshot["gaps"].append(f"Cached RSS headlines unavailable ({type(exc).__name__}).")
+        snapshot["news"] = sorted(stories, key=lambda item: item["published_at"], reverse=True)[:8]
+        if not snapshot["news"]:
+            snapshot["gaps"].append("RSS headlines not cached yet; refresh Industry Intelligence news first.")
+        return snapshot
 
     def signals(self) -> dict:
         return self.data.signals()
