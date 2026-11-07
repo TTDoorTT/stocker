@@ -1,6 +1,6 @@
 # Stocker
 
-Local educational stock research for U.S. companies, with partial Canadian support. Stocker combines a React workspace, six specialist research stages, source-linked deterministic calculations and saved reports in SQLite. It runs locally with Docker; synthetic fixture mode needs no credentials.
+Local educational stock research for U.S. companies, with partial Canadian support. Stocker combines a React workspace, six specialist research stages, source-linked deterministic calculations, industry RSS news with optional AI highlights, and saved results in SQLite. It runs locally with Docker; synthetic fixture mode needs no credentials.
 
 ## Quick start
 
@@ -20,13 +20,23 @@ Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/do
 - Watchlists and simple USD/CAD position snapshots with unrealized P&L when a matching quote exists.
 - Profile → financials → expectations → valuation → risk → report, with independent validation, bounded retries and a persisted execution trace.
 - Stock-context chat, research history and Markdown report downloads.
-- Limited daily review/news, explicit headline-only live summaries, optional macro indicators and 20 guided industry topics.
+- Daily review, optional macro indicators and 20 guided industry research topics.
+- Industry Intelligence: curated English-first RSS news across 12 categories (88 configured sources), with explicit AI highlights saved by category.
+- Persistent dark/light theme switch in the top-right header; the browser remembers the choice.
 
 `DATA_MODE=fixtures` is the default: invented, visibly **synthetic** data and a deterministic model stub exercise the workflow. The independent TradingView widget uses external data and may be blocked without preventing research. `DATA_MODE=live` uses configured providers/model and never silently falls back to fixtures.
 
+## Industry Intelligence news and highlights
+
+Open **Industry Intelligence** to browse recent (last three days) English-first RSS headlines by category. The source inventory contains **88 configured feeds across 12 categories**, not 88 guaranteed working sources. The page shows publisher links, source response counts and the last successful refresh; select **Refresh news** for a manual background update. Opening the feed schedules a refresh when the previous attempt is at least 45 minutes old. RSS access depends on network availability and publisher endpoints.
+
+Reading, refreshing and filtering news **do not call an AI model**. Selecting **Generate AI highlights** explicitly calls the configured OpenAI-compatible model, using up to 20 selected recent headlines plus short publisher-provided RSS excerpts, with evidence links—not full article text. Successful highlights are saved per category in the existing SQLite database, restored on later visits without model calls, and marked stale if the underlying recent news changes. Regeneration is manual; unsuccessful requests preserve the previous saved result. RSS news is separate from `DATA_MODE`: synthetic fixture mode still labels stock/research data as invented and does not turn RSS headlines into financial facts.
+
+For source licensing, scope, and operational limitations, see [RSS news source attribution](docs/THIRD_PARTY_NEWS_SOURCES.md).
+
 ## Configuration
 
-Open **Settings → AI** (or the initial setup window), enter the **API Base URL**, exact **Model ID**, and optional **API Key**, then **Test Connection** and **Save**. Strata and other OpenAI-compatible chat-completion endpoints are supported. Saved settings take effect immediately for new requests and survive container recreation; no rebuild is needed. Keys are stored privately on the backend and never returned to the browser. For a host model in Docker, use `http://host.docker.internal:PORT/v1`; see [host networking](docs/DEVELOPMENT.md#ai-configuration-and-host-networking).
+Open **Settings → AI** (or the initial setup window), enter the **API Base URL**, exact **Model ID**, and optional **API Key**, then **Test Connection** and **Save**. Strata and other OpenAI-compatible chat-completion endpoints are supported. Saved settings take effect immediately for new requests (including manually triggered RSS highlights) and survive container recreation; no rebuild is needed. Keys are stored privately on the backend and never returned to the browser. For a host model in Docker, use `http://host.docker.internal:PORT/v1`; see [host networking](docs/DEVELOPMENT.md#ai-configuration-and-host-networking).
 
 The root `.env` method remains supported for advanced configuration. Saved AI settings override its three model connection fields; **Use environment configuration** removes that override without editing `.env`. AI setup does not enable live financial data: `DATA_MODE=fixtures` remains synthetic. For live data, configure `.env` with `DATA_MODE=live` and the desired providers. A genuine `SEC_USER_AGENT` enables SEC access; `FINNHUB_API_KEY` enables authorized U.S. quotes/news. Yahoo daily history and Bank of Canada macro need no key; Alpha Vantage and FRED are optional.
 
@@ -38,7 +48,7 @@ This is local educational software, not a hosted multiuser service or investment
 
 A previous live AAPL run recorded all six validated stages and a sourced report; it is historical acceptance evidence, **not independently rerun for this cleanup** or proof of general model accuracy. Licensed consensus, interim/TTM coverage, peer comparisons and other evidence remain incomplete. Annual ratios are not TTM; there are no trading actions or target-price features.
 
-Canadian support covers explicit `.TO`/`.V` daily-history mapping, CAD positions and Bank of Canada context. Canadian fundamentals/current quotes and automatic currency conversion are unavailable; TSXV history has not been live-probed. Market-data access and redistribution depend on provider rights. Widget prices never feed agents.
+Canadian support covers explicit `.TO`/`.V` daily-history mapping, CAD positions and Bank of Canada context. Canadian fundamentals/current quotes and automatic currency conversion are unavailable; TSXV history has not been live-probed. Market-data access and redistribution depend on provider rights. RSS headlines/excerpts are third-party publisher material, may be unavailable or delayed, and are not verified article content. The RSS feed and highlights do not supply financial facts to stock research. Widget prices never feed agents.
 
 ## Tests
 
@@ -52,7 +62,7 @@ Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript a
 
 - [Development and configuration](docs/DEVELOPMENT.md)
 - [Architecture](docs/ARCHITECTURE.md) and [API](docs/API.md)
-- [Data providers](docs/DATA_PROVIDERS.md)
+- [Data providers](docs/DATA_PROVIDERS.md) and [RSS news sources / attribution](docs/THIRD_PARTY_NEWS_SOURCES.md)
 - [Fixture demo](docs/DEMO.md) and [industry topics / attribution](docs/INDUSTRIES.md)
 - [Future work](docs/ROADMAP.md)
 

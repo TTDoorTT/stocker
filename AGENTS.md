@@ -6,7 +6,7 @@ Keep active documentation aligned with implemented code. Record new development 
 
 Keep new code in its owned backend `app/modules/{market_data,research,portfolio,intelligence}` or frontend `src/features/*` module. Keep routers thin, provider access behind normalized market-data services and finance calculations pure. Share stable public contracts; preserve enforced import boundaries and API/DTO compatibility.
 
-Keep fixtures visibly synthetic. Live facts require source metadata; derived values use deterministic calculations. Preserve explicit unavailable/incomplete coverage, runtime model prompts and existing tests. Reference clones stay ignored; OpenStock is conceptual reference only (AGPL). Retain industry attribution.
+Keep fixtures visibly synthetic. Live facts require source metadata; derived values use deterministic calculations. Preserve explicit unavailable/incomplete coverage, runtime model prompts and existing tests. RSS industry news is independent of financial `DATA_MODE`: reading/refreshing/categorizing news and restoring saved highlights must not call an LLM. Only explicit user-triggered generation can call the validated summarizer. Preserve RSS publisher links, excerpts limitations, per-category SQLite persistence/staleness, and the MIT-derived source inventory/license in `docs/THIRD_PARTY_NEWS_SOURCES.md`. Reference clones stay ignored; OpenStock is conceptual reference only (AGPL). Retain industry attribution.
 
 Preserve ignored configuration/databases and user-wide Codex/Strata/LiteLLM settings. Back up persistence before storage changes. Keep loopback bindings and restrictive host/origin/endpoint policies. Preserve legacy Compose/volume/SQLite and internal identifiers unless a separate migration explicitly authorizes changes.
 

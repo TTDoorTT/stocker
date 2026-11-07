@@ -1,5 +1,7 @@
 # Financial data providers
 
+The curated Industry Intelligence RSS feed is **separate** from normalized market quotes, company facts and research evidence. It has its own publisher inventory, cache and optional explicitly invoked highlight generation; see [RSS sources and attribution](THIRD_PARTY_NEWS_SOURCES.md). RSS headlines are not a quote or fundamentals fallback.
+
 Reconciled 2026-11-06 for Stocker, a local U.S./Canadian educational prototype. See [validation](VALIDATION.md) for actual check scope. Provider documentation, configured credentials and successful live retrieval are distinct states. Access/redistribution rights must be checked for the intended use; the application does not grant them.
 
 | Purpose | Provider / configuration | Scope and fallback |

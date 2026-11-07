@@ -13,20 +13,24 @@ Base URL `http://127.0.0.1:8000/api`; OpenAPI interactive contracts at `/docs`. 
 - `GET /research-runs?limit=50&offset=0`, `GET /research-runs/{id}`, `GET /research-runs/{id}/events`, `GET /research-runs/{id}/report`: saved artifacts and timestamped real execution trace. Poll detail/events every 1.5 seconds while queued/running. Stages can pass while overall analysis is incomplete due to missing data.
 - `POST /chat`: `{symbol,message}`; stock-context answer with validated evidence/numbers. Does not launch research. Fixture mode returns a visibly labeled deterministic stub.
 
-Saved provider keys are never returned. Local AI settings accept validated OpenAI-compatible endpoints; public unauthenticated hosting remains unsupported.
+Saved provider keys are never returned. Local AI settings accept validated OpenAI-compatible endpoints; public unauthenticated hosting remains unsupported. RSS article/refresh tables and per-category highlight results are stored in the same existing SQLite database; none of the GET RSS endpoints invokes the LLM.
 
 Selected intelligence APIs:
 
 - `GET /daily-review`: timestamped SPY/QQQ ETF proxy returns and source calculations, headlines and explicit coverage gaps. No inferred market session or whole-market breadth.
-- `GET /intelligence/news`: `{mode,items,gaps,fetched_at}`. Items retain headline, source URL/name, published/fetched timestamps and ticker tags. Coverage is limited and missing headlines are not invented.
+- `GET /intelligence/news`: older company/provider-news endpoint returning `{mode,items,gaps,fetched_at}`; still used in daily review. It is **not** the new Industry Intelligence RSS page. Missing headlines are not invented.
+- `GET /intelligence/rss?category=ai`: returns recent articles (headline, publisher, URL, published/fetched timestamps), category/count metadata, total/working/failed source counts, last successful refresh, refresh state and error message. It may schedule a nonblocking RSS refresh when at least 45 minutes have passed since the prior attempt; article list is capped at 120/category, from the last three days. The list API does not expose stored publisher descriptions. Invalid categories return 422.
+- `POST /intelligence/rss/refresh`: manually request a background RSS refresh; returns a current feed/status snapshot (not a guarantee of completed downloading). No request body; no LLM invocation.
+- `GET /intelligence/rss/highlights?category=ai`: read-only saved highlights `{category,saved,generated_at,model_id,stale,result}`. `result` is a prior cited chat response or `null`. This never calls the model.
+- `POST /intelligence/rss/highlights`: JSON `{category:"ai"}`; explicitly generate and persist cited qualitative highlights from up to 20 recent publisher-diverse RSS headlines and short feed excerpts. Returns `{answer,evidence,mode,gaps}`. Requires a configured model and recent articles; missing input/model may return 503, invalid category 422 and failed evidence validation 502. A failed generation does not replace the last successful saved result.
 - `GET /intelligence/signals`: three optional FRED plus two no-key Bank of Canada Valet series descriptors (Valet can be disabled) with null unavailable observations or genuine source series. Observation date differs from publication date; freshness is explicit.
 - `GET /industries`, `GET /industries/{slug}`:20 guided topics with prompt, representative symbols and limitations. Optional industry_slug on a research run adds this question to the existing six-stage company workflow; it does not establish comprehensive industry coverage.
 
-- `POST /intelligence/news/summary`: explicit headline-only AI summary of at most12 retrieved live headlines, using the shared model client and evidence validation. Returns `{answer,evidence,mode,gaps}`; fixture mode/missing model/no headlines =>503, invalid unsupported model output =>502. Never auto-launches research or treats article contents as retrieved.
+- `POST /intelligence/news/summary`: retained provider-news summary endpoint for at most 12 retrieved live headlines, separate from RSS industry highlights. Uses the shared model client and evidence validation. Returns `{answer,evidence,mode,gaps}`; fixture mode/missing model/no headlines → 503, failed validation → 502. Never auto-launches research or claims full articles were retrieved.
 
 Canadian exact-symbol search results are explicitly unverified listing candidates, not verified company identity. Live stock objects and research runs retain CA market metadata; unsupported fundamentals and quotes remain explicit gaps. Fixture mode remains the original synthetic U.S. demo with no fabricated Canadian fixtures.
 
-The complete contract is protected by `backend/tests/contracts/openapi.json` and its API regression test. The Stocker cleanup changes only OpenAPI `info.title`; routes, request/response schemas and error contracts are preserved.
+The complete contract is protected by `backend/tests/contracts/openapi.json` and API regression tests. The RSS update adds four endpoints and their validation schema while retaining earlier research, market, portfolio, company-news and AI settings routes. The OpenAPI snapshot was updated with the RSS routes; it is not a no-change API migration.
 
 ## AI configuration
 
