@@ -8,6 +8,7 @@ from app.core.config import Settings
 from app.finance.metrics import build_calculations
 from app.modules.intelligence.highlight_cache import HighlightCache
 from app.modules.intelligence.industries import IndustryCatalog
+from app.modules.intelligence.industry_research import IndustryResearchService
 from app.modules.intelligence.news import news_feed, summarize_news
 from app.modules.intelligence.rss import RSSNewsService
 from app.modules.market_data.service import DataService
@@ -27,6 +28,9 @@ class IntelligenceService:
         self.catalog = IndustryCatalog()
         self.rss_collector = RSSNewsService(settings)
         self.highlight_cache = HighlightCache(settings.database_url)
+        self.industry_research = IndustryResearchService(
+            settings.database_url, self.catalog.industry, self.ai_computing_evidence, self.current_settings
+        )
 
     def daily_review(self) -> dict:
         proxies = []
@@ -105,6 +109,12 @@ class IntelligenceService:
         if not snapshot["news"]:
             snapshot["gaps"].append("RSS headlines not cached yet; refresh Industry Intelligence news first.")
         return snapshot
+
+    def saved_industry_section(self, slug: str, section: str) -> dict:
+        return self.industry_research.saved(slug, section)
+
+    def generate_industry_section(self, slug: str, section: str) -> dict:
+        return self.industry_research.generate(slug, section)
 
     def signals(self) -> dict:
         return self.data.signals()

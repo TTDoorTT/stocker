@@ -1,42 +1,18 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useResource } from '../../../shared/hooks/useResource';
-import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading } from '../../../shared/ui/Feedback';
 import { PageTitle } from '../../../shared/ui/Presentation';
-import { researchApi } from '../../research/api';
 import { intelligenceApi } from '../api';
-import { IndustryEvidence } from '../components/IndustryEvidence';
-import type { Industry } from '../types';
 
 export function Industries() {
   const industries = useResource(() => intelligenceApi.industries());
-  const [busy, setBusy] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  async function start(industry: Industry, symbol: string) {
-    setBusy(`${industry.slug}-${symbol}`);
-    setError('');
-    try {
-      const run = await researchApi.runResearch(symbol, industry.slug);
-      navigate(`/runs/${run.run_id}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Research could not start');
-    } finally {
-      setBusy('');
-    }
-  }
   return (
     <>
       <PageTitle title="Industry research" />
       <p className="muted">
-        Guided industry templates organize questions and evidence needs. Launching a representative company
-        analysis reuses the six-stage pipeline; it is not comprehensive sector coverage.
+        Open a guided workspace for each industry. AI Computing Overview has a limited, source-backed research
+        pilot; other sections are methodologies until their data integrations are complete.
       </p>
-      <section className="panel">
-        <h2>AI Computing Infrastructure — SEC evidence pilot</h2>
-        <IndustryEvidence />
-      </section>
-      {error && <ErrorBox message={error} />}{' '}
       {industries.loading ? (
         <Loading />
       ) : industries.error ? (
@@ -45,26 +21,16 @@ export function Industries() {
         <div className="industry-grid">
           {industries.data.map((industry) => (
             <article className="panel" key={industry.slug}>
-              <p className="eyebrow">GUIDED TEMPLATE</p>
+              <p className="eyebrow">INDUSTRY WORKSPACE</p>
               <h2>{industry.name}</h2>
-              <details>
-                <summary>Open research questions</summary>
-                <p>{industry.prompt}</p>
-                <Gaps gaps={industry.gaps} />
-                <p className="muted">Representative U.S. company research</p>
-                <div className="actions">
-                  {industry.symbols.map((symbol) => (
-                    <button
-                      className="button secondary"
-                      key={symbol}
-                      disabled={!!busy}
-                      onClick={() => start(industry, symbol)}
-                    >
-                      {busy === `${industry.slug}-${symbol}` ? 'Starting…' : `Research ${symbol} ↗`}
-                    </button>
-                  ))}
-                </div>
-              </details>
+              <p className="muted">
+                {industry.slug === 'ai-computing'
+                  ? 'Source-backed Overview pilot available'
+                  : 'Guided research sections; no verified industry-wide report yet'}
+              </p>
+              <Link className="button secondary" to={`/industries/${industry.slug}`}>
+                Open workspace ↗
+              </Link>
             </article>
           ))}
         </div>

@@ -84,6 +84,39 @@ def create_router(intel: IntelligenceService) -> APIRouter:
         except ValueError:
             raise HTTPException(422, "Year must be a completed calendar year") from None
 
+    @router.get("/api/industries/{slug}/sections/{section}")
+    def saved_industry_section(slug: str, section: str) -> dict:
+        if len(slug) > 60 or len(section) > 40:
+            raise HTTPException(422, "Invalid industry or section")
+        try:
+            return intel.saved_industry_section(slug, section)
+        except KeyError:
+            raise HTTPException(404, "Industry template not found") from None
+        except ValueError:
+            raise HTTPException(422, "Unknown industry section") from None
+
+    @router.post("/api/industries/{slug}/sections/{section}/generate")
+    def generate_industry_section(slug: str, section: str) -> dict:
+        if len(slug) > 60 or len(section) > 40:
+            raise HTTPException(422, "Invalid industry or section")
+        try:
+            return intel.generate_industry_section(slug, section)
+        except KeyError:
+            raise HTTPException(404, "Industry template not found") from None
+        except (DataUnavailable, ModelError):
+            raise
+        except ValueError as exc:
+            if (
+                str(exc).startswith("AI generation is currently available")
+                or str(exc) == "Unknown industry section"
+            ):
+                raise HTTPException(422, str(exc)) from None
+            raise HTTPException(
+                502, "Industry research failed evidence validation; saved result unchanged"
+            ) from None
+        except RuntimeError:
+            raise HTTPException(409, "An industry research generation is already running") from None
+
     @router.get("/api/industries/{slug}")
     def industry(slug: str) -> dict:
         if len(slug) > 60:
