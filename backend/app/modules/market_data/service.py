@@ -1,18 +1,22 @@
 import json
+from datetime import date
 
 from app.contracts.market import NewsItem, PriceBar, Stock
+from app.contracts.stock_research import CandleSeries, SourceMetadata
 from app.core.config import ROOT, Settings
+from app.modules.market_data.candles import fixture_candles
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.filing_excerpt import filing_excerpts
 from app.modules.market_data.fixtures import FixtureData
 from app.modules.market_data.industry_sec import SECIndustryEvidence
+from app.modules.market_data.providers.alpha_candles import AlphaVantageCandles
 from app.modules.market_data.providers.alpha_vantage import AlphaVantageProvider
 from app.modules.market_data.providers.bank_of_canada import valet_signals
 from app.modules.market_data.providers.finnhub import FinnhubProvider
 from app.modules.market_data.providers.fred import FredProvider
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.providers.sec import SecProvider
-from app.modules.market_data.providers.yahoo import YFinanceHistory
+from app.modules.market_data.providers.yahoo_candles import YFinanceCandleHistory
 from app.modules.market_data.symbols import normalize_symbol, symbol_market
 
 
@@ -21,7 +25,8 @@ class DataService:
         self.settings = settings
         self.http = http or ProviderHTTP()
         self.fixtures = FixtureData(json.loads((ROOT / "fixtures" / "market.json").read_text()))
-        self.yahoo_history = YFinanceHistory()
+        # Subclass of the previous provider: retains the exact legacy .history contract.
+        self.yahoo_history = YFinanceCandleHistory()
         self.sec = SecProvider(settings, self.http)
         self.finnhub = FinnhubProvider(settings, self.http)
         self.alpha_vantage = AlphaVantageProvider(settings, self.http)
@@ -101,6 +106,47 @@ class DataService:
         if symbol_market(symbol) == "CA":
             raise DataUnavailable("Canadian history unavailable; use optional yfinance for .TO/.V listings")
         return self.alpha_vantage.history(symbol, range, failures)
+
+    def candles(self, symbol: str, range_key: str = "1y", interval: str = "1d") -> CandleSeries:
+        """New read-only OHLCV endpoint; no changes to the original history endpoint."""
+        symbol = normalize_symbol(symbol)
+        if range_key not in {"1m", "3m", "6m", "1y", "2y", "5y"}:
+            raise ValueError("Unsupported candle range")
+        if interval not in {"1d", "1wk", "1mo"}:
+            raise ValueError("Unsupported candle interval")
+        if self.settings.data_mode == "fixtures":
+            stock = self.fixtures.stock(symbol)
+            as_of = date.fromisoformat(self.fixtures.demo["as_of"][:10])
+            return CandleSeries(
+                symbol=symbol,
+                market="US",
+                currency="USD",
+                mode="fixtures",
+                range=range_key,
+                interval=interval,
+                price_basis="provider_ohlc",
+                adjustment_note="Invented synthetic OHLCV; not historical prices or returns.",
+                source=SourceMetadata(
+                    name="Stocker synthetic offline fixture",
+                    url="https://github.com/TTDoorTT/stocker/blob/main/fixtures/market.json",
+                    fetched_at=stock.quote.fetched_at,
+                    fixture=True,
+                ),
+                bars=fixture_candles(
+                    quote_price=stock.quote.price, range_key=range_key, interval=interval, as_of=as_of
+                ),
+                gaps=["Entire price series is synthetic and cannot be used as real market evidence."],
+            )
+        currency = "CAD" if symbol_market(symbol) == "CA" else "USD"
+        if self.settings.history_provider in {"auto", "yfinance"}:
+            try:
+                return self.yahoo_history.candles(symbol, range_key, interval, currency)
+            except DataUnavailable:
+                if self.settings.history_provider == "yfinance":
+                    raise
+        if symbol_market(symbol) == "CA":
+            raise DataUnavailable("Canadian candles require available optional yfinance history")
+        return AlphaVantageCandles(self.alpha_vantage).candles(symbol, range_key, interval)
 
     def overview(self) -> list[Stock]:
         return [self.stock(symbol) for symbol in ["SPY", "QQQ"]]

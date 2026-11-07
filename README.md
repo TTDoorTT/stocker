@@ -69,3 +69,9 @@ Runs isolated fixture tests, Ruff/Biome lint and formatting, strict TypeScript a
 Vibe Research (MIT) inspired the methodology/topic concepts; its attribution is retained in the industry guide. OpenStock (AGPL) was conceptual reference only; no implementation was copied. The official TradingView embed retains its attribution and terms.
 
 Current documentation is maintained in `README.md`, `AGENTS.md` and `docs/`. Historical development records are preserved in [this Git snapshot](https://github.com/TTDoorTT/stocker/tree/7933922ca5e3b88fa43b345456e856f8cfc550ba/progress) and the archive branch `archive/progress-before-cleanup-2026-11-06`. Historical plans are not active implementation instructions.
+
+## Interactive stock charts
+
+Company pages include interactive OHLCV candlestick charts with trading volume, MA5/10/20/60 overlays, selectable date ranges, daily/weekly/monthly intervals, and zoom controls.
+
+Charts display data-source attribution and price-adjustment limitations. Synthetic fixture charts remain clearly distinguished from live provider data.

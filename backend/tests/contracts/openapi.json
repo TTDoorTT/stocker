@@ -318,6 +318,98 @@
         }
       }
     },
+    "/api/stocks/{ticker}/candles": {
+      "get": {
+        "summary": "Candles",
+        "operationId": "candles_api_stocks__ticker__candles_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1m",
+                "3m",
+                "6m",
+                "1y",
+                "2y",
+                "5y"
+              ],
+              "type": "string",
+              "default": "1y",
+              "title": "Range"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1d",
+                "1wk",
+                "1mo"
+              ],
+              "type": "string",
+              "default": "1d",
+              "title": "Interval"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "CA"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandleSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/watchlist": {
       "get": {
         "summary": "Watchlist",
@@ -1342,6 +1434,171 @@
         ],
         "title": "AIStatus"
       },
+      "CandleBar": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "open": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Open"
+          },
+          "high": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "High"
+          },
+          "low": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Low"
+          },
+          "close": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Close"
+          },
+          "volume": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume"
+          },
+          "adjusted_close": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjusted Close"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close"
+        ],
+        "title": "CandleBar"
+      },
+      "CandleSeries": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9][A-Z0-9.]*$",
+            "title": "Symbol"
+          },
+          "market": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ],
+            "title": "Market"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CAD"
+            ],
+            "title": "Currency"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "live"
+            ],
+            "title": "Mode"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "range": {
+            "type": "string",
+            "enum": [
+              "1m",
+              "3m",
+              "6m",
+              "1y",
+              "2y",
+              "5y"
+            ],
+            "title": "Range"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "1d",
+              "1wk",
+              "1mo"
+            ],
+            "title": "Interval"
+          },
+          "price_basis": {
+            "type": "string",
+            "enum": [
+              "provider_ohlc",
+              "split_adjusted_ohlc",
+              "fully_adjusted_ohlc"
+            ],
+            "title": "Price Basis"
+          },
+          "adjustment_note": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Adjustment Note"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          },
+          "bars": {
+            "items": {
+              "$ref": "#/components/schemas/CandleBar"
+            },
+            "type": "array",
+            "maxItems": 1400,
+            "title": "Bars"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "market",
+          "currency",
+          "mode",
+          "range",
+          "interval",
+          "price_basis",
+          "adjustment_note",
+          "source"
+        ],
+        "title": "CandleSeries"
+      },
       "ChatRequest": {
         "properties": {
           "symbol": {
@@ -2280,6 +2537,57 @@
           "latency_seconds"
         ],
         "title": "ResearchRun"
+      },
+      "SourceMetadata": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Url"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "fixture": {
+            "type": "boolean",
+            "title": "Fixture",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "url",
+          "fetched_at"
+        ],
+        "title": "SourceMetadata"
       },
       "StageAttempt": {
         "properties": {

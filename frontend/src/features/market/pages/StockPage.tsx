@@ -9,11 +9,10 @@ import { portfolioApi } from '../../portfolio/api';
 import { researchApi } from '../../research/api';
 import { Chat } from '../../research/components/Chat';
 import { marketApi } from '../api';
-import { PriceChart } from '../components/PriceChart';
+import { PriceHistoryPanel } from '../components/PriceHistoryPanel';
 export function StockPage() {
   const { symbol = 'AAPL' } = useParams();
   const stock = useResource(() => marketApi.stock(symbol), [symbol]);
-  const history = useResource(() => marketApi.history(symbol), [symbol]);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [notice, setNotice] = useState('');
@@ -98,19 +97,7 @@ export function StockPage() {
             </small>
           ))}
       </section>
-      <section className="panel">
-        <div className="panel-heading">
-          <h2>Price history</h2>
-          <ModeBadge mode={data.mode} />
-        </div>
-        {history.loading ? (
-          <Loading />
-        ) : history.error ? (
-          <ErrorBox message={history.error} />
-        ) : (
-          <PriceChart bars={history.data || []} currency={data.currency} />
-        )}
-      </section>
+      <PriceHistoryPanel key={symbol} symbol={symbol} mode={data.mode} />
       <section className="panel">
         <div className="panel-heading">
           <h2>Financial facts</h2>

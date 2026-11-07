@@ -1,0 +1,104 @@
+/* Stocker price-history panel, isolated from TradingView and research stages. */
+.candle-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 14px;
+}
+.candle-ranges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.candle-controls button,
+.candle-controls select {
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--panel);
+  color: inherit;
+}
+.candle-controls button[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+}
+.candle-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.candle-chart {
+  min-width: 0;
+}
+.candle-chart-meta {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 7px 0;
+}
+.candle-chart-ohlc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 17px;
+  row-gap: 6px;
+  margin: 9px 0 6px;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  color: var(--muted);
+}
+.candle-chart-ohlc strong {
+  color: inherit;
+  font-size: 11px;
+}
+.candle-chart-ohlc b {
+  color: inherit;
+  font-weight: 600;
+}
+.candle-chart-ohlc .candle-up {
+  color: #299c7c;
+}
+.candle-chart-ohlc .candle-down {
+  color: #d76877;
+}
+.candle-chart-canvas {
+  width: 100%;
+  height: 472px;
+  min-height: 340px;
+}
+.candle-provenance {
+  margin: 8px 0 0;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.candle-provenance summary {
+  color: var(--muted);
+  font-size: 11px;
+}
+.candle-provenance small {
+  margin-top: 5px;
+}
+.candle-provenance .source-note {
+  margin-top: 8px;
+}
+@media (max-width: 760px) {
+  .candle-chart-canvas {
+    height: 380px;
+    min-height: 320px;
+  }
+  .candle-controls {
+    align-items: flex-start;
+  }
+  .candle-chart-ohlc {
+    column-gap: 11px;
+    font-size: 10px;
+  }
+}
