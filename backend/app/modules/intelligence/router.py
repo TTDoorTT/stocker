@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -73,6 +75,14 @@ def create_router(intel: IntelligenceService) -> APIRouter:
     @router.get("/api/industries")
     def industries() -> list[dict]:
         return intel.industries()
+
+    @router.get("/api/industries/ai-computing/evidence")
+    def ai_computing_evidence(year: int | None = Query(default=None, ge=2009, le=2100)) -> dict:
+        try:
+            target_year = year if year is not None else datetime.now(UTC).year - 1
+            return intel.ai_computing_evidence(target_year)
+        except ValueError:
+            raise HTTPException(422, "Year must be a completed calendar year") from None
 
     @router.get("/api/industries/{slug}")
     def industry(slug: str) -> dict:

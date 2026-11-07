@@ -5,6 +5,7 @@ import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
 import { PageTitle } from '../../../shared/ui/Presentation';
 import { researchApi } from '../../research/api';
 import { intelligenceApi } from '../api';
+import { IndustryEvidence } from '../components/IndustryEvidence';
 import type { Industry } from '../types';
 
 export function Industries() {
@@ -31,6 +32,10 @@ export function Industries() {
         Guided industry templates organize questions and evidence needs. Launching a representative company
         analysis reuses the six-stage pipeline; it is not comprehensive sector coverage.
       </p>
+      <section className="panel">
+        <h2>AI Computing Infrastructure — SEC evidence pilot</h2>
+        <IndustryEvidence />
+      </section>
       {error && <ErrorBox message={error} />}{' '}
       {industries.loading ? (
         <Loading />

@@ -21,3 +21,7 @@ export const intelligenceApi = {
   news: () =>
     request<{ mode: string; items: NewsItem[]; gaps: string[]; fetched_at: string }>('/intelligence/news'),
 };
+
+export function fetchIndustryEvidence<T>(year: number): Promise<T> {
+  return request<T>(`/industries/ai-computing/evidence?year=${year}`);
+}
