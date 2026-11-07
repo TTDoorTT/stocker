@@ -11,3 +11,19 @@ The modular application, fixture checks, Docker persistence, CI, RSS category ne
 - Improve RSS source-health observability, publisher attribution/rights review, and manual highlight regeneration controls without silently increasing model calls.
 
 Chinese A-share-specific trading sentiment remains outside the product scope.
+
+## Stock research expansion (planned)
+
+The following five features are approved for incremental implementation:
+
+1. Interactive OHLCV price charts.
+2. Quarterly financial trends.
+3. Earnings preview and historical review.
+4. Historical earnings event studies.
+5. Earnings markers on price charts.
+
+Phase 0 establishes contracts, synthetic test fixtures, and provider feasibility documentation.
+
+Subsequent phases will implement each feature independently while preserving the existing six-stage AI research engine and public APIs.
+
+See [Stock Research Providers](STOCK_RESEARCH_PROVIDERS.md).
