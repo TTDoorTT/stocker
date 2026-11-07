@@ -469,6 +469,65 @@
         }
       }
     },
+    "/api/stocks/{ticker}/earnings": {
+      "get": {
+        "summary": "Earnings",
+        "operationId": "earnings_api_stocks__ticker__earnings_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "CA"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarningsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/watchlist": {
       "get": {
         "summary": "Watchlist",
@@ -1733,6 +1792,220 @@
           "message"
         ],
         "title": "ConnectionResult"
+      },
+      "EarningsRecord": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "fiscal_quarter": {
+            "type": "string",
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4"
+            ],
+            "title": "Fiscal Quarter"
+          },
+          "reported_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Reported On"
+          },
+          "actual_eps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Eps"
+          },
+          "actual_basis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "gaap_diluted",
+                  "gaap_basic",
+                  "adjusted"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Basis"
+          },
+          "estimate_eps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Eps"
+          },
+          "estimate_basis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "gaap_diluted",
+                  "gaap_basic",
+                  "adjusted"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Basis"
+          },
+          "surprise_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surprise Pct"
+          },
+          "actual_revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Revenue"
+          },
+          "estimate_revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estimate Revenue"
+          },
+          "revenue_surprise_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Surprise Pct"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "fiscal_year",
+          "fiscal_quarter",
+          "reported_on",
+          "source"
+        ],
+        "title": "EarningsRecord"
+      },
+      "EarningsResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9][A-Z0-9.]*$",
+            "title": "Symbol"
+          },
+          "market": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ],
+            "title": "Market"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CAD"
+            ],
+            "title": "Currency"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "live"
+            ],
+            "title": "Mode"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "upcoming": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UpcomingEarnings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/EarningsRecord"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "History"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceMetadata"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "market",
+          "currency",
+          "mode"
+        ],
+        "title": "EarningsResponse"
       },
       "Evidence": {
         "properties": {
@@ -3152,6 +3425,111 @@
           "status"
         ],
         "title": "TTMValue"
+      },
+      "UpcomingEarnings": {
+        "properties": {
+          "scheduled_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Scheduled Date"
+          },
+          "date_status": {
+            "type": "string",
+            "enum": [
+              "estimated",
+              "confirmed"
+            ],
+            "title": "Date Status"
+          },
+          "timing": {
+            "type": "string",
+            "enum": [
+              "before_open",
+              "after_close",
+              "during_session",
+              "unknown"
+            ],
+            "title": "Timing",
+            "default": "unknown"
+          },
+          "fiscal_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Year"
+          },
+          "fiscal_quarter": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Q1",
+                  "Q2",
+                  "Q3",
+                  "Q4"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Quarter"
+          },
+          "eps_estimate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eps Estimate"
+          },
+          "eps_estimate_basis": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "gaap_diluted",
+                  "gaap_basic",
+                  "adjusted"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eps Estimate Basis"
+          },
+          "revenue_estimate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue Estimate"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "scheduled_date",
+          "date_status",
+          "source"
+        ],
+        "title": "UpcomingEarnings"
       },
       "ValidationError": {
         "properties": {

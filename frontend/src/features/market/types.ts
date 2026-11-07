@@ -115,3 +115,41 @@ export interface FinancialTrendsResponse {
   sources: FinancialSource[];
   gaps: string[];
 }
+
+/** Finnhub dated earnings calendar response; no inferred release timestamp. */
+export interface UpcomingEarnings {
+  scheduled_date: string;
+  date_status: 'estimated' | 'confirmed';
+  timing: 'before_open' | 'after_close' | 'during_session' | 'unknown';
+  fiscal_year: number | null;
+  fiscal_quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' | null;
+  eps_estimate: number | null;
+  eps_estimate_basis: 'gaap_diluted' | 'gaap_basic' | 'adjusted' | null;
+  revenue_estimate: number | null;
+  source: FinancialSource;
+}
+export interface EarningsRecord {
+  event_id: string;
+  fiscal_year: number;
+  fiscal_quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  reported_on: string;
+  actual_eps: number | null;
+  actual_basis: 'gaap_diluted' | 'gaap_basic' | 'adjusted' | null;
+  estimate_eps: number | null;
+  estimate_basis: 'gaap_diluted' | 'gaap_basic' | 'adjusted' | null;
+  surprise_pct: number | null;
+  actual_revenue: number | null;
+  estimate_revenue: number | null;
+  revenue_surprise_pct: number | null;
+  source: FinancialSource;
+}
+export interface EarningsResponse {
+  symbol: string;
+  market: 'US' | 'CA';
+  currency: 'USD' | 'CAD';
+  mode: Mode;
+  upcoming: UpcomingEarnings | null;
+  history: EarningsRecord[];
+  sources: FinancialSource[];
+  gaps: string[];
+}

@@ -7,6 +7,7 @@ import './styles/themes.css';
 import './styles/rss.css';
 import './styles/stock-chart.css';
 import './styles/quarterly-trends.css';
+import './styles/earnings.css';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

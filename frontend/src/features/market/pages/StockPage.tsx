@@ -9,6 +9,7 @@ import { portfolioApi } from '../../portfolio/api';
 import { researchApi } from '../../research/api';
 import { Chat } from '../../research/components/Chat';
 import { marketApi } from '../api';
+import { EarningsPanel } from '../components/EarningsPanel';
 import { PriceHistoryPanel } from '../components/PriceHistoryPanel';
 import { QuarterlyTrendsPanel } from '../components/QuarterlyTrendsPanel';
 export function StockPage() {
@@ -99,6 +100,7 @@ export function StockPage() {
           ))}
       </section>
       <PriceHistoryPanel key={symbol} symbol={symbol} mode={data.mode} />
+      <EarningsPanel key={symbol} symbol={symbol} />
       <QuarterlyTrendsPanel key={symbol} symbol={symbol} />
       <section className="panel">
         <div className="panel-heading">
