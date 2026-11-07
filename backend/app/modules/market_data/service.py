@@ -3,6 +3,7 @@ import json
 from app.contracts.market import NewsItem, PriceBar, Stock
 from app.core.config import ROOT, Settings
 from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.filing_excerpt import filing_excerpts
 from app.modules.market_data.fixtures import FixtureData
 from app.modules.market_data.industry_sec import SECIndustryEvidence
 from app.modules.market_data.providers.alpha_vantage import AlphaVantageProvider
@@ -32,7 +33,6 @@ class DataService:
             return []
         if self.settings.data_mode == "fixtures":
             return self.fixtures.search(q)
-        # Exact Canadian listings are accepted without inventing identity/search coverage.
         try:
             candidate = normalize_symbol(q)
         except ValueError:
@@ -107,7 +107,7 @@ class DataService:
 
     def news(self, symbol: str | None = None) -> list[NewsItem]:
         if self.settings.data_mode == "fixtures":
-            return []  # no invented headlines
+            return []
         symbols = [normalize_symbol(symbol)] if symbol else ["AAPL", "MSFT", "NVDA"]
         output = []
         for ticker in symbols:
@@ -130,3 +130,7 @@ class DataService:
     def sec_industry_snapshot(self, year: int) -> dict:
         """Expose SEC industry evidence through the market-data service."""
         return SECIndustryEvidence(self.sec, self.settings).snapshot(year)
+
+    def sec_filing_excerpts(self, year: int) -> dict:
+        """Fetch bounded, matched SEC filing text without invoking an AI model."""
+        return filing_excerpts(self.sec, self.sec_industry_snapshot(year))

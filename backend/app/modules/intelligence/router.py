@@ -84,6 +84,14 @@ def create_router(intel: IntelligenceService) -> APIRouter:
         except ValueError:
             raise HTTPException(422, "Year must be a completed calendar year") from None
 
+    @router.get("/api/industries/ai-computing/filing-excerpts")
+    def ai_computing_filing_excerpts(year: int | None = Query(default=None, ge=2009, le=2100)) -> dict:
+        try:
+            target_year = year if year is not None else datetime.now(UTC).year - 1
+            return intel.ai_computing_filing_excerpts(target_year)
+        except ValueError:
+            raise HTTPException(422, "Year must be a completed calendar year") from None
+
     @router.get("/api/industries/{slug}/sections/{section}")
     def saved_industry_section(slug: str, section: str) -> dict:
         if len(slug) > 60 or len(section) > 40:

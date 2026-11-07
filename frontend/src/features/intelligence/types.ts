@@ -80,3 +80,24 @@ export interface Industry {
   symbols: string[];
   gaps: string[];
 }
+
+export interface FilingExcerpt {
+  symbol: string;
+  form: string;
+  filed: string;
+  matched_term: string;
+  text: string;
+  source_name: string;
+  source_url: string;
+  fetched_at: string;
+  cached: boolean;
+}
+
+export interface FilingExcerptsResponse {
+  industry: string;
+  year: number;
+  mode: 'fixtures' | 'live';
+  excerpts: FilingExcerpt[];
+  gaps: string[];
+  coverage: string;
+}
