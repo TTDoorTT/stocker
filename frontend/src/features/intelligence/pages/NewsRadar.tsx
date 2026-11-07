@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 
-import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
-import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
+import { Empty, ErrorBox, Loading } from '../../../shared/ui/Feedback';
 import { PageTitle } from '../../../shared/ui/Presentation';
 import { dateTime } from '../../../shared/utils/format';
-import type { ChatReply } from '../../research/types';
 import { intelligenceApi } from '../api';
+import { RSSHighlights } from '../components/RSSHighlights';
 import type { RSSNewsResponse } from '../types';
 
 export function NewsRadar() {
@@ -18,17 +16,10 @@ export function NewsRadar() {
   const [refreshError, setRefreshError] = useState('');
   const [refreshingRequest, setRefreshingRequest] = useState(false);
 
-  const [summary, setSummary] = useState<ChatReply>();
-  const [summaryError, setSummaryError] = useState('');
-  const [summarizing, setSummarizing] = useState(false);
-
-  // Load cached news from the backend.
   const load = useCallback(async () => {
     try {
       const response = await intelligenceApi.rss(category);
-
       if (activeCategory.current !== category) return;
-
       setData(response);
       setError('');
     } catch (err) {
@@ -42,21 +33,18 @@ export function NewsRadar() {
     void load();
   }, [load]);
 
-  // Poll while the background RSS collection is running.
+  // Poll while the background RSS collector is working.
   useEffect(() => {
     if (!data?.refreshing) return;
-
     const handle = window.setInterval(() => {
       void load();
     }, 3000);
-
     return () => window.clearInterval(handle);
   }, [data?.refreshing, load]);
 
   async function refresh() {
     setRefreshingRequest(true);
     setRefreshError('');
-
     try {
       await intelligenceApi.refreshRSS();
       await load();
@@ -67,52 +55,22 @@ export function NewsRadar() {
     }
   }
 
-  // Only this action invokes the configured LLM.
-  async function highlights() {
-    const selectedCategory = category;
-
-    setSummarizing(true);
-    setSummary(undefined);
-    setSummaryError('');
-
-    try {
-      const result = await intelligenceApi.rssHighlights(selectedCategory);
-
-      if (activeCategory.current === selectedCategory) {
-        setSummary(result);
-      }
-    } catch (err) {
-      if (activeCategory.current === selectedCategory) {
-        setSummaryError(err instanceof Error ? err.message : 'AI highlights unavailable');
-      }
-    } finally {
-      setSummarizing(false);
-    }
-  }
-
   function chooseCategory(next: string) {
     if (next === category) return;
-
     activeCategory.current = next;
     setCategory(next);
     setData(undefined);
     setError('');
-    setSummary(undefined);
-    setSummaryError('');
   }
 
   return (
     <>
       <PageTitle title="Industry intelligence" />
-
       <section className="panel">
-        {/* Page header */}
         <div className="rss-toolbar">
           <div>
             <h2>Investment News</h2>
-
             <p className="muted">English-language investment and industry news from curated RSS sources.</p>
-
             {data && (
               <small>
                 {data.sources_ok}/{data.sources_total} sources responded · Last successful refresh:{' '}
@@ -121,7 +79,6 @@ export function NewsRadar() {
               </small>
             )}
           </div>
-
           <button
             type="button"
             className="button secondary"
@@ -133,20 +90,16 @@ export function NewsRadar() {
         </div>
 
         {error && <ErrorBox message={error} retry={() => void load()} />}
-
         {refreshError && <ErrorBox message={refreshError} />}
-
         {data?.error && (
           <div className="notice error" role="alert">
             {data.error}
           </div>
         )}
-
         {!data && !error && <Loading />}
 
         {data && (
           <>
-            {/* Industry category filters */}
             <div className="rss-category-bar" role="group" aria-label="News industry categories">
               {data.categories.map((entry) => (
                 <button
@@ -162,43 +115,13 @@ export function NewsRadar() {
               ))}
             </div>
 
-            {/* Optional AI highlights */}
-            <div className="rss-highlights">
-              <div>
-                <h3>Industry highlights</h3>
-                <small>
-                  Generate AI highlights from the selected industry's news. Full articles are not retrieved.
-                </small>
-              </div>
+            <RSSHighlights
+              key={category}
+              category={category}
+              hasNews={data.items.length > 0}
+              newsRevision={data.last_refreshed}
+            />
 
-              <button
-                type="button"
-                className="button"
-                disabled={summarizing || data.items.length === 0}
-                onClick={() => void highlights()}
-              >
-                {summarizing ? 'Generating…' : 'Generate AI highlights'}
-              </button>
-            </div>
-
-            {summaryError && <ErrorBox message={summaryError} />}
-
-            {summary && (
-              <section className="chat-answer">
-                <div className="markdown">
-                  <ReactMarkdown>{summary.answer}</ReactMarkdown>
-                </div>
-
-                <Gaps gaps={summary.gaps} />
-
-                <details>
-                  <summary>Supporting news sources</summary>
-                  <EvidenceTable evidence={summary.evidence} />
-                </details>
-              </section>
-            )}
-
-            {/* Compact news list */}
             {data.items.length === 0 ? (
               <Empty>
                 {data.refreshing
@@ -212,11 +135,9 @@ export function NewsRadar() {
                     <time className="rss-compact-date" dateTime={article.published_at}>
                       {article.published_at.slice(0, 10)}
                     </time>
-
                     <span className="rss-compact-source" title={article.source_name}>
                       {article.source_name}
                     </span>
-
                     <a
                       className="rss-compact-title"
                       href={article.source_url}

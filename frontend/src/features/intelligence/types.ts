@@ -1,4 +1,6 @@
 import type { Mode, NewsItem, Quote } from '../../shared/types';
+import type { ChatReply } from '../research/types';
+
 export interface RSSArticle {
   headline: string;
   source_name: string;
@@ -6,6 +8,7 @@ export interface RSSArticle {
   published_at: string;
   fetched_at: string;
 }
+
 export interface RSSNewsResponse {
   category: string;
   categories: { key: string; name: string; count: number }[];
@@ -16,6 +19,15 @@ export interface RSSNewsResponse {
   last_refreshed: string | null;
   refreshing: boolean;
   error: string;
+}
+
+export interface SavedRSSHighlights {
+  category: string;
+  saved: boolean;
+  generated_at: string | null;
+  model_id: string | null;
+  stale: boolean;
+  result: ChatReply | null;
 }
 
 export interface Signal {
@@ -32,6 +44,7 @@ export interface Signal {
   observations: { date: string; value: number }[];
   gaps: string[];
 }
+
 export interface Review {
   mode: Mode;
   as_of: string;
@@ -47,6 +60,7 @@ export interface Review {
   session: string;
   coverage: string;
 }
+
 export interface Industry {
   slug: string;
   name: string;

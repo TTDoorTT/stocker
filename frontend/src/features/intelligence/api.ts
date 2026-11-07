@@ -1,11 +1,14 @@
 import { request } from '../../shared/api/client';
 import type { Mode, NewsItem } from '../../shared/types';
 import type { ChatReply } from '../research/types';
-import type { Industry, Review, RSSNewsResponse, Signal } from './types';
+import type { Industry, Review, RSSNewsResponse, SavedRSSHighlights, Signal } from './types';
+
 export const intelligenceApi = {
   rss: (category: string) =>
     request<RSSNewsResponse>(`/intelligence/rss?category=${encodeURIComponent(category)}`),
   refreshRSS: () => request<RSSNewsResponse>('/intelligence/rss/refresh', { method: 'POST' }),
+  savedRSSHighlights: (category: string) =>
+    request<SavedRSSHighlights>(`/intelligence/rss/highlights?category=${encodeURIComponent(category)}`),
   rssHighlights: (category: string) =>
     request<ChatReply>('/intelligence/rss/highlights', {
       method: 'POST',

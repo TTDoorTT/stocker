@@ -1,10 +1,12 @@
 """Small, source-backed market intelligence; no second agent orchestration system."""
 
 from collections.abc import Callable
+from contextlib import closing
 from datetime import UTC, datetime
 
 from app.core.config import Settings
 from app.finance.metrics import build_calculations
+from app.modules.intelligence.highlight_cache import HighlightCache
 from app.modules.intelligence.industries import IndustryCatalog
 from app.modules.intelligence.news import news_feed, summarize_news
 from app.modules.intelligence.rss import RSSNewsService
@@ -24,6 +26,7 @@ class IntelligenceService:
         self.current_settings = current_settings or (lambda: self.settings)
         self.catalog = IndustryCatalog()
         self.rss_collector = RSSNewsService(settings)
+        self.highlight_cache = HighlightCache(settings.database_url)
 
     def daily_review(self) -> dict:
         proxies = []
@@ -65,8 +68,23 @@ class IntelligenceService:
         self.rss_collector.schedule(force=True)
         return self.rss_collector.feed(schedule=False)
 
+    def rss_saved_highlights(self, category: str) -> dict:
+        self.rss_collector.validate_category(category)
+        return self.highlight_cache.get(category)
+
     def rss_highlights(self, category: str) -> dict:
-        return self.rss_collector.highlights(category, self.current_settings())
+        self.rss_collector.validate_category(category)
+        settings = self.current_settings()
+        # Initialize RSS tables even if the user has never opened the news feed.
+        with closing(self.rss_collector.connect()):
+            pass
+        # Snapshot before the model runs, so a simultaneous news refresh marks
+        # the eventual saved result stale rather than falsely up to date.
+        fingerprint = self.highlight_cache.fingerprint(category)
+        result = self.rss_collector.highlights(category, settings)
+        # Never erase a successful cached result if generation fails.
+        self.highlight_cache.save(category, result, settings.llm_model, fingerprint)
+        return result
 
     def signals(self) -> dict:
         return self.data.signals()
