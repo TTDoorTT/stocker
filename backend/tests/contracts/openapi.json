@@ -906,18 +906,61 @@
       }
     },
     "/api/intelligence/rss/highlights": {
+      "get": {
+        "summary": "Rss Saved Highlights",
+        "operationId": "rss_saved_highlights_api_intelligence_rss_highlights_get",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 30,
+              "pattern": "^[a-z]+$",
+              "default": "ai",
+              "title": "Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Rss Saved Highlights Api Intelligence Rss Highlights Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Rss Highlights",
         "operationId": "rss_highlights_api_intelligence_rss_highlights_post",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RSSHighlightsRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.contracts.api import ChatResponse
@@ -43,6 +43,15 @@ def create_router(intel: IntelligenceService) -> APIRouter:
     @router.post("/api/intelligence/rss/refresh")
     def rss_refresh() -> dict:
         return intel.rss_refresh()
+
+    @router.get("/api/intelligence/rss/highlights")
+    def rss_saved_highlights(
+        category: str = Query(default="ai", min_length=1, max_length=30, pattern=r"^[a-z]+$"),
+    ) -> dict:
+        try:
+            return intel.rss_saved_highlights(category)
+        except ValueError:
+            raise HTTPException(422, "Unknown RSS industry category") from None
 
     @router.post("/api/intelligence/rss/highlights", response_model=ChatResponse)
     def rss_highlights(body: RSSHighlightsRequest):
