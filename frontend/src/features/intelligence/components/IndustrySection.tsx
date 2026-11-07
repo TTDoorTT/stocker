@@ -18,7 +18,19 @@ export function IndustrySection({ slug, section }: { slug: string; section: Indu
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const enabled = slug === 'ai-computing' && section === 'overview';
+  const enabled =
+    slug === 'ai-computing' &&
+    (section === 'overview' ||
+      section === 'technology' ||
+      section === 'supply-chain' ||
+      section === 'competition');
+  const sectionLabel: Record<IndustrySectionKey, string> = {
+    overview: 'Overview',
+    technology: 'Technology',
+    'supply-chain': 'Supply Chain',
+    competition: 'Competition',
+    outlook: 'Outlook',
+  };
 
   useEffect(() => {
     let active = true;
@@ -88,14 +100,14 @@ export function IndustrySection({ slug, section }: { slug: string; section: Indu
                 {busy
                   ? 'Generating with configured AI…'
                   : saved?.saved
-                    ? 'Regenerate Overview'
-                    : 'Generate Overview'}
+                    ? `Regenerate ${sectionLabel[section]}`
+                    : `Generate ${sectionLabel[section]}`}
               </button>
             </div>
           ) : (
             <p className="muted">
               Guided workspace only. Automated research is not enabled until trustworthy source coverage
-              exists.
+              exists for this industry and section.
             </p>
           )}
         </>

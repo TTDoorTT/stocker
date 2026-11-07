@@ -176,7 +176,7 @@ def test_api_allows_saved_without_model_and_blocks_fixture_generation(tmp_path, 
         assert client.get("/api/industries/unknown/sections/overview").status_code == 404
         assert client.get("/api/industries/ai-computing/sections/invalid").status_code == 422
         assert client.post("/api/industries/ai-computing/sections/overview/generate").status_code == 503
-        assert client.post("/api/industries/ai-computing/sections/technology/generate").status_code == 422
+        assert client.post("/api/industries/ai-computing/sections/technology/generate").status_code == 503
 
 
 def test_unsupported_citation_is_rejected_and_not_persisted(tmp_path, monkeypatch):

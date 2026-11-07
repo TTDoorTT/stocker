@@ -50,8 +50,9 @@ export function IndustryWorkspace() {
       ) : industry.data ? (
         <>
           <p className="muted">
-            Research questions and supporting sources are organized separately from company analysis. Only AI
-            Computing Overview currently supports source-backed AI generation.
+            Research questions and supporting sources are organized separately from company analysis. AI
+            Computing supports an SEC/RSS-backed Overview and narrowly scoped filing-backed Technology, Supply
+            Chain and Competition notes. Outlook and other industries remain guided only.
           </p>
           <div
             className="actions"

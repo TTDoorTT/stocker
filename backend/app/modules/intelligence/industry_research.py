@@ -1,7 +1,7 @@
-"""Evidence-bound industry overview with persistent, read-only cache retrieval.
+"""Evidence-bound AI Computing research with persistent, read-only cache retrieval.
 
-Only AI Computing Overview is enabled for generation; the other workspaces
-expose methodologies without claiming coverage that does not exist.
+Overview retains its SEC/RSS evidence path. Technology, Supply Chain and
+Competition use only bounded SEC filing excerpts. Other workspaces remain guided.
 """
 
 from __future__ import annotations
@@ -15,12 +15,14 @@ from pathlib import Path
 from threading import Lock
 
 from app.contracts.market import Evidence
+from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.provenance import evidence_id
 from app.modules.research.service import summarize_captured_headlines
 
 SECTIONS = ("overview", "technology", "supply-chain", "competition", "outlook")
 EXPERIMENTAL = ("ai-computing", "overview")
+FILING_SECTIONS = frozenset({"technology", "supply-chain", "competition"})
 
 
 def _now() -> datetime:
@@ -223,10 +225,13 @@ def capture_evidence(snapshot: dict, repo: IndustryResearchRepository) -> list[d
 
 
 class IndustryResearchService:
-    def __init__(self, database_url: str, catalog, capture_snapshot, current_settings):
+    def __init__(
+        self, database_url: str, catalog, capture_snapshot, current_settings, capture_filing_excerpts=None
+    ):
         self.repository = IndustryResearchRepository(database_url)
         self.catalog = catalog
         self.capture_snapshot = capture_snapshot
+        self.capture_filing_excerpts = capture_filing_excerpts
         self.current_settings = current_settings
         self.generation_lock = Lock()
 
@@ -241,8 +246,8 @@ class IndustryResearchService:
 
     def generate(self, slug: str, section: str) -> dict:
         self._validate(slug, section)
-        if (slug, section) != EXPERIMENTAL:
-            raise ValueError("AI generation is currently available only for AI Computing Overview")
+        if slug != "ai-computing" or section not in {"overview", *FILING_SECTIONS}:
+            raise ValueError("AI generation is currently available only for selected AI Computing sections")
         settings = self.current_settings()
         if settings.data_mode != "live":
             raise DataUnavailable("Industry AI research requires live SEC evidence, not fixtures")
@@ -251,6 +256,38 @@ class IndustryResearchService:
         if not self.generation_lock.acquire(blocking=False):
             raise RuntimeError("An industry research generation is already running")
         try:
+            if section in FILING_SECTIONS:
+                if self.capture_filing_excerpts is None:
+                    raise DataUnavailable("SEC filing excerpt retrieval is not configured")
+                # Explicit generation only. GET /sections reads the saved SQLite row.
+                snapshot = self.capture_filing_excerpts(_now().year - 1)
+                evidence = capture_filing_section(snapshot, section)
+                gaps = filing_gaps(section, snapshot)
+                result = summarize_captured_headlines(
+                    {
+                        "symbol": "US",
+                        "mode": "live",
+                        "evidence": evidence,
+                        "news": [],
+                        "facts": [],
+                        "gaps": gaps,
+                    },
+                    evidence,
+                    gaps,
+                    settings,
+                    task=filing_task(section),
+                    bullets_only=True,
+                )
+                result["answer"] = result["answer"].replace(
+                    "Industry highlights (headlines only)",
+                    f"Industry {section} (selected SEC filing excerpts)",
+                    1,
+                )
+                # Exactly the same persistence contract as Overview: save only
+                # after the model output has passed research citation validation.
+                self.repository.save(slug, section, result, snapshot, settings.llm_model, _hash(evidence))
+                return self.repository.get(slug, section)
+
             snapshot = self.capture_snapshot(_now().year - 1)
             if not snapshot.get("metrics") and not snapshot.get("filings"):
                 raise DataUnavailable("No verified SEC evidence available for AI Computing Overview")
