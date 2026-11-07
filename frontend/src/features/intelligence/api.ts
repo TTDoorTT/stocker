@@ -1,8 +1,16 @@
 import { request } from '../../shared/api/client';
 import type { Mode, NewsItem } from '../../shared/types';
 import type { ChatReply } from '../research/types';
-import type { Industry, Review, Signal } from './types';
+import type { Industry, Review, RSSNewsResponse, Signal } from './types';
 export const intelligenceApi = {
+  rss: (category: string) =>
+    request<RSSNewsResponse>(`/intelligence/rss?category=${encodeURIComponent(category)}`),
+  refreshRSS: () => request<RSSNewsResponse>('/intelligence/rss/refresh', { method: 'POST' }),
+  rssHighlights: (category: string) =>
+    request<ChatReply>('/intelligence/rss/highlights', {
+      method: 'POST',
+      body: JSON.stringify({ category }),
+    }),
   signals: () => request<{ mode: Mode; items: Signal[]; gaps: string[] }>('/intelligence/signals'),
   dailyReview: () => request<Review>('/daily-review'),
   industries: () => request<Industry[]>('/industries'),

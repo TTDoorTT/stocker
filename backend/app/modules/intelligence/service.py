@@ -7,6 +7,7 @@ from app.core.config import Settings
 from app.finance.metrics import build_calculations
 from app.modules.intelligence.industries import IndustryCatalog
 from app.modules.intelligence.news import news_feed, summarize_news
+from app.modules.intelligence.rss import RSSNewsService
 from app.modules.market_data.service import DataService
 
 
@@ -22,6 +23,7 @@ class IntelligenceService:
         self.settings = settings
         self.current_settings = current_settings or (lambda: self.settings)
         self.catalog = IndustryCatalog()
+        self.rss_collector = RSSNewsService(settings)
 
     def daily_review(self) -> dict:
         proxies = []
@@ -55,6 +57,16 @@ class IntelligenceService:
 
     def news(self) -> dict:
         return news_feed(self.data, self.settings)
+
+    def rss_feed(self, category: str = 'ai') -> dict:
+        return self.rss_collector.feed(category)
+
+    def rss_refresh(self) -> dict:
+        self.rss_collector.schedule(force=True)
+        return self.rss_collector.feed(schedule=False)
+
+    def rss_highlights(self, category: str) -> dict:
+        return self.rss_collector.highlights(category, self.current_settings())
 
     def signals(self) -> dict:
         return self.data.signals()

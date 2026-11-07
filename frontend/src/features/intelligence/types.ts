@@ -1,4 +1,23 @@
 import type { Mode, NewsItem, Quote } from '../../shared/types';
+export interface RSSArticle {
+  headline: string;
+  source_name: string;
+  source_url: string;
+  published_at: string;
+  fetched_at: string;
+}
+export interface RSSNewsResponse {
+  category: string;
+  categories: { key: string; name: string; count: number }[];
+  items: RSSArticle[];
+  sources_total: number;
+  sources_ok: number;
+  sources_failed: number;
+  last_refreshed: string | null;
+  refreshing: boolean;
+  error: string;
+}
+
 export interface Signal {
   series_id: string;
   name: string;
