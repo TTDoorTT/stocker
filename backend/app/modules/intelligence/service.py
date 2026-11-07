@@ -29,7 +29,11 @@ class IntelligenceService:
         self.rss_collector = RSSNewsService(settings)
         self.highlight_cache = HighlightCache(settings.database_url)
         self.industry_research = IndustryResearchService(
-            settings.database_url, self.catalog.industry, self.ai_computing_evidence, self.current_settings
+            settings.database_url,
+            self.catalog.industry,
+            self.ai_computing_evidence,
+            self.current_settings,
+            self.data.sec_filing_excerpts,
         )
 
     def daily_review(self) -> dict:

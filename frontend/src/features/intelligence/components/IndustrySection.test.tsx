@@ -54,3 +54,35 @@ it('does not enable unsupported industry sections', async () => {
   expect(await screen.findByText(/Automated research is not enabled/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Generate Overview/ })).not.toBeInTheDocument();
 });
+
+it('enables filing-backed technology generation on explicit click only', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'technology',
+    saved: false,
+    result: null,
+  });
+  vi.mocked(intelligenceApi.generateIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'technology',
+    result: { answer: 'Source-backed technology note.', evidence: [], gaps: [], mode: 'live' },
+  });
+  render(<IndustrySection slug="ai-computing" section="technology" />);
+  const button = await screen.findByRole('button', { name: 'Generate Technology' });
+  expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
+  fireEvent.click(button);
+  expect(await screen.findByText('Source-backed technology note.')).toBeInTheDocument();
+  expect(intelligenceApi.generateIndustrySection).toHaveBeenCalledWith('ai-computing', 'technology');
+});
+
+it('does not enable AI Computing Outlook until sources exist', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'outlook',
+    saved: false,
+    result: null,
+  });
+  render(<IndustrySection slug="ai-computing" section="outlook" />);
+  expect(await screen.findByText(/Automated research is not enabled/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Generate Outlook/ })).not.toBeInTheDocument();
+});
