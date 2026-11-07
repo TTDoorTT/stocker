@@ -58,7 +58,7 @@ class IntelligenceService:
     def news(self) -> dict:
         return news_feed(self.data, self.settings)
 
-    def rss_feed(self, category: str = 'ai') -> dict:
+    def rss_feed(self, category: str = "ai") -> dict:
         return self.rss_collector.feed(category)
 
     def rss_refresh(self) -> dict:

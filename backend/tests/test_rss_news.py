@@ -32,12 +32,18 @@ def test_rss_refresh_persists_without_model(monkeypatch, tmp_path):
     }
     now = datetime.now(UTC).isoformat()
     item = {
-        "category": "ai", "headline": "New model published", "source_name": "Example",
-        "source_url": "https://example.org/story", "canonical_url": "https://example.org/story",
-        "published_at": now, "summary": "",
+        "category": "ai",
+        "headline": "New model published",
+        "source_name": "Example",
+        "source_url": "https://example.org/story",
+        "canonical_url": "https://example.org/story",
+        "published_at": now,
+        "summary": "",
     }
     monkeypatch.setattr(rss, "fetch_source", lambda source, cutoff: ([item, item], True))
-    monkeypatch.setattr(rss, "summarize_captured_headlines", lambda *args: pytest.fail("No model on news fetch"))
+    monkeypatch.setattr(
+        rss, "summarize_captured_headlines", lambda *args: pytest.fail("No model on news fetch")
+    )
     service.refresh_worker()
     data = service.feed("ai", schedule=False)
     assert len(data["items"]) == 1

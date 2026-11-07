@@ -139,31 +139,48 @@ beforeEach(() => {
             errors: ['Calculation mismatch'],
           },
         ];
-      else if (path === '/intelligence/news' && liveNews)
-        response = {
-          mode: 'live',
-          items: [
-            {
-              headline: 'Sourced test headline',
-              source_url: 'https://example.org/news',
-              source_name: 'Test source',
-              published_at: timestamp,
-            },
-          ],
-          gaps: [],
-          fetched_at: timestamp,
-        };
-      else if (path === '/intelligence/news/summary' && liveNews) {
+      else if (path.startsWith('/intelligence/rss?')) {
+        if (!liveNews) {
+          status = 503;
+          response = { detail: 'Test provider unavailable' };
+        } else {
+          const selectedCategory = new URL(path, 'http://localhost').searchParams.get('category') || 'ai';
+
+          response = {
+            category: selectedCategory,
+            categories: [
+              { key: 'ai', name: 'AI / LLMs', count: 1 },
+              { key: 'semi', name: 'Semiconductors', count: 0 },
+            ],
+            items: [
+              {
+                headline: 'Sourced test headline',
+                source_url: 'https://example.org/news',
+                source_name: 'Test source',
+                published_at: timestamp,
+                fetched_at: timestamp,
+              },
+            ],
+            sources_total: 88,
+            sources_ok: 1,
+            sources_failed: 0,
+            last_refreshed: timestamp,
+            refreshing: false,
+            error: '',
+          };
+        }
+      } else if (path === '/intelligence/rss/highlights' && method === 'POST') {
         if (summaryUnavailable) {
           status = 503;
           response = { detail: 'Live model not configured' };
-        } else
+        } else {
           response = {
-            answer: 'Sourced headline-only test summary.',
+            answer: 'Sourced RSS industry highlights.',
             evidence: [evidence],
             mode: 'live',
             gaps: ['Full article text unavailable'],
           };
+        }
       } else if (path === '/chat')
         response = {
           answer: 'Available test evidence [ev-test].',
@@ -323,32 +340,83 @@ describe('Stocker flows', () => {
     expect(await screen.findAllByText('Unavailable')).not.toHaveLength(0);
     expect(document.querySelector('a[href^="fixture:"]')).toBeNull();
   });
-  it('summarizes sourced live headlines only on explicit request', async () => {
+
+  it('generates RSS highlights only on explicit request', async () => {
     liveNews = true;
     mount('/intelligence');
-    const button = await screen.findByRole('button', { name: 'Summarize headlines' });
-    expect(calls.filter((call) => call.path === '/intelligence/news/summary')).toHaveLength(0);
-    fireEvent.click(button);
-    expect(await screen.findByText('Sourced headline-only test summary.')).toBeInTheDocument();
+
+    const article = await screen.findByRole('link', {
+      name: 'Sourced test headline',
+    });
+
+    expect(article).toHaveAttribute('href', 'https://example.org/news');
+
+    // Loading the news must never invoke the LLM.
+    expect(calls.filter((call) => call.path === '/intelligence/rss/highlights')).toHaveLength(0);
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Generate AI highlights',
+      }),
+    );
+
+    expect(await screen.findByText('Sourced RSS industry highlights.')).toBeInTheDocument();
+
     expect(screen.getByText('Full article text unavailable')).toBeInTheDocument();
+
     expect(
-      calls.filter((call) => call.path === '/intelligence/news/summary' && call.method === 'POST'),
-    ).toHaveLength(1);
+      calls.filter((call) => call.path === '/intelligence/rss/highlights' && call.method === 'POST'),
+    ).toEqual([
+      {
+        path: '/intelligence/rss/highlights',
+        method: 'POST',
+        body: { category: 'ai' },
+      },
+    ]);
+
     expect(calls.filter((call) => call.path === '/research-runs' && call.method === 'POST')).toHaveLength(0);
   });
-  it('keeps missing live summary configuration explicit', async () => {
+
+  it('reports missing AI configuration without inventing highlights', async () => {
     liveNews = true;
     summaryUnavailable = true;
+
     mount('/intelligence');
-    fireEvent.click(await screen.findByRole('button', { name: 'Summarize headlines' }));
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Generate AI highlights',
+      }),
+    );
+
     expect(await screen.findByText('Live model not configured')).toBeInTheDocument();
-    expect(screen.queryByText('Sourced headline-only test summary.')).not.toBeInTheDocument();
+
+    expect(screen.queryByText('Sourced RSS industry highlights.')).not.toBeInTheDocument();
   });
-  it('reopens persisted record and displays provider failures honestly', async () => {
+
+  it('reopens a saved report and reports RSS provider failures', async () => {
     mount('/records');
-    fireEvent.click(await screen.findByRole('link', { name: 'Open analysis ↗' }));
-    expect(await screen.findByRole('heading', { name: 'Saved fixture report' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('link', { name: 'Industry Intelligence' }));
-    expect(await screen.findAllByText('Test provider unavailable')).toHaveLength(2);
+
+    fireEvent.click(
+      await screen.findByRole('link', {
+        name: 'Open analysis ↗',
+      }),
+    );
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Saved fixture report',
+      }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('link', {
+        name: 'Industry Intelligence',
+      }),
+    );
+
+    expect(await screen.findByText('Test provider unavailable')).toBeInTheDocument();
+
+    expect(calls.some((call) => call.path.startsWith('/intelligence/rss?'))).toBe(true);
   });
 });

@@ -17,11 +17,7 @@ def test_rss_highlights_context_and_diversity(tmp_path, monkeypatch):
 
     with rss.closing(service.connect()) as db, db:
         for i in range(29):
-            source = (
-                "Dominant Publisher" if i < 25
-                else "Publisher B" if i < 27
-                else "Publisher C"
-            )
+            source = "Dominant Publisher" if i < 25 else "Publisher B" if i < 27 else "Publisher C"
             stamp = (now - timedelta(minutes=i)).isoformat()
             db.execute(
                 """INSERT INTO rss_articles
@@ -57,9 +53,7 @@ def test_rss_highlights_context_and_diversity(tmp_path, monkeypatch):
             "mode": "live",
         }
 
-    monkeypatch.setattr(
-        rss, "summarize_captured_headlines", fake_summary
-    )
+    monkeypatch.setattr(rss, "summarize_captured_headlines", fake_summary)
 
     result = service.highlights("ai", settings)
     evidence = received["evidence"]

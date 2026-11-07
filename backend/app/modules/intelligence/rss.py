@@ -31,8 +31,13 @@ REFRESH_INTERVAL = timedelta(minutes=45)
 CJK = re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]")
 TAGS = re.compile(r"<[^>]*>")
 TRACKING = {
-    "utm_source", "utm_medium", "utm_campaign",
-    "utm_term", "utm_content", "fbclid", "gclid",
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "fbclid",
+    "gclid",
 }
 
 
@@ -70,21 +75,23 @@ def canonical_url(value: str) -> str:
         if parsed.scheme not in ("https", "http") or not parsed.hostname:
             return ""
 
-        query = urlencode([
-            (key, val)
-            for key, val in parse_qsl(
-                parsed.query, keep_blank_values=True
-            )
-            if key.lower() not in TRACKING
-        ])
+        query = urlencode(
+            [
+                (key, val)
+                for key, val in parse_qsl(parsed.query, keep_blank_values=True)
+                if key.lower() not in TRACKING
+            ]
+        )
 
-        return urlunsplit((
-            parsed.scheme.lower(),
-            parsed.netloc.lower(),
-            parsed.path.rstrip("/"),
-            query,
-            "",
-        ))
+        return urlunsplit(
+            (
+                parsed.scheme.lower(),
+                parsed.netloc.lower(),
+                parsed.path.rstrip("/"),
+                query,
+                "",
+            )
+        )
     except ValueError:
         return ""
 
@@ -102,29 +109,19 @@ def parse_feed(
         if item.tag.split("}")[-1] not in {"item", "entry"}:
             continue
 
-        title = html.unescape(
-            TAGS.sub("", child_text(item, "title"))
-        ).strip()
+        title = html.unescape(TAGS.sub("", child_text(item, "title"))).strip()
 
         if not title or CJK.search(title):
             continue
 
-        language = (
-            child_text(item, "language")
-            or item.get(
-                "{http://www.w3.org/XML/1998/namespace}lang", ""
-            )
-        )
+        language = child_text(item, "language") or item.get("{http://www.w3.org/XML/1998/namespace}lang", "")
         if language and not language.lower().startswith("en"):
             continue
 
         link = child_text(item, "link")
         if not link:
             for element in item:
-                if (
-                    element.tag.split("}")[-1] == "link"
-                    and element.get("rel", "alternate") == "alternate"
-                ):
+                if element.tag.split("}")[-1] == "link" and element.get("rel", "alternate") == "alternate":
                     link = element.get("href", "")
                     if link:
                         break
@@ -135,17 +132,9 @@ def parse_feed(
         if not identity:
             continue
 
-        published = read_date(
-            child_text(
-                item, "pubDate", "published", "updated", "date"
-            )
-        )
+        published = read_date(child_text(item, "pubDate", "published", "updated", "date"))
 
-        if (
-            published is None
-            or published < cutoff
-            or published > utc_now() + timedelta(days=1)
-        ):
+        if published is None or published < cutoff or published > utc_now() + timedelta(days=1):
             continue
 
         # Store more publisher-provided context than before.
@@ -159,15 +148,17 @@ def parse_feed(
         if CJK.search(description):
             description = ""
 
-        found.append({
-            "category": source["hint"],
-            "headline": title[:500],
-            "source_name": source["name"],
-            "source_url": link,
-            "canonical_url": identity,
-            "published_at": published.isoformat(),
-            "summary": description,
-        })
+        found.append(
+            {
+                "category": source["hint"],
+                "headline": title[:500],
+                "source_name": source["name"],
+                "source_url": link,
+                "canonical_url": identity,
+                "published_at": published.isoformat(),
+                "summary": description,
+            }
+        )
 
         if len(found) >= 6:
             break
@@ -183,19 +174,14 @@ def fetch_source(
     try:
         headers = {
             "User-Agent": "Stocker RSS Reader/1.0",
-            "Accept": (
-                "application/rss+xml, application/atom+xml, "
-                "application/xml, text/xml"
-            ),
+            "Accept": ("application/rss+xml, application/atom+xml, application/xml, text/xml"),
         }
 
         with httpx.Client(
             timeout=httpx.Timeout(12.0, connect=5.0),
             follow_redirects=True,
         ) as client:
-            with client.stream(
-                "GET", source["url"], headers=headers
-            ) as response:
+            with client.stream("GET", source["url"], headers=headers) as response:
                 response.raise_for_status()
                 chunks = []
                 size = 0
@@ -206,9 +192,7 @@ def fetch_source(
                         raise ValueError("RSS feed exceeds size limit")
                     chunks.append(chunk)
 
-        return parse_feed(
-            b"".join(chunks), source, cutoff
-        ), True
+        return parse_feed(b"".join(chunks), source, cutoff), True
 
     except (
         httpx.HTTPError,
@@ -222,16 +206,12 @@ def fetch_source(
 class RSSNewsService:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.config = json.loads(
-            SOURCE_FILE.read_text(encoding="utf-8")
-        )
+        self.config = json.loads(SOURCE_FILE.read_text(encoding="utf-8"))
 
         if not settings.database_url.startswith("sqlite:///"):
-            raise ValueError(
-                "RSS feed currently requires SQLite storage"
-            )
+            raise ValueError("RSS feed currently requires SQLite storage")
 
-        self.db_path = settings.database_url[len("sqlite:///"):]
+        self.db_path = settings.database_url[len("sqlite:///") :]
         self.lock = Lock()
         self.refreshing = False
         self.last_error = ""
@@ -264,17 +244,12 @@ class RSSNewsService:
             )
         """)
 
-        db.execute(
-            "INSERT OR IGNORE INTO rss_refresh(id) VALUES(1)"
-        )
+        db.execute("INSERT OR IGNORE INTO rss_refresh(id) VALUES(1)")
         db.commit()
         return db
 
     def validate_category(self, category: str) -> None:
-        valid = {
-            item["key"]
-            for item in self.config["industries"]
-        }
+        valid = {item["key"] for item in self.config["industries"]}
         if category not in valid:
             raise ValueError("Unknown RSS industry category")
 
@@ -284,21 +259,11 @@ class RSSNewsService:
                 return False
 
             with closing(self.connect()) as db, db:
-                row = db.execute(
-                    "SELECT attempted_at FROM rss_refresh WHERE id = 1"
-                ).fetchone()
+                row = db.execute("SELECT attempted_at FROM rss_refresh WHERE id = 1").fetchone()
 
-            previous = (
-                read_date(row["attempted_at"])
-                if row["attempted_at"]
-                else None
-            )
+            previous = read_date(row["attempted_at"]) if row["attempted_at"] else None
 
-            if (
-                not force
-                and previous
-                and utc_now() - previous < REFRESH_INTERVAL
-            ):
+            if not force and previous and utc_now() - previous < REFRESH_INTERVAL:
                 return False
 
             self.refreshing = True
@@ -325,24 +290,16 @@ class RSSNewsService:
                     )
                 )
 
-            successful = sum(
-                1 for _, success in results if success
-            )
+            successful = sum(1 for _, success in results if success)
 
-            new_rows = [
-                row
-                for rows, _ in results
-                for row in rows
-            ]
+            new_rows = [row for rows, _ in results for row in rows]
 
-            distinct = {
-                (row["category"], row["canonical_url"]): row
-                for row in new_rows
-            }
+            distinct = {(row["category"], row["canonical_url"]): row for row in new_rows}
 
             with closing(self.connect()) as db, db:
                 for row in distinct.values():
-                    db.execute("""
+                    db.execute(
+                        """
                         INSERT INTO rss_articles (
                             category,
                             canonical_url,
@@ -362,25 +319,26 @@ class RSSNewsService:
                             published_at = excluded.published_at,
                             fetched_at = excluded.fetched_at,
                             summary = excluded.summary
-                    """, (
-                        row["category"],
-                        row["canonical_url"],
-                        row["headline"],
-                        row["source_name"],
-                        row["source_url"],
-                        row["published_at"],
-                        now.isoformat(),
-                        row["summary"],
-                    ))
+                    """,
+                        (
+                            row["category"],
+                            row["canonical_url"],
+                            row["headline"],
+                            row["source_name"],
+                            row["source_url"],
+                            row["published_at"],
+                            now.isoformat(),
+                            row["summary"],
+                        ),
+                    )
 
                 db.execute(
                     "DELETE FROM rss_articles WHERE published_at < ?",
-                    (
-                        (now - timedelta(days=14)).isoformat(),
-                    ),
+                    ((now - timedelta(days=14)).isoformat(),),
                 )
 
-                db.execute("""
+                db.execute(
+                    """
                     UPDATE rss_refresh
                     SET attempted_at = ?,
                         completed_at =
@@ -391,25 +349,20 @@ class RSSNewsService:
                         sources_ok = ?,
                         sources_failed = ?
                     WHERE id = 1
-                """, (
-                    now.isoformat(),
-                    successful,
-                    now.isoformat(),
-                    successful,
-                    len(sources) - successful,
-                ))
+                """,
+                    (
+                        now.isoformat(),
+                        successful,
+                        now.isoformat(),
+                        successful,
+                        len(sources) - successful,
+                    ),
+                )
 
-            self.last_error = (
-                ""
-                if successful
-                else "All RSS sources failed. Showing cached articles."
-            )
+            self.last_error = "" if successful else "All RSS sources failed. Showing cached articles."
 
         except (OSError, sqlite3.Error, ValueError) as exc:
-            self.last_error = (
-                f"RSS refresh failed ({type(exc).__name__}). "
-                "Cached articles remain available."
-            )
+            self.last_error = f"RSS refresh failed ({type(exc).__name__}). Cached articles remain available."
 
         finally:
             with self.lock:
@@ -426,12 +379,11 @@ class RSSNewsService:
         if schedule:
             self.schedule()
 
-        cutoff = (
-            utc_now() - timedelta(days=RECENT_DAYS)
-        ).isoformat()
+        cutoff = (utc_now() - timedelta(days=RECENT_DAYS)).isoformat()
 
         with closing(self.connect()) as db, db:
-            articles = db.execute("""
+            articles = db.execute(
+                """
                 SELECT
                     headline,
                     source_name,
@@ -443,21 +395,24 @@ class RSSNewsService:
                     AND published_at >= ?
                 ORDER BY published_at DESC
                 LIMIT 120
-            """, (category, cutoff)).fetchall()
+            """,
+                (category, cutoff),
+            ).fetchall()
 
             counts = {
                 row["category"]: row["n"]
-                for row in db.execute("""
+                for row in db.execute(
+                    """
                     SELECT category, COUNT(*) AS n
                     FROM rss_articles
                     WHERE published_at >= ?
                     GROUP BY category
-                """, (cutoff,)).fetchall()
+                """,
+                    (cutoff,),
+                ).fetchall()
             }
 
-            meta = db.execute(
-                "SELECT * FROM rss_refresh WHERE id = 1"
-            ).fetchone()
+            meta = db.execute("SELECT * FROM rss_refresh WHERE id = 1").fetchone()
 
         return {
             "category": category,
@@ -487,20 +442,16 @@ class RSSNewsService:
         self.validate_category(category)
 
         if not settings.llm_model:
-            raise ModelError(
-                "Configure an AI model in Settings before "
-                "requesting industry highlights"
-            )
+            raise ModelError("Configure an AI model in Settings before requesting industry highlights")
 
-        cutoff = (
-            utc_now() - timedelta(days=RECENT_DAYS)
-        ).isoformat()
+        cutoff = (utc_now() - timedelta(days=RECENT_DAYS)).isoformat()
 
         # Read descriptions directly from SQLite, not the list API.
         with closing(self.connect()) as db:
             candidates = [
                 dict(row)
-                for row in db.execute("""
+                for row in db.execute(
+                    """
                     SELECT
                         headline,
                         source_name,
@@ -513,7 +464,9 @@ class RSSNewsService:
                         AND published_at >= ?
                     ORDER BY published_at DESC
                     LIMIT 120
-                """, (category, cutoff)).fetchall()
+                """,
+                    (category, cutoff),
+                ).fetchall()
             ]
 
         # Pass 1: Prefer a broad selection of publishers.
@@ -531,9 +484,7 @@ class RSSNewsService:
             items.append(article)
             chosen_urls.add(article["source_url"])
 
-            source_counts[source] = (
-                source_counts.get(source, 0) + 1
-            )
+            source_counts[source] = source_counts.get(source, 0) + 1
 
             if len(items) >= 20:
                 break
@@ -549,30 +500,19 @@ class RSSNewsService:
                 chosen_urls.add(article["source_url"])
 
         if not items:
-            raise DataUnavailable(
-                "No current English RSS headlines are available "
-                "for this industry"
-            )
+            raise DataUnavailable("No current English RSS headlines are available for this industry")
 
         evidence = []
 
         for article in items:
             headline = article["headline"]
 
-            description = " ".join(
-                (article["summary"] or "").split()
-            )[:500]
+            description = " ".join((article["summary"] or "").split())[:500]
 
             context = f"Headline: {headline}"
 
-            if (
-                description
-                and description.casefold() != headline.casefold()
-            ):
-                context += (
-                    "\nPublisher RSS description (excerpt): "
-                    + description
-                )
+            if description and description.casefold() != headline.casefold():
+                context += "\nPublisher RSS description (excerpt): " + description
 
             record = Evidence(
                 evidence_id=evidence_id(
@@ -597,20 +537,15 @@ class RSSNewsService:
             evidence.append(record.model_dump(mode="json"))
 
         limitations = [
-            "Highlights use publisher RSS headlines and excerpts, "
-            "not verified full articles.",
-            "Publisher descriptions may be incomplete, "
-            "promotional, or unavailable.",
-            "Coverage is limited to configured feeds and "
-            "the last three days; no trading advice.",
+            "Highlights use publisher RSS headlines and excerpts, not verified full articles.",
+            "Publisher descriptions may be incomplete, promotional, or unavailable.",
+            "Coverage is limited to configured feeds and the last three days; no trading advice.",
         ]
 
         payload = {
             "symbol": "US",
             "mode": "live",
-            "profile": (
-                f"Recent {category} industry RSS headlines and excerpts."
-            ),
+            "profile": (f"Recent {category} industry RSS headlines and excerpts."),
             "evidence": evidence,
             "facts": [],
             "news": [record["value"] for record in evidence],
