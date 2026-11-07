@@ -1,8 +1,8 @@
 # Stocker contributor rules
 
-Read `README.md`, `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md`, `docs/VALIDATION.md` and the latest entry in `progress/PROGRESS.md` before changing code. Use current source/architecture for implementation; consult [progress records](progress/README.md) for past plans, decisions, migrations and debugging context.
+Read `README.md` first. Consult `docs/ARCHITECTURE.md`, `docs/DEVELOPMENT.md`, `docs/API.md` and `docs/VALIDATION.md` only as relevant to the task. Use current source code as the authority for behavior. Do not load archived development history by default.
 
-Keep application changes and their development records together on `main` through the normal PR workflow. Update `progress/PROGRESS.md` at meaningful milestones, after test runs, on blockers and before ending a session; record architecture decisions in `progress/DECISIONS.md`. Include actual validation results, limitations and a precise next action. No separate development-history branch or archive synchronization is required. Older archive branches are preserved snapshots; their workflow instructions are superseded. Preserve history and existing branches; pushes require user authorization.
+Keep active documentation aligned with implemented code. Record new development decisions, validation results and changes in commits, pull requests or issues. Do not recreate or maintain `progress/PROGRESS.md` or a separate progress-log directory. Preserve Git history and existing archive branches; pushes require user authorization.
 
 Keep new code in its owned backend `app/modules/{market_data,research,portfolio,intelligence}` or frontend `src/features/*` module. Keep routers thin, provider access behind normalized market-data services and finance calculations pure. Share stable public contracts; preserve enforced import boundaries and API/DTO compatibility.
 
