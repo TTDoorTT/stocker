@@ -1,5 +1,7 @@
 # Guided industry research
 
+The 20 guided research topics described here are **not** the same as the 12 RSS news categories on the Industry Intelligence page. RSS categories provide recent publisher links and optional cited AI highlights, not comprehensive industry financial analysis. See [RSS sources and attribution](THIRD_PARTY_NEWS_SOURCES.md).
+
 The 20 topics in `fixtures/industries.json` independently adapt the topic selection of Vibe Research's `desktop/src/verticals/finance/data/sectors.json` at commit `84c141b86b5e7540b29f5f4cd5457dc0ebd6052e`. Prompts are newly written in English for U.S. research and global supply chains. China-specific substitution and trading assumptions have been removed. The source's verification flags are not inherited.
 
 Each topic is a research guide, not a claim that sector capacity, market share or demand data is integrated. Company symbols are starting points for verification against filings. Running one company does not establish an industry-wide finding. Canadian fundamentals remain deferred; partial daily-history/CAD/macro support is separate from these templates.
