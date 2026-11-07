@@ -30,6 +30,18 @@ export interface SavedRSSHighlights {
   result: ChatReply | null;
 }
 
+export interface SavedIndustrySection {
+  industry_slug: string;
+  section: IndustrySectionKey;
+  saved: boolean;
+  generated_at: string | null;
+  model_id: string | null;
+  stale: boolean;
+  result: ChatReply | null;
+}
+
+export type IndustrySectionKey = 'overview' | 'technology' | 'supply-chain' | 'competition' | 'outlook';
+
 export interface Signal {
   series_id: string;
   name: string;
