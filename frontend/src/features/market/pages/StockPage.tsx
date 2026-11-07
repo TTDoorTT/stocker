@@ -10,6 +10,7 @@ import { researchApi } from '../../research/api';
 import { Chat } from '../../research/components/Chat';
 import { marketApi } from '../api';
 import { PriceHistoryPanel } from '../components/PriceHistoryPanel';
+import { QuarterlyTrendsPanel } from '../components/QuarterlyTrendsPanel';
 export function StockPage() {
   const { symbol = 'AAPL' } = useParams();
   const stock = useResource(() => marketApi.stock(symbol), [symbol]);
@@ -98,6 +99,7 @@ export function StockPage() {
           ))}
       </section>
       <PriceHistoryPanel key={symbol} symbol={symbol} mode={data.mode} />
+      <QuarterlyTrendsPanel key={symbol} symbol={symbol} />
       <section className="panel">
         <div className="panel-heading">
           <h2>Financial facts</h2>

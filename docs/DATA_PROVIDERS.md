@@ -74,3 +74,15 @@ OHLCV chart data uses the configured historical price providers.
 Yahoo/yfinance is an optional historical data source for supported U.S. and explicitly identified Canadian listings. Alpha Vantage provides a limited U.S. fallback when configured.
 
 Provider OHLC values and adjusted closing prices have different adjustment semantics. Chart data is not represented as total-return data. Provider limitations, coverage gaps, currency, and synthetic fixture status remain explicit.
+
+## SEC quarterly financial trends
+
+Stocker supports read-only U.S. quarterly financial trends using SEC companyfacts.
+
+The parser distinguishes directly reported standalone quarters, cumulative year-to-date contexts and annual contexts. Supported additive financial metrics may be derived from compatible cumulative periods.
+
+Derived values retain calculation provenance. Quarterly EPS cannot be reliably inferred by subtracting cumulative EPS because share-count denominators can differ.
+
+TTM calculations require four consecutive valid standalone quarters. Missing periods, conflicting filing contexts and unsupported metrics produce explicit unavailable states rather than inferred financial results.
+
+Canadian issuer quarterly fundamentals are unavailable without a verified source.

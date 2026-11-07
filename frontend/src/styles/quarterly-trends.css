@@ -1,0 +1,86 @@
+.quarterly-panel .quarterly-metrics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.quarterly-metric-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: inherit;
+  font-size: 11px;
+  padding: 9px 13px;
+  border-radius: 7px;
+}
+.quarterly-metric-button:hover {
+  border-color: var(--accent);
+}
+.quarterly-metric-button.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.quarterly-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 36px;
+  padding: 15px 0;
+  border-top: 1px solid var(--border);
+}
+.quarterly-summary > div {
+  display: grid;
+  gap: 5px;
+  min-width: 170px;
+}
+.quarterly-summary strong {
+  font-size: 16px;
+  font-family: Manrope, sans-serif;
+}
+.quarterly-summary small {
+  max-width: 340px;
+}
+.quarterly-plot svg {
+  width: 100%;
+  height: auto;
+  min-height: 190px;
+  display: block;
+}
+.quarterly-explainer {
+  font-size: 10px;
+  margin: 0 0 16px;
+}
+.quarterly-table {
+  margin-top: 16px;
+}
+.quarterly-table table {
+  min-width: 580px;
+}
+.quarterly-table td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.quarterly-source {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 18px 0 10px;
+}
+.quarterly-gaps {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.quarterly-gaps summary {
+  font-size: 11px;
+}
+.quarterly-gaps li {
+  margin-bottom: 7px;
+}
+@media (max-width: 760px) {
+  .quarterly-summary {
+    gap: 16px;
+  }
+  .quarterly-plot svg {
+    min-height: 140px;
+  }
+}

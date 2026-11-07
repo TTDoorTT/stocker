@@ -2,7 +2,7 @@ import json
 from datetime import date
 
 from app.contracts.market import NewsItem, PriceBar, Stock
-from app.contracts.stock_research import CandleSeries, SourceMetadata
+from app.contracts.stock_research import CandleSeries, FinancialTrendsResponse, SourceMetadata
 from app.core.config import ROOT, Settings
 from app.modules.market_data.candles import fixture_candles
 from app.modules.market_data.errors import DataUnavailable
@@ -17,6 +17,11 @@ from app.modules.market_data.providers.fred import FredProvider
 from app.modules.market_data.providers.http import ProviderHTTP
 from app.modules.market_data.providers.sec import SecProvider
 from app.modules.market_data.providers.yahoo_candles import YFinanceCandleHistory
+from app.modules.market_data.quarterly import (
+    fetch_sec_financial_trends,
+    fixture_financial_trends,
+    no_coverage,
+)
 from app.modules.market_data.symbols import normalize_symbol, symbol_market
 
 
@@ -147,6 +152,20 @@ class DataService:
         if symbol_market(symbol) == "CA":
             raise DataUnavailable("Canadian candles require available optional yfinance history")
         return AlphaVantageCandles(self.alpha_vantage).candles(symbol, range_key, interval)
+
+    def financial_trends(self, symbol: str) -> FinancialTrendsResponse:
+        """Quarterly evidence independent of annual research calculations."""
+        symbol = normalize_symbol(symbol)
+        if self.settings.data_mode == "fixtures":
+            return fixture_financial_trends(symbol, self.fixtures.demo["companies"])
+        if symbol_market(symbol) == "CA":
+            return no_coverage(
+                symbol,
+                "CA",
+                "live",
+                "Canadian quarterly fundamentals unavailable; no licensed issuer feed or SEDAR+ scraper is configured.",
+            )
+        return fetch_sec_financial_trends(symbol, self.sec)
 
     def overview(self) -> list[Stock]:
         return [self.stock(symbol) for symbol in ["SPY", "QQQ"]]

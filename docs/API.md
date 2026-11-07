@@ -50,3 +50,16 @@ Omitted/null `api_key` retains the effective key only for the same endpoint; an 
 - The original `/stocks/{ticker}/history` endpoint remains available.
 
 The frontend provides candlesticks, volume, moving averages, range and interval selection, and interactive zoom.
+
+## Quarterly financial trends
+
+- `GET /stocks/{ticker}/financial-trends`: sourced quarterly financial data.
+- Supports U.S. issuer fundamentals from SEC EDGAR when available.
+- Returns fiscal periods, reporting metadata, source evidence and calculated TTM values where supported.
+- Standalone quarter values may be derived from comparable year-to-date filings.
+- Q4 additive metrics may be calculated from full-year minus nine-month values.
+- Quarterly EPS is not inferred through subtraction.
+- Missing or incompatible quarterly observations remain unavailable.
+- Canadian issuer quarterly fundamentals remain unsupported without a verified provider.
+
+This endpoint does not modify the original annual SEC parser or six-stage research workflow.

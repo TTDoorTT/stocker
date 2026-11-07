@@ -410,6 +410,65 @@
         }
       }
     },
+    "/api/stocks/{ticker}/financial-trends": {
+      "get": {
+        "summary": "Financial Trends",
+        "operationId": "financial_trends_api_stocks__ticker__financial_trends_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "CA"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancialTrendsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/watchlist": {
       "get": {
         "summary": "Watchlist",
@@ -2010,6 +2069,199 @@
         ],
         "title": "FinancialFact"
       },
+      "FinancialPeriod": {
+        "properties": {
+          "period_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Period Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "maximum": 2200.0,
+            "minimum": 1900.0,
+            "title": "Fiscal Year"
+          },
+          "fiscal_quarter": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Q1",
+                  "Q2",
+                  "Q3",
+                  "Q4"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fiscal Quarter"
+          },
+          "period_kind": {
+            "type": "string",
+            "enum": [
+              "standalone_quarter",
+              "ytd",
+              "annual"
+            ],
+            "title": "Period Kind"
+          },
+          "period_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Period End"
+          },
+          "filed_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Filed On"
+          },
+          "form": {
+            "type": "string",
+            "enum": [
+              "10-Q",
+              "10-K"
+            ],
+            "title": "Form"
+          },
+          "accession": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Accession"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MetricValue"
+            },
+            "propertyNames": {
+              "enum": [
+                "revenue",
+                "net_income",
+                "diluted_eps",
+                "operating_cash_flow",
+                "gross_profit"
+              ]
+            },
+            "type": "object",
+            "title": "Metrics"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "period_id",
+          "fiscal_year",
+          "period_kind",
+          "period_start",
+          "period_end",
+          "filed_on",
+          "form",
+          "accession",
+          "source"
+        ],
+        "title": "FinancialPeriod"
+      },
+      "FinancialTrendsResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9][A-Z0-9.]*$",
+            "title": "Symbol"
+          },
+          "market": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ],
+            "title": "Market"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CAD"
+            ],
+            "title": "Currency"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "live"
+            ],
+            "title": "Mode"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "quarterly",
+              "annual"
+            ],
+            "title": "Frequency"
+          },
+          "periods": {
+            "items": {
+              "$ref": "#/components/schemas/FinancialPeriod"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Periods"
+          },
+          "ttm": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TTMValue"
+            },
+            "propertyNames": {
+              "enum": [
+                "revenue",
+                "net_income",
+                "diluted_eps",
+                "operating_cash_flow",
+                "gross_profit"
+              ]
+            },
+            "type": "object",
+            "title": "Ttm"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceMetadata"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "market",
+          "currency",
+          "mode",
+          "frequency"
+        ],
+        "title": "FinancialTrendsResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -2070,6 +2322,71 @@
           "limitations"
         ],
         "title": "HealthResponse"
+      },
+      "MetricValue": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Unit"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "as_reported",
+              "derived",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          },
+          "calculation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "unit",
+          "status"
+        ],
+        "title": "MetricValue"
       },
       "NewsItem": {
         "properties": {
@@ -2771,6 +3088,70 @@
           "symbol"
         ],
         "title": "SymbolRequest"
+      },
+      "TTMValue": {
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Unit"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "input_period_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Input Period Ids"
+          },
+          "calculation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "unit",
+          "status"
+        ],
+        "title": "TTMValue"
       },
       "ValidationError": {
         "properties": {
