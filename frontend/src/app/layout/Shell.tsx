@@ -4,6 +4,7 @@ import { ModeBadge } from '../../shared/ui/Presentation';
 import { appApi } from '../api';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+
 type Theme = 'dark' | 'light';
 
 function readTheme(): Theme {
