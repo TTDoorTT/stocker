@@ -3,6 +3,7 @@ import type {
   CandleInterval,
   CandleRange,
   CandleSeries,
+  EarningsResponse,
   FinancialTrendsResponse,
   PriceBar,
   SearchResult,
@@ -15,6 +16,7 @@ export const marketApi = {
   history: (symbol: string) => request<PriceBar[]>(`/stocks/${encodeURIComponent(symbol)}/history?range=1y`),
   financialTrends: (symbol: string) =>
     request<FinancialTrendsResponse>(`/stocks/${encodeURIComponent(symbol)}/financial-trends`),
+  earnings: (symbol: string) => request<EarningsResponse>(`/stocks/${encodeURIComponent(symbol)}/earnings`),
   candles: (symbol: string, range: CandleRange, interval: CandleInterval) =>
     request<CandleSeries>(
       `/stocks/${encodeURIComponent(symbol)}/candles?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`,

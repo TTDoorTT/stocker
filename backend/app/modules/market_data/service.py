@@ -2,9 +2,15 @@ import json
 from datetime import date
 
 from app.contracts.market import NewsItem, PriceBar, Stock
-from app.contracts.stock_research import CandleSeries, FinancialTrendsResponse, SourceMetadata
+from app.contracts.stock_research import (
+    CandleSeries,
+    EarningsResponse,
+    FinancialTrendsResponse,
+    SourceMetadata,
+)
 from app.core.config import ROOT, Settings
 from app.modules.market_data.candles import fixture_candles
+from app.modules.market_data.earnings import fetch_earnings, fixture_earnings, unavailable
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.filing_excerpt import filing_excerpts
 from app.modules.market_data.fixtures import FixtureData
@@ -166,6 +172,15 @@ class DataService:
                 "Canadian quarterly fundamentals unavailable; no licensed issuer feed or SEDAR+ scraper is configured.",
             )
         return fetch_sec_financial_trends(symbol, self.sec)
+
+    def earnings(self, symbol: str) -> EarningsResponse:
+        """Dated earnings records and scheduled dates; no AI or SEC-date inference."""
+        symbol = normalize_symbol(symbol)
+        if self.settings.data_mode == "fixtures":
+            return fixture_earnings(symbol, self.fixtures.demo["companies"])
+        if symbol_market(symbol) == "CA":
+            return unavailable(symbol, "CA", "Canadian earnings calendar access is not licensed or verified.")
+        return fetch_earnings(symbol, self.finnhub)
 
     def overview(self) -> list[Stock]:
         return [self.stock(symbol) for symbol in ["SPY", "QQQ"]]

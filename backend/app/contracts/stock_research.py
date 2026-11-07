@@ -184,6 +184,11 @@ class UpcomingEarnings(StrictModel):
     scheduled_date: date
     date_status: Literal["estimated", "confirmed"]
     timing: Literal["before_open", "after_close", "during_session", "unknown"] = "unknown"
+    fiscal_year: int | None = None
+    fiscal_quarter: Quarter | None = None
+    eps_estimate: float | None = None
+    eps_estimate_basis: Literal["gaap_diluted", "gaap_basic", "adjusted"] | None = None
+    revenue_estimate: float | None = None
     source: SourceMetadata
 
 
@@ -197,6 +202,9 @@ class EarningsRecord(StrictModel):
     estimate_eps: float | None = None
     estimate_basis: Literal["gaap_diluted", "gaap_basic", "adjusted"] | None = None
     surprise_pct: float | None = None
+    actual_revenue: float | None = None
+    estimate_revenue: float | None = None
+    revenue_surprise_pct: float | None = None
     source: SourceMetadata
 
     @model_validator(mode="after")
@@ -211,6 +219,10 @@ class EarningsRecord(StrictModel):
             or self.actual_basis != self.estimate_basis
         ):
             raise ValueError("surprise requires comparable EPS actual and estimate")
+        if self.revenue_surprise_pct is not None and (
+            self.actual_revenue is None or self.estimate_revenue in (None, 0)
+        ):
+            raise ValueError("revenue surprise requires both actual and nonzero estimate")
         return self
 
 

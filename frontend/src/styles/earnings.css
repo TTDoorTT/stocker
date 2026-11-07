@@ -1,0 +1,146 @@
+.earnings-panel .panel-heading {
+  margin-bottom: 16px;
+}
+.earnings-preview {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.9fr) minmax(260px, 1.5fr);
+  column-gap: 22px;
+  row-gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 4%, var(--panel));
+  border-radius: 10px;
+}
+.earnings-kicker {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+.earnings-preview-date {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.earnings-preview-date strong {
+  font:
+    700 23px / 1.2 Manrope,
+    sans-serif;
+}
+.earnings-preview-estimates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.earnings-preview-estimates > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.earnings-preview-estimates strong {
+  font:
+    700 19px / 1.2 Manrope,
+    sans-serif;
+}
+.earnings-preview-estimates small {
+  font-size: 10px;
+}
+.earnings-warning {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 10px;
+}
+.earnings-preview-unavailable {
+  padding: 18px;
+  border: 1px dashed var(--border);
+  border-radius: 9px;
+}
+.earnings-preview-unavailable strong {
+  font-size: 13px;
+}
+.earnings-preview-unavailable p {
+  font-size: 11px;
+  margin: 8px 0 0;
+}
+.earnings-review {
+  margin-top: 24px;
+}
+.earnings-review-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.earnings-review h3,
+.earnings-no-history h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.earnings-review-heading .muted {
+  font-size: 11px;
+}
+.earnings-table {
+  margin: 10px 0;
+}
+.earnings-table table {
+  min-width: 940px;
+}
+.earnings-table th {
+  white-space: nowrap;
+  font-size: 10px;
+}
+.earnings-table td {
+  vertical-align: top;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.earnings-table td small {
+  max-width: 170px;
+  white-space: normal;
+  font-size: 9px;
+}
+.earnings-table .is-positive {
+  color: #44b68a;
+  font-weight: 700;
+}
+.earnings-table .is-negative {
+  color: var(--negative);
+  font-weight: 700;
+}
+.earnings-no-history {
+  margin-top: 20px;
+}
+.earnings-sources {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  margin: 16px 0 10px;
+}
+.earnings-gaps {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.earnings-gaps li {
+  margin: 6px 0;
+}
+.earnings-gaps summary {
+  cursor: pointer;
+}
+@media (max-width: 760px) {
+  .earnings-preview {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+  .earnings-preview-estimates {
+    gap: 12px;
+  }
+  .earnings-preview-date strong {
+    font-size: 20px;
+  }
+  .earnings-preview-estimates strong {
+    font-size: 17px;
+  }
+}
