@@ -59,3 +59,59 @@ export interface CandleSeries {
   bars: CandleBar[];
   gaps: string[];
 }
+
+/** Read-only contracts from backend/app/contracts/stock_research.py. */
+export type FinancialMetricName =
+  | 'revenue'
+  | 'net_income'
+  | 'diluted_eps'
+  | 'operating_cash_flow'
+  | 'gross_profit';
+export interface FinancialSource {
+  name: string;
+  url: string;
+  fetched_at: string;
+  published_at: string | null;
+  cached: boolean;
+  fixture: boolean;
+}
+export interface FinancialMetric {
+  value: number | null;
+  unit: string;
+  status: 'as_reported' | 'derived' | 'unavailable';
+  evidence_ids: string[];
+  calculation_id?: string | null;
+  reason?: string | null;
+}
+export interface FinancialPeriod {
+  period_id: string;
+  fiscal_year: number;
+  fiscal_quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' | null;
+  period_kind: 'standalone_quarter' | 'ytd' | 'annual';
+  period_start: string;
+  period_end: string;
+  filed_on: string;
+  form: '10-K' | '10-Q';
+  accession: string;
+  metrics: Partial<Record<FinancialMetricName, FinancialMetric>>;
+  source: FinancialSource;
+}
+export interface FinancialTTM {
+  value: number | null;
+  unit: string;
+  status: 'available' | 'unavailable';
+  input_period_ids: string[];
+  calculation_id?: string | null;
+  reason?: string | null;
+}
+export interface FinancialTrendsResponse {
+  symbol: string;
+  market: 'US' | 'CA';
+  currency: 'USD' | 'CAD';
+  mode: Mode;
+  frequency: 'quarterly' | 'annual';
+  periods: FinancialPeriod[];
+  ttm: Partial<Record<FinancialMetricName, FinancialTTM>>;
+  sources: FinancialSource[];
+  gaps: string[];
+}
