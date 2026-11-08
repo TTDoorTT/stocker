@@ -15,6 +15,7 @@ from pathlib import Path
 from threading import Lock
 
 from app.contracts.market import Evidence
+from app.modules.intelligence.filing_dispatch import prepare_filing_generation
 from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
 from app.modules.intelligence.industry_profiles import ALL_SECTIONS, generation_pipeline
 from app.modules.market_data.errors import DataUnavailable
@@ -261,21 +262,21 @@ class IndustryResearchService:
                 if self.capture_filing_excerpts is None:
                     raise DataUnavailable("SEC filing excerpt retrieval is not configured")
                 # Explicit generation only. GET /sections reads the saved SQLite row.
-                snapshot = (
-                    self.capture_filing_excerpts(_now().year - 1)
-                    if slug == "ai-computing"
-                    else self.capture_filing_excerpts(_now().year - 1, industry=slug)
+                inputs = prepare_filing_generation(
+                    slug,
+                    section,
+                    _now().year - 1,
+                    self.capture_filing_excerpts,
+                    capture_filing_section,
+                    filing_gaps,
+                    filing_task,
                 )
-                if slug == "ai-computing":
-                    # Preserve the original adapter call signature.
-                    evidence = capture_filing_section(snapshot, section)
-                    gaps = filing_gaps(section, snapshot)
-                    task = filing_task(section)
-                else:
-                    # Additional industries require explicit identity checks.
-                    evidence = capture_filing_section(snapshot, section, industry=slug)
-                    gaps = filing_gaps(section, snapshot, industry=slug)
-                    task = filing_task(section, industry=slug)
+                snapshot, evidence, gaps, task = (
+                    inputs.snapshot,
+                    inputs.evidence,
+                    inputs.gaps,
+                    inputs.task,
+                )
                 result = summarize_captured_headlines(
                     {
                         "symbol": "US",
