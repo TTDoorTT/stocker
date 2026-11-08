@@ -10,6 +10,7 @@ import re
 from datetime import UTC, date, datetime
 from math import isfinite
 
+from app.contracts.industry_sources import sec_filing_source
 from app.core.config import Settings
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.providers.sec import SecProvider
@@ -112,12 +113,14 @@ class SECIndustryEvidence:
         self.sec = sec
         self.settings = settings
 
-    def snapshot(self, year: int) -> dict:
+    def snapshot(self, year: int, *, industry: str = "ai-computing") -> dict:
+        source = sec_filing_source(industry)
+        peers = source.peers
         now = datetime.now(UTC)
         if year < 2009 or year >= now.year:
             raise ValueError("Year must be a completed calendar year from 2009 onward")
         result = {
-            "industry": "ai-computing",
+            "industry": industry,
             "year": year,
             "mode": self.settings.data_mode,
             "as_of": now.isoformat(),
@@ -125,7 +128,7 @@ class SECIndustryEvidence:
             "metrics": [],
             "filings": [],
             "gaps": [],
-            "coverage": "Selected U.S. public-company examples only; not a sector-wide census.",
+            "coverage": source.limitations,
         }
         if self.settings.data_mode != "live":
             result["gaps"].append(
@@ -142,7 +145,7 @@ class SECIndustryEvidence:
 
         by_symbol = {row["ticker"].upper(): row for row in mappings}
         cik_to_symbol = {}
-        for symbol in PEERS:
+        for symbol in peers:
             row = by_symbol.get(symbol)
             if not row:
                 result["gaps"].append(f"{symbol}: SEC ticker mapping unavailable.")
@@ -156,7 +159,7 @@ class SECIndustryEvidence:
             result["gaps"].append("No selected peer identifiers were available from the SEC.")
             return result
 
-        for key, (tag, label) in METRICS.items():
+        for key, (tag, label) in METRICS.items() if industry == "ai-computing" else ():
             url = f"https://data.sec.gov/api/xbrl/frames/us-gaap/{tag}/USD/CY{year}.json"
             try:
                 response = self.sec.http.fetch(url, headers=headers, ttl=86400, interval=0.2)
@@ -177,7 +180,7 @@ class SECIndustryEvidence:
                 if len(rows) < len(cik_to_symbol):
                     missing = [
                         v
-                        for v in PEERS
+                        for v in peers
                         if v in cik_to_symbol.values() and v not in {x["symbol"] for x in rows}
                     ]
                     result["gaps"].append(f"{label}: no comparable frame entry for {', '.join(missing)}.")
@@ -197,6 +200,8 @@ class SECIndustryEvidence:
             except DataUnavailable as exc:
                 result["gaps"].append(f"{company['symbol']} filings: {exc}")
         result["filings"] = sorted(result["filings"], key=lambda f: f["filed"], reverse=True)[:15]
+        if industry == "semiconductor":
+            result["gaps"].append(source.limitations)
         result["gaps"].extend(
             [
                 "XBRL Frames can omit peers because their fiscal periods or accounting concepts differ.",

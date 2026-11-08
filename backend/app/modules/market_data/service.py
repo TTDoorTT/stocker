@@ -250,10 +250,10 @@ class DataService:
             "gaps": ["These indicators describe macro conditions; no investment signals are inferred."],
         }
 
-    def sec_industry_snapshot(self, year: int) -> dict:
-        """Expose SEC industry evidence through the market-data service."""
-        return SECIndustryEvidence(self.sec, self.settings).snapshot(year)
+    def sec_industry_snapshot(self, year: int, *, industry: str = "ai-computing") -> dict:
+        """Read bounded, approved SEC issuer metadata for a source profile."""
+        return SECIndustryEvidence(self.sec, self.settings).snapshot(year, industry=industry)
 
-    def sec_filing_excerpts(self, year: int) -> dict:
-        """Fetch bounded, matched SEC filing text without invoking an AI model."""
-        return filing_excerpts(self.sec, self.sec_industry_snapshot(year))
+    def sec_filing_excerpts(self, year: int, *, industry: str = "ai-computing") -> dict:
+        """Fetch approved 10-K passages without invoking an AI model."""
+        return filing_excerpts(self.sec, self.sec_industry_snapshot(year, industry=industry))

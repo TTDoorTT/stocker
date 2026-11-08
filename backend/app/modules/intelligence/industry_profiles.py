@@ -26,6 +26,20 @@ class IndustryResearchProfile:
 # The named source profile must be implemented and verified separately before
 # a new industry is enabled. All other industries stay guided-only.
 _PROFILES = {
+    "semiconductor": IndustryResearchProfile(
+        slug="semiconductor",
+        source_profile="semiconductor-sec-pilot",
+        pipelines=(
+            ("technology", "sec_filing_review"),
+            ("supply-chain", "sec_filing_review"),
+            ("competition", "sec_filing_review"),
+        ),
+        coverage=(
+            "Limited U.S. SEC 10-K semiconductor filing pilot: technology, supply-chain "
+            "and competition issuer-disclosure notes. Overview and Outlook are guided-only. "
+            "International foundries, non-U.S. issuers and the full global value chain are not covered."
+        ),
+    ),
     "ai-computing": IndustryResearchProfile(
         slug="ai-computing",
         source_profile="ai-computing-sec-pilot",
@@ -40,7 +54,7 @@ _PROFILES = {
             "supply-chain and competition notes. Outlook is guided-only. Selected U.S. "
             "issuers do not represent the entire industry."
         ),
-    )
+    ),
 }
 
 GUIDED_COVERAGE = (
@@ -57,7 +71,7 @@ def validate_profiles(templates: list[dict]) -> None:
     if not set(_PROFILES).issubset(slugs):
         raise ValueError("Configured research profile has no industry template")
     for slug, profile in _PROFILES.items():
-        if profile.slug != slug or profile.source_profile != "ai-computing-sec-pilot":
+        if profile.slug != slug or profile.source_profile != f"{slug}-sec-pilot":
             raise ValueError("Unknown research source integration; generation disabled")
         configured = [section for section, _ in profile.pipelines]
         if len(configured) != len(set(configured)) or any(s not in ALL_SECTIONS for s in configured):
@@ -68,6 +82,12 @@ def validate_profiles(templates: list[dict]) -> None:
             "supply-chain": "sec_filing_review",
             "competition": "sec_filing_review",
         }
+        if slug == "semiconductor":
+            expected = {
+                "technology": "sec_filing_review",
+                "supply-chain": "sec_filing_review",
+                "competition": "sec_filing_review",
+            }
         if dict(profile.pipelines) != expected:
             raise ValueError("Research profile does not match implemented source pipelines")
 
@@ -75,7 +95,7 @@ def validate_profiles(templates: list[dict]) -> None:
 def generation_pipeline(slug: str, section: str) -> Pipeline | None:
     """Return a backend-supported pipeline, not a UI hint or speculative plan."""
     profile = _PROFILES.get(slug)
-    if profile is None or profile.source_profile != "ai-computing-sec-pilot":
+    if profile is None or profile.source_profile != f"{slug}-sec-pilot":
         return None
     return dict(profile.pipelines).get(section)
 
