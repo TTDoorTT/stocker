@@ -1,17 +1,21 @@
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 
 from app.contracts.market import NewsItem, PriceBar, Stock
 from app.contracts.stock_research import (
     CandleSeries,
     EarningsResponse,
+    EventsResponse,
+    EventStudyResponse,
     FinancialTrendsResponse,
     SourceMetadata,
 )
 from app.core.config import ROOT, Settings
+from app.finance.event_study import calculate_event_study, empty_study
 from app.modules.market_data.candles import fixture_candles
 from app.modules.market_data.earnings import fetch_earnings, fixture_earnings, unavailable
 from app.modules.market_data.errors import DataUnavailable
+from app.modules.market_data.event_sources import empty_events, fetch_historical_events, fixture_events
 from app.modules.market_data.filing_excerpt import filing_excerpts
 from app.modules.market_data.fixtures import FixtureData
 from app.modules.market_data.industry_sec import SECIndustryEvidence
@@ -181,6 +185,45 @@ class DataService:
         if symbol_market(symbol) == "CA":
             return unavailable(symbol, "CA", "Canadian earnings calendar access is not licensed or verified.")
         return fetch_earnings(symbol, self.finnhub)
+
+    def events(self, symbol: str) -> EventsResponse:
+        """Historical vendor-dated earnings only; no inferred release times."""
+        symbol = normalize_symbol(symbol)
+        if self.settings.data_mode == "fixtures":
+            if symbol_market(symbol) == "CA":
+                raise DataUnavailable("No synthetic Canadian earnings-event fixture exists")
+            as_of = date.fromisoformat(self.fixtures.demo["as_of"][:10])
+            return fixture_events(symbol, self.fixtures.demo["companies"], as_of=as_of)
+        if symbol_market(symbol) == "CA":
+            return empty_events(symbol, "CA", "live", "Canadian earnings event coverage is unverified.")
+        return fetch_historical_events(symbol, self.finnhub)
+
+    def event_study(self, symbol: str) -> EventStudyResponse:
+        """On-demand post-date drift versus SPY, never an AI/model calculation."""
+        symbol = normalize_symbol(symbol)
+        events = self.events(symbol)
+        if not events.events:
+            return empty_study(events, "No usable historical earnings dates; event study unavailable.")
+        try:
+            stock = self.candles(symbol, "5y", "1d")
+            spy = self.candles("SPY", "5y", "1d")
+        except DataUnavailable:
+            return empty_study(events, "Five years of daily stock and SPY history are unavailable.")
+
+        if self.settings.data_mode == "fixtures":
+            stock = stock.model_copy(
+                update={"bars": [bar.model_copy(update={"adjusted_close": bar.close}) for bar in stock.bars]}
+            )
+            spy = spy.model_copy(
+                update={"bars": [bar.model_copy(update={"adjusted_close": bar.close}) for bar in spy.bars]}
+            )
+            as_of = date.fromisoformat(self.fixtures.demo["as_of"][:10])
+        else:
+            as_of = datetime.now(UTC).date()
+        try:
+            return calculate_event_study(events, stock, spy, as_of=as_of)
+        except ValueError:
+            return empty_study(events, "Stock/SPY history is not comparable for the event study.")
 
     def overview(self) -> list[Stock]:
         return [self.stock(symbol) for symbol in ["SPY", "QQQ"]]

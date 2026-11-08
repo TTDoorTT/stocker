@@ -528,6 +528,124 @@
         }
       }
     },
+    "/api/stocks/{ticker}/events": {
+      "get": {
+        "summary": "Events",
+        "operationId": "events_api_stocks__ticker__events_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "CA"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/{ticker}/event-study": {
+      "get": {
+        "summary": "Event Study",
+        "operationId": "event_study_api_stocks__ticker__event_study_get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "US",
+                    "CA"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Market"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventStudyResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/watchlist": {
       "get": {
         "summary": "Watchlist",
@@ -1793,6 +1911,77 @@
         ],
         "title": "ConnectionResult"
       },
+      "EarningsEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "fiscal_year": {
+            "type": "integer",
+            "title": "Fiscal Year"
+          },
+          "fiscal_quarter": {
+            "type": "string",
+            "enum": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4"
+            ],
+            "title": "Fiscal Quarter"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "date_precision": {
+            "type": "string",
+            "enum": [
+              "date_only",
+              "timestamp"
+            ],
+            "title": "Date Precision"
+          },
+          "timing_basis": {
+            "type": "string",
+            "enum": [
+              "issuer_release",
+              "vendor_report",
+              "sec_8k_filing"
+            ],
+            "title": "Timing Basis"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SourceMetadata"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "fiscal_year",
+          "fiscal_quarter",
+          "event_date",
+          "date_precision",
+          "timing_basis",
+          "source"
+        ],
+        "title": "EarningsEvent"
+      },
       "EarningsRecord": {
         "properties": {
           "event_id": {
@@ -2006,6 +2195,281 @@
           "mode"
         ],
         "title": "EarningsResponse"
+      },
+      "EventStudyResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9][A-Z0-9.]*$",
+            "title": "Symbol"
+          },
+          "market": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ],
+            "title": "Market"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CAD"
+            ],
+            "title": "Currency"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "live"
+            ],
+            "title": "Mode"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "benchmark_symbol": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Benchmark Symbol"
+          },
+          "pre_trading_days": {
+            "type": "integer",
+            "const": 5,
+            "title": "Pre Trading Days",
+            "default": 5
+          },
+          "post_trading_days": {
+            "type": "integer",
+            "const": 20,
+            "title": "Post Trading Days",
+            "default": 20
+          },
+          "return_method": {
+            "type": "string",
+            "const": "compounded_close_to_close_excess",
+            "title": "Return Method",
+            "default": "compounded_close_to_close_excess"
+          },
+          "minimum_sample": {
+            "type": "integer",
+            "const": 8,
+            "title": "Minimum Sample",
+            "default": 8
+          },
+          "eligible_event_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Eligible Event Count"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventWindow"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/EventStudySummary"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceMetadata"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "market",
+          "currency",
+          "mode",
+          "benchmark_symbol",
+          "eligible_event_count"
+        ],
+        "title": "EventStudyResponse"
+      },
+      "EventStudySummary": {
+        "properties": {
+          "horizon": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Horizon"
+          },
+          "eligible_n": {
+            "type": "integer",
+            "minimum": 8.0,
+            "title": "Eligible N"
+          },
+          "mean_excess_return": {
+            "type": "number",
+            "title": "Mean Excess Return"
+          },
+          "median_excess_return": {
+            "type": "number",
+            "title": "Median Excess Return"
+          },
+          "positive_share": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Positive Share"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "horizon",
+          "eligible_n",
+          "mean_excess_return",
+          "median_excess_return",
+          "positive_share"
+        ],
+        "title": "EventStudySummary"
+      },
+      "EventWindow": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "pattern": "^(US|CA):[A-Z0-9][A-Z0-9.]*:earnings_release:FY\\d{4}Q[1-4]$",
+            "title": "Event Id"
+          },
+          "day_zero": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day Zero"
+          },
+          "eligible": {
+            "type": "boolean",
+            "title": "Eligible"
+          },
+          "exclusion_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exclusion Reason"
+          },
+          "excess_returns": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Excess Returns"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "eligible"
+        ],
+        "title": "EventWindow"
+      },
+      "EventsResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "maxLength": 24,
+            "minLength": 1,
+            "pattern": "^[A-Z0-9][A-Z0-9.]*$",
+            "title": "Symbol"
+          },
+          "market": {
+            "type": "string",
+            "enum": [
+              "US",
+              "CA"
+            ],
+            "title": "Market"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CAD"
+            ],
+            "title": "Currency"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "fixtures",
+              "live"
+            ],
+            "title": "Mode"
+          },
+          "gaps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gaps"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EarningsEvent"
+            },
+            "type": "array",
+            "title": "Events"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceMetadata"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "symbol",
+          "market",
+          "currency",
+          "mode"
+        ],
+        "title": "EventsResponse"
       },
       "Evidence": {
         "properties": {

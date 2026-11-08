@@ -4,6 +4,8 @@ import type {
   CandleRange,
   CandleSeries,
   EarningsResponse,
+  EventStudyResponse,
+  EventsResponse,
   FinancialTrendsResponse,
   PriceBar,
   SearchResult,
@@ -17,6 +19,9 @@ export const marketApi = {
   financialTrends: (symbol: string) =>
     request<FinancialTrendsResponse>(`/stocks/${encodeURIComponent(symbol)}/financial-trends`),
   earnings: (symbol: string) => request<EarningsResponse>(`/stocks/${encodeURIComponent(symbol)}/earnings`),
+  events: (symbol: string) => request<EventsResponse>(`/stocks/${encodeURIComponent(symbol)}/events`),
+  eventStudy: (symbol: string) =>
+    request<EventStudyResponse>(`/stocks/${encodeURIComponent(symbol)}/event-study`),
   candles: (symbol: string, range: CandleRange, interval: CandleInterval) =>
     request<CandleSeries>(
       `/stocks/${encodeURIComponent(symbol)}/candles?range=${encodeURIComponent(range)}&interval=${encodeURIComponent(interval)}`,

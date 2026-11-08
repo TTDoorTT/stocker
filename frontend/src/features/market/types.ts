@@ -153,3 +153,54 @@ export interface EarningsResponse {
   sources: FinancialSource[];
   gaps: string[];
 }
+
+/** Source-backed historical earnings dates; never exact release timestamps by inference. */
+export interface EarningsEvent {
+  event_id: string;
+  fiscal_year: number;
+  fiscal_quarter: 'Q1' | 'Q2' | 'Q3' | 'Q4';
+  event_date: string;
+  published_at: string | null;
+  date_precision: 'date_only' | 'timestamp';
+  timing_basis: 'issuer_release' | 'vendor_report' | 'sec_8k_filing';
+  source: FinancialSource;
+}
+export interface EventsResponse {
+  symbol: string;
+  market: 'US' | 'CA';
+  currency: 'USD' | 'CAD';
+  mode: Mode;
+  events: EarningsEvent[];
+  sources: FinancialSource[];
+  gaps: string[];
+}
+export interface EventWindow {
+  event_id: string;
+  day_zero: string | null;
+  eligible: boolean;
+  exclusion_reason: string | null;
+  excess_returns: Record<string, number | null>;
+}
+export interface EventStudySummary {
+  horizon: string;
+  eligible_n: number;
+  mean_excess_return: number;
+  median_excess_return: number;
+  positive_share: number;
+}
+export interface EventStudyResponse {
+  symbol: string;
+  market: 'US' | 'CA';
+  currency: 'USD' | 'CAD';
+  mode: Mode;
+  benchmark_symbol: string;
+  pre_trading_days: 5;
+  post_trading_days: 20;
+  return_method: 'compounded_close_to_close_excess';
+  minimum_sample: 8;
+  eligible_event_count: number;
+  events: EventWindow[];
+  summary: EventStudySummary[] | null;
+  sources: FinancialSource[];
+  gaps: string[];
+}
