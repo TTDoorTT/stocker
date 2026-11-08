@@ -139,4 +139,17 @@ def summarize_captured_headlines(
         "mode": "live",
         "gaps": sorted(set(gaps + validated["gaps"])),
         **({"claim_review": claim_review} if claim_review is not None else {}),
+        **(
+            {
+                "filing_claims": [
+                    {
+                        "text": claim["text"],
+                        "evidence_ids": list(claim["evidence_ids"]),
+                    }
+                    for claim in validated["claims"]
+                ]
+            }
+            if review_filing
+            else {}
+        ),
     }

@@ -20,6 +20,7 @@ from app.modules.intelligence.filing_coverage import filing_coverage
 from app.modules.intelligence.filing_dispatch import prepare_filing_generation
 from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
 from app.modules.intelligence.industry_profiles import ALL_SECTIONS, generation_pipeline
+from app.modules.intelligence.issuer_findings import issuer_findings
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.provenance import evidence_id
 from app.modules.research.service import summarize_captured_headlines
@@ -308,6 +309,11 @@ class IndustryResearchService:
                 if citation_coverage is not None:
                     coverage.update(citation_coverage)
                 result["filing_coverage"] = coverage
+                result["issuer_findings"] = issuer_findings(
+                    evidence,
+                    result.get("filing_claims"),
+                    result.get("claim_review"),
+                )
                 self.repository.save(slug, section, result, snapshot, settings.llm_model, _hash(evidence))
                 return self.repository.get(slug, section)
 
