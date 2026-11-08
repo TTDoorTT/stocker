@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { intelligenceApi } from '../api';
 import type { SavedRSSHighlights } from '../types';
@@ -51,4 +51,27 @@ it('labels changed article selection without removing saved highlights', async (
   render(<RSSHighlights category="ai" hasNews newsRevision="2026-11-07" />);
   expect(await screen.findByText(/News has changed since these highlights/)).toBeInTheDocument();
   expect(screen.getByText('Previously saved AI highlights.')).toBeInTheDocument();
+});
+
+it('preserves an explicit generation error when the earlier cache read fails', async () => {
+  let failCache: ((reason?: unknown) => void) | undefined;
+
+  const pending = new Promise<SavedRSSHighlights>((_resolve, reject) => {
+    failCache = reject;
+  });
+
+  vi.mocked(intelligenceApi.savedRSSHighlights).mockReturnValueOnce(pending);
+  vi.mocked(intelligenceApi.rssHighlights).mockRejectedValue(new Error('Live model not configured'));
+
+  render(<RSSHighlights category="ai" hasNews newsRevision={null} />);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Generate AI highlights' }));
+  expect(await screen.findByText('Live model not configured')).toBeInTheDocument();
+
+  await act(async () => {
+    failCache?.(new Error('Cache read unavailable'));
+  });
+
+  expect(screen.getByText('Live model not configured')).toBeInTheDocument();
+  expect(screen.queryByText('Saved highlights are temporarily unavailable.')).toBeNull();
 });

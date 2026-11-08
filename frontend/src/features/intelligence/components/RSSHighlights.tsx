@@ -40,7 +40,9 @@ export function RSSHighlights({ category, hasNews, newsRevision }: Props) {
         }
       })
       .catch(() => {
-        if (!cancelled) setError('Saved highlights are temporarily unavailable.');
+        if (!cancelled) {
+          setError((current) => current || 'Saved highlights are temporarily unavailable.');
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
