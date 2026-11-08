@@ -10,6 +10,7 @@ from app.modules.market_data.service import DataService
 from app.modules.research.agents.client import ModelClient
 from app.modules.research.agents.tools import ResearchTools
 from app.modules.research.chat import answer_chat
+from app.modules.research.claim_review import screen_filing_claims
 from app.modules.research.errors import IndustryNotFound, ResearchQueueFull, RunNotFound
 from app.modules.research.orchestrator import ResearchOrchestrator, new_run, now
 from app.modules.research.repository import ResearchRepository
@@ -98,6 +99,7 @@ def summarize_captured_headlines(
     settings: Settings,
     task: str | None = None,
     bullets_only: bool = False,
+    review_filing: bool = False,
 ) -> dict:
     tools = ResearchTools(payload, [], [], {}, lambda *args, **kwargs: None, "report")
     result = ModelClient(settings).complete(
@@ -120,6 +122,7 @@ def summarize_captured_headlines(
         raise ValueError("Headline summary requires at least one source-cited claim")
     if any(claim["value"] is not None or claim["calculation_ids"] for claim in validated["claims"]):
         raise ValueError("Text-only headline evidence does not support numeric or calculation claims")
+    claim_review = screen_filing_claims(validated["claims"], evidence, settings) if review_filing else None
     if bullets_only:
         answer = "Industry highlights (headlines only)\n\n"
         for claim in validated["claims"][:5]:
@@ -135,4 +138,5 @@ def summarize_captured_headlines(
         "evidence": evidence,
         "mode": "live",
         "gaps": sorted(set(gaps + validated["gaps"])),
+        **({"claim_review": claim_review} if claim_review is not None else {}),
     }

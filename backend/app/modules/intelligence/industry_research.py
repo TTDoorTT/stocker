@@ -277,6 +277,7 @@ class IndustryResearchService:
                     settings,
                     task=filing_task(section),
                     bullets_only=True,
+                    review_filing=True,
                 )
                 result["answer"] = result["answer"].replace(
                     "Industry highlights (headlines only)",
