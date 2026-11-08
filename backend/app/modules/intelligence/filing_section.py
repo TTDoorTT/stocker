@@ -57,6 +57,46 @@ SECTION_TASK = {
 }
 
 
+SYNTHESIS_TASK = {
+    "technology": (
+        "Identify issuer-disclosed design approaches, component roles, "
+        "integration requirements, or operating constraints. "
+        "Explain specific differences between disclosed technical approaches "
+        "only when both sides are supported by cited passages. "
+        "Do not infer superior performance, technical leadership, "
+        "commercial adoption, or deployment scale."
+    ),
+    "supply-chain": (
+        "Identify specific issuer-disclosed production dependencies, "
+        "materials, manufacturing constraints, or supply risks. "
+        "Contrast stated dependencies or mitigations only where supported. "
+        "Do not infer unmentioned supplier relationships, "
+        "global shortages, or bargaining power."
+    ),
+    "competition": (
+        "Identify issuer-disclosed competitive mechanisms such as "
+        "substitution risks, customer concentration, pricing exposure, "
+        "or technical differentiation only when explicitly documented. "
+        "Contrast stated competitive exposures, not market leadership, "
+        "market shares, or industry rankings."
+    ),
+}
+
+COMMON_SYNTHESIS_RULES = (
+    " Prefer a concrete disclosed detail, constraint, or conditional risk "
+    "over broad lists of technologies or generic observations. "
+    "Only compare named issuers when separate cited excerpts expressly "
+    "support both sides; otherwise state that the excerpts do not "
+    "support a defensible comparison. "
+    "Do not combine unrelated issuer statements into one claim "
+    "to increase citation counts. "
+    "Keep each finding focused on one bounded point and concise "
+    "(prefer under 450 characters). "
+    "Cite only the evidence IDs necessary to support every material "
+    "part of each claim."
+)
+
+
 def _parse_date(value: object) -> date | None:
     try:
         return date.fromisoformat(str(value))
@@ -182,6 +222,9 @@ def filing_task(section: str, *, industry: str = "ai-computing") -> str:
         f"Write at most three concise, qualitative {source.label} {section} findings from "
         "the provided literal SEC 10-K excerpts ONLY. "
         + SECTION_TASK[section]
+        + " "
+        + SYNTHESIS_TASK[section]
+        + COMMON_SYNTHESIS_RULES
         + " Attribute every claim to one or more supplied evidence IDs. "
         "Clearly distinguish statements disclosed by an issuer from verified industry facts. "
         "The excerpts are keyword-selected, partial, and could be incomplete or misleading. "
