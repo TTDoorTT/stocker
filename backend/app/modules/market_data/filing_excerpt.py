@@ -1,13 +1,14 @@
-"""Bounded SEC filing text retrieval for the AI Computing evidence pilot.
+"""Bounded SEC 10-K passage retrieval with deterministic topic ranking.
 
-Only server-derived, allowlisted SEC 10-K primary documents are retrieved.
-A match is a literal text excerpt, NOT a validated accounting/sector claim.
+This is *not* a SEC section parser: Item headings are hints, not verified
+boundaries. Issuer statements are untrusted source text, not instructions.
 """
 
 from __future__ import annotations
 
 import re
 import time
+from collections import defaultdict
 from datetime import UTC, datetime
 from html.parser import HTMLParser
 from urllib.parse import urlsplit
@@ -22,76 +23,219 @@ SEC_DOCUMENT = re.compile(
     r"[A-Za-z0-9_.-]{1,180}\.(?:htm|html|txt)$",
     re.IGNORECASE,
 )
+
+# These exact terms preserve compatibility with intelligence/filing_section.py.
+TOPIC_TERMS = {
+    "technology": (
+        "artificial intelligence",
+        "semiconductors",
+        "semiconductor",
+        "accelerators",
+        "accelerator",
+        "advanced packaging",
+        "high bandwidth memory",
+        "data centers",
+        "data center",
+    ),
+    "supply-chain": ("supply chain", "manufacturing", "advanced packaging", "customer demand"),
+    "competition": ("competition", "risk factors", "customer demand"),
+}
+TOPICS = tuple(TOPIC_TERMS)
+WORD_WEIGHTS = {
+    "supply chain": 5,
+    "high bandwidth memory": 5,
+    "advanced packaging": 5,
+    "artificial intelligence": 4,
+    "competition": 4,
+    "customer demand": 4,
+    "risk factors": 3,
+    "manufacturing": 3,
+    "semiconductors": 3,
+    "semiconductor": 3,
+    "data centers": 3,
+    "data center": 3,
+    "accelerators": 3,
+    "accelerator": 3,
+}
+
 TERMS = re.compile(
-    r"\b(?:supply chain|manufacturing|data centers?|artificial intelligence|"
-    r"semiconductors?|advanced packaging|high bandwidth memory|"
-    r"customer demand|competition|risk factors|accelerators?)\b",
+    r"\b(?:" + "|".join(re.escape(x) for x in sorted(WORD_WEIGHTS, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+HEADING = re.compile(
+    r"^item\s+(1a|1|7a|7)\s*[.\-:]?\s*"
+    r"(business|risk\s+factors|management.{0,75}|quantitative.{0,75})?\s*$",
     re.IGNORECASE,
 )
 MAX_DOCUMENT_BYTES = 8_000_000
-MAX_DOCUMENTS = 3
-MAX_EXCERPTS_PER_DOCUMENT = 3
+MAX_VISIBLE_CHARS = 2_400_000
+MAX_DOCUMENTS = 5
+MAX_PASSAGES_PER_TOPIC = 2
 MAX_EXCERPT_CHARS = 360
+MAX_CANDIDATES_PER_TOPIC = 2500
 CACHE_SECONDS = 24 * 3600
 
 
 class _VisibleText(HTMLParser):
-    """Flatten readable HTML text without parsing or executing source markup."""
+    """Collect text blocks; exclude scripts/styles/headers and never execute markup."""
 
-    BLOCKS = {"p", "div", "li", "br", "tr", "td", "th", "h1", "h2", "h3", "h4", "section"}
-    IGNORE = {"script", "style", "noscript", "ix:header", "head"}
+    BLOCKS = {"p", "div", "li", "br", "tr", "td", "th", "h1", "h2", "h3", "h4", "h5", "h6", "section"}
+    IGNORE = {"script", "style", "noscript", "head", "ix:header"}
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
+        self.blocks: list[str] = []
         self.parts: list[str] = []
-        self.hidden = 0
+        self.hidden: str | None = None
+        self.hidden_depth = 0
 
-    def handle_starttag(self, tag: str, attrs):
+    def _flush(self) -> None:
+        body = " ".join(" ".join(self.parts).split())
+        self.parts.clear()
+        if body:
+            self.blocks.append(body)
+
+    def handle_starttag(self, tag: str, attrs) -> None:
         if self.hidden:
-            self.hidden += 1
-        elif tag in self.IGNORE:
-            self.hidden = 1
+            if tag == self.hidden:
+                self.hidden_depth += 1
+            return
+        if tag in self.IGNORE:
+            self._flush()
+            self.hidden = tag
+            self.hidden_depth = 1
         elif tag in self.BLOCKS:
-            self.parts.append(" ")
+            self._flush()
 
-    def handle_endtag(self, tag: str):
+    def handle_startendtag(self, tag: str, attrs) -> None:
+        if not self.hidden and tag in self.BLOCKS:
+            self._flush()
+
+    def handle_endtag(self, tag: str) -> None:
         if self.hidden:
-            self.hidden -= 1
-        elif tag in self.BLOCKS:
-            self.parts.append(" ")
+            if tag == self.hidden:
+                self.hidden_depth -= 1
+                if self.hidden_depth == 0:
+                    self.hidden = None
+            return
+        if tag in self.BLOCKS:
+            self._flush()
 
-    def handle_data(self, data: str):
+    def handle_data(self, data: str) -> None:
         if not self.hidden:
             self.parts.append(data)
 
 
-def extract_passages(document: str) -> list[dict]:
-    """Return a few short literal matches; don't pretend to identify SEC Items."""
-    parser = _VisibleText()
-    parser.feed(document)
-    parser.close()
-    normalized = re.sub(r"\s+", " ", " ".join(parser.parts)).strip()
-    # Huge filings are deliberately not fully indexed by this pilot.
-    normalized = normalized[:1_200_000]
-    found: list[dict] = []
-    seen: set[str] = set()
-    for match in TERMS.finditer(normalized):
-        start = max(0, match.start() - 125)
-        end = min(len(normalized), start + MAX_EXCERPT_CHARS)
-        excerpt = normalized[start:end].strip()
-        if len(excerpt) < 100:
+def _blocks(document: str) -> list[tuple[str, str | None]]:
+    """Attach a best-effort Item heading cue, never a verified SEC Item label."""
+    if "<" in document[:300]:
+        reader = _VisibleText()
+        reader.feed(document[: MAX_VISIBLE_CHARS * 2])
+        reader.close()
+        reader._flush()
+        blocks = reader.blocks
+    else:
+        blocks = re.split(r"\n\s*\n", document[:MAX_VISIBLE_CHARS])
+
+    output: list[tuple[str, str | None]] = []
+    hint: str | None = None
+    total = 0
+    for block in blocks:
+        clean = " ".join(block.split())
+        if not clean:
             continue
-        signature = excerpt[:95].casefold()
-        if signature in seen:
-            continue
-        seen.add(signature)
-        found.append({"matched_term": match.group(0), "text": excerpt})
-        if len(found) >= MAX_EXCERPTS_PER_DOCUMENT:
+        total += len(clean)
+        if total > MAX_VISIBLE_CHARS:
             break
-    return found
+        if len(clean) <= 110:
+            heading = HEADING.fullmatch(clean)
+            if heading:
+                item = heading.group(1).upper()
+                hint = f"Item {item} (unverified heading cue)"
+                continue
+        output.append((clean, hint))
+    return output
+
+
+def _excerpt(text: str, position: int) -> str:
+    start = max(0, position - 100)
+    end = min(len(text), start + MAX_EXCERPT_CHARS)
+    return text[start:end].strip()
+
+
+def _tokens(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9]+", text.casefold()))
+
+
+def _near_duplicate(left: str, right: str) -> bool:
+    a, b = _tokens(left), _tokens(right)
+    if not a or not b:
+        return False
+    return len(a & b) / len(a | b) >= 0.78
+
+
+def extract_passages(document: str) -> list[dict]:
+    """Find balanced topic excerpts, not just the first three regex matches.
+
+    Per-topic ranking and deduplication are deterministic. Some text can be
+    reused across different topics when the filing supports both, because the
+    existing evidence adapter selects by its exact matched_term contract.
+    """
+    candidates: dict[str, list[dict]] = defaultdict(list)
+    position = 0
+    for paragraph, heading in _blocks(document):
+        matches = list(TERMS.finditer(paragraph))
+        if not matches:
+            position += len(paragraph)
+            continue
+        names = {match.group(0).casefold() for match in matches}
+        for topic, allowed in TOPIC_TERMS.items():
+            relevant = [m for m in matches if m.group(0).casefold() in allowed]
+            if not relevant or len(candidates[topic]) >= MAX_CANDIDATES_PER_TOPIC:
+                continue
+            # Pick the most specific phrase rather than whichever occurs first.
+            best = max(relevant, key=lambda m: (WORD_WEIGHTS[m.group(0).casefold()], -m.start()))
+            excerpt = _excerpt(paragraph, best.start())
+            if len(excerpt) < 100:
+                continue
+            distinct = len(names.intersection(allowed))
+            score = 10 + WORD_WEIGHTS[best.group(0).casefold()] * 3 + min(distinct, 4) * 2
+            if heading:
+                score += 2
+                if topic == "competition" and "1A" in heading:
+                    score += 4
+                if topic in {"technology", "supply-chain"} and "Item 1 " in heading:
+                    score += 4
+            candidates[topic].append(
+                {
+                    "matched_term": best.group(0),
+                    "text": excerpt,
+                    "topic": topic,
+                    "section_hint": heading,
+                    "relevance_score": score,
+                    "_offset": position + best.start(),
+                }
+            )
+        position += len(paragraph)
+
+    selected: list[dict] = []
+    for topic in TOPICS:
+        ranked = sorted(candidates[topic], key=lambda p: (-p["relevance_score"], p["_offset"]))
+        chosen: list[dict] = []
+        for candidate in ranked:
+            if any(_near_duplicate(candidate["text"], x["text"]) for x in chosen):
+                continue
+            chosen.append(candidate)
+            if len(chosen) >= MAX_PASSAGES_PER_TOPIC:
+                break
+        for item in chosen:
+            item.pop("_offset")
+        selected.extend(chosen)
+    return selected
 
 
 def _fetch_document(sec: SecProvider, url: str) -> tuple[str, str, bool]:
+    """Use existing SEC transport and shared pacing, with no redirects."""
     if not SEC_DOCUMENT.fullmatch(url) or urlsplit(url).query or urlsplit(url).fragment:
         raise DataUnavailable("SEC document URL was rejected by the filing allowlist")
     headers = sec.headers()
@@ -101,13 +245,12 @@ def _fetch_document(sec: SecProvider, url: str) -> tuple[str, str, bool]:
         existing = http.cache.get(cache_key)
         if existing and existing[0] > time.monotonic():
             return existing[1], existing[2].isoformat(), True
-        # Serialize with existing ProviderHTTP SEC calls and share its pacing.
         pause = 0.25 - (time.monotonic() - http.last.get("www.sec.gov", 0))
         if pause > 0:
             time.sleep(pause)
         http.last["www.sec.gov"] = time.monotonic()
         try:
-            with http.client.stream("GET", url, headers=headers) as response:
+            with http.client.stream("GET", url, headers=headers, follow_redirects=False) as response:
                 if response.status_code != 200:
                     raise DataUnavailable(f"SEC document HTTP {response.status_code}")
                 content_type = response.headers.get("content-type", "").lower()
@@ -129,20 +272,24 @@ def _fetch_document(sec: SecProvider, url: str) -> tuple[str, str, bool]:
 
 
 def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
-    """Consume only filing URLs already derived from the SEC submissions API."""
+    """Consume only 10-K URLs from validated SEC submissions metadata."""
     result = {
         "industry": "ai-computing",
         "year": snapshot["year"],
         "mode": snapshot["mode"],
         "excerpts": [],
         "gaps": [],
-        "coverage": "Selected recent SEC 10-K primary documents; not full-text research or industry coverage.",
+        "coverage": (
+            "Selected recent SEC 10-K documents; up to five issuers and two excerpts per topic per issuer. "
+            "Relevance is heuristic; Item headings are unverified cues."
+        ),
     }
     if snapshot["mode"] != "live":
         result["gaps"].append(
             "SEC filing text is unavailable in fixture mode; no fake excerpts are generated."
         )
         return result
+
     documents = []
     seen = set()
     for row in snapshot.get("filings", []):
@@ -157,20 +304,27 @@ def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
     if not documents:
         result["gaps"].append("No safely addressable recent 10-K primary documents were identified.")
         return result
+
+    per_company: dict[str, dict[str, list[dict]]] = {}
     for item in documents:
+        symbol = item["symbol"]
+        per_company[symbol] = {topic: [] for topic in TOPICS}
         try:
             document, fetched, cached = _fetch_document(sec, item["source_url"])
-            matches = extract_passages(document)
-            if not matches:
-                result["gaps"].append(f"{item['symbol']}: no usable matching passages in the bounded text.")
-            for passage in matches:
-                result["excerpts"].append(
+            selected = extract_passages(document)
+            if not selected:
+                result["gaps"].append(f"{symbol}: no usable matching passages in the bounded text.")
+            for passage in selected:
+                per_company[symbol][passage["topic"]].append(
                     {
-                        "symbol": item["symbol"],
+                        "symbol": symbol,
                         "form": "10-K",
                         "filed": item["filed"],
                         "matched_term": passage["matched_term"],
                         "text": passage["text"],
+                        "topic": passage["topic"],
+                        "section_hint": passage["section_hint"],
+                        "relevance_score": passage["relevance_score"],
                         "source_name": "SEC EDGAR primary filing",
                         "source_url": item["source_url"],
                         "fetched_at": fetched,
@@ -178,11 +332,22 @@ def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
                     }
                 )
         except DataUnavailable as exc:
-            result["gaps"].append(f"{item['symbol']}: {exc}")
-    result["gaps"].append(
-        "Excerpts are literal keyword matches, not verified SEC Item boundaries or evidence of industry-wide trends."
-    )
-    result["gaps"].append(
-        "Documents are limited to a few selected, recent 10-K filings and may differ from the requested financial frame year."
+            result["gaps"].append(f"{symbol}: {exc}")
+
+    # Balance coverage across issuers. The section adapter can safely select
+    # its own topic from the first 50 rows without one company dominating.
+    for topic in TOPICS:
+        for rank in range(MAX_PASSAGES_PER_TOPIC):
+            for item in documents:
+                matches = per_company[item["symbol"]][topic]
+                if len(matches) > rank:
+                    result["excerpts"].append(matches[rank])
+
+    result["gaps"].extend(
+        [
+            "Item labels are heading-based guesses, NOT validated SEC Item boundaries.",
+            "Passages are partial keyword-selected issuer statements, not independently established industry facts.",
+            "Five selected U.S. issuers are not a complete industry census; financial frame year may differ from filing year.",
+        ]
     )
     return result
