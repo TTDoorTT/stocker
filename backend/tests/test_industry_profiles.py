@@ -25,7 +25,7 @@ def test_all_industry_templates_have_truthful_generation_capabilities():
         assert row["ai_sections"] == allowed
         assert row["research_status"] == ("limited_pilot" if allowed else "guided_only")
         assert catalog.industry(row["slug"]) == row
-    assert sum(bool(row["ai_sections"]) for row in rows) == 2
+    assert sum(bool(row["ai_sections"]) for row in rows) == 3
 
 
 def test_only_integrated_profiles_have_generation_pipelines():
@@ -42,7 +42,8 @@ def test_only_integrated_profiles_have_generation_pipelines():
         "supply-chain",
         "competition",
     ]
-    for slug in ("ai-application", "power-grid", "../evil", ""):
+    assert public_capabilities("power-grid")["ai_sections"] == ["technology", "supply-chain", "competition"]
+    for slug in ("ai-application", "../evil", ""):
         assert public_capabilities(slug)["ai_sections"] == []
         assert all(generation_pipeline(slug, s) is None for s in ALL_SECTIONS)
 

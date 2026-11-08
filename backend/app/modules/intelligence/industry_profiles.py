@@ -26,6 +26,20 @@ class IndustryResearchProfile:
 # The named source profile must be implemented and verified separately before
 # a new industry is enabled. All other industries stay guided-only.
 _PROFILES = {
+    "power-grid": IndustryResearchProfile(
+        slug="power-grid",
+        source_profile="power-grid-sec-pilot",
+        pipelines=(
+            ("technology", "sec_filing_review"),
+            ("supply-chain", "sec_filing_review"),
+            ("competition", "sec_filing_review"),
+        ),
+        coverage=(
+            "Limited SEC 10-K grid-infrastructure pilot: Technology, Supply Chain and Competition "
+            "only. Selected electrical equipment, construction and utility issuers are examples, "
+            "not a grid-wide census. Overview and Outlook remain guided-only."
+        ),
+    ),
     "semiconductor": IndustryResearchProfile(
         slug="semiconductor",
         source_profile="semiconductor-sec-pilot",
@@ -82,7 +96,7 @@ def validate_profiles(templates: list[dict]) -> None:
             "supply-chain": "sec_filing_review",
             "competition": "sec_filing_review",
         }
-        if slug == "semiconductor":
+        if slug in {"semiconductor", "power-grid"}:
             expected = {
                 "technology": "sec_filing_review",
                 "supply-chain": "sec_filing_review",
