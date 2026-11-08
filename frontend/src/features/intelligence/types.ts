@@ -43,6 +43,20 @@ export interface FilingEvidenceCoverage {
   citation_limitation?: string;
 }
 
+export interface IssuerFindingCitation {
+  evidence_id: string;
+  symbol: string;
+  source_url: string;
+}
+
+export interface IssuerFinding {
+  claim_index: number;
+  text: string;
+  issuers: string[];
+  scope: 'single_issuer' | 'multiple_issuers';
+  citations: IssuerFindingCitation[];
+}
+
 export interface SavedIndustrySection {
   industry_slug: string;
   section: IndustrySectionKey;
@@ -50,7 +64,9 @@ export interface SavedIndustrySection {
   generated_at: string | null;
   model_id: string | null;
   stale: boolean;
-  result: (ChatReply & { filing_coverage?: FilingEvidenceCoverage }) | null;
+  result:
+    | (ChatReply & { filing_coverage?: FilingEvidenceCoverage; issuer_findings?: IssuerFinding[] })
+    | null;
 }
 
 export type IndustrySectionKey = 'overview' | 'technology' | 'supply-chain' | 'competition' | 'outlook';

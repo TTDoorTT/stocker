@@ -4,6 +4,7 @@ import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
 import { ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
 import { intelligenceApi } from '../api';
 import type { IndustrySectionKey, SavedIndustrySection } from '../types';
+import { IssuerFindings } from './IssuerFindings';
 
 const descriptions: Record<IndustrySectionKey, string> = {
   overview: 'Definition, demand context, key participants and sourced recent developments.',
@@ -109,6 +110,7 @@ export function IndustrySection({
               <div className="markdown">
                 <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
               </div>
+              <IssuerFindings findings={saved.result.issuer_findings} />
               <Gaps gaps={saved.result.gaps} />
               <details>
                 <summary>Captured supporting evidence ({saved.result.evidence.length})</summary>
