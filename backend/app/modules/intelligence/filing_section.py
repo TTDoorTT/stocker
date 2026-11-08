@@ -1,8 +1,8 @@
-"""Bounded, citation-ready SEC 10-K excerpts for specific industry research sections.
+"""Bounded, citation-ready SEC 10-K excerpts for industry research sections.
 
-This adapter performs NO network requests and NO model calls. Inputs must come from
-Market Data's public SEC filing-excerpts facade. Issuer text is untrusted evidence,
-not verified industry-wide fact, and is never treated as model instructions.
+Market Data owns SEC retrieval. This adapter screens only captured issuer text,
+validates source metadata, and converts excerpts into typed Evidence records.
+Deterministic screening does not prove a generated claim follows from a source.
 """
 
 from __future__ import annotations
@@ -11,10 +11,10 @@ import re
 from datetime import UTC, date, datetime, timedelta
 
 from app.contracts.market import Evidence
+from app.modules.intelligence.filing_quality import select_quality_excerpts
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.provenance import evidence_id
 
-# Matches the bounded SEC primary-document URL form accepted by market_data.
 SEC_DOCUMENT = re.compile(
     r"^https://www\.sec\.gov/Archives/edgar/data/[1-9][0-9]*/[0-9]{18}/"
     r"[A-Za-z0-9_.-]{1,180}\.(?:htm|html|txt)$",
@@ -22,8 +22,6 @@ SEC_DOCUMENT = re.compile(
 )
 PEERS = frozenset({"NVDA", "AMD", "INTC", "AVGO", "MU"})
 
-# Use the exact term returned by the deterministic text matcher. Do not allow
-# an LLM to classify arbitrary passages or assert a missing subject is covered.
 SECTION_TERMS: dict[str, frozenset[str]] = {
     "technology": frozenset(
         {
@@ -78,8 +76,24 @@ def _parse_timestamp(value: object) -> datetime | None:
     return stamp
 
 
+def _valid_filing_metadata(row: object) -> bool:
+    if not isinstance(row, dict) or row.get("form") != "10-K":
+        return False
+    filed = _parse_date(row.get("filed"))
+    fetched = _parse_timestamp(row.get("fetched_at"))
+    return bool(
+        isinstance(row.get("symbol"), str)
+        and row["symbol"] in PEERS
+        and isinstance(row.get("source_url"), str)
+        and SEC_DOCUMENT.fullmatch(row["source_url"])
+        and filed is not None
+        and fetched is not None
+        and filed <= fetched.date()
+    )
+
+
 def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
-    """Validate, select and normalize attributable excerpts to Evidence contracts."""
+    """Screen captured passages and create bounded, attributable evidence."""
     if section not in SECTION_TERMS:
         raise ValueError("Unsupported filing-backed industry section")
     if not isinstance(snapshot, dict) or snapshot.get("mode") != "live":
@@ -88,10 +102,12 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
     if not isinstance(excerpts, list):
         raise DataUnavailable("SEC excerpt response was missing or malformed")
 
+    qualified = [row for row in excerpts[:50] if _valid_filing_metadata(row)]
+    quality = select_quality_excerpts(qualified, section, SECTION_TERMS[section])
     out: list[dict] = []
     seen: set[tuple[str, str, str]] = set()
-    for row in excerpts[:50]:
-        if not isinstance(row, dict) or row.get("form") != "10-K":
+    for row in quality.selected:
+        if row.get("form") != "10-K":
             continue
         symbol = str(row.get("symbol", "")).upper()
         url = str(row.get("source_url", ""))
@@ -106,13 +122,13 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
             or not 100 <= len(body) <= 400
             or filed is None
             or fetched is None
+            or filed > fetched.date()
         ):
             continue
         signature = (symbol, url, body)
         if signature in seen:
             continue
         seen.add(signature)
-        # A short excerpt is issuer disclosure, not a verified complete SEC Item.
         record = Evidence(
             evidence_id=evidence_id("industry-filing", section, symbol, url, body),
             symbol=symbol,
@@ -130,7 +146,8 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
             fetched_at=fetched,
             cached=bool(row.get("cached", False)),
             missing_reason=(
-                "Keyword match, not a verified SEC Item boundary or independently established fact."
+                "Automated relevance screening is not verification of full SEC Item boundaries, "
+                "source context, or semantic support for any generated claim."
             ),
         )
         out.append(record.model_dump(mode="json"))
@@ -138,7 +155,7 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
             break
     if not out:
         raise DataUnavailable(
-            f"No attributable {section} excerpts from selected SEC filings; "
+            f"No attributable, quality-screened {section} excerpts from selected SEC filings; "
             "open filing excerpts to check coverage"
         )
     return out
@@ -165,10 +182,31 @@ def filing_task(section: str) -> str:
 
 
 def filing_gaps(section: str, snapshot: dict) -> list[str]:
-    return list(snapshot.get("gaps", [])) + [
+    gaps = list(snapshot.get("gaps", [])) + [
         f"This is a narrow issuer-disclosure note for {section}, not a complete industry report.",
-        "Only selected recent SEC 10-K filings and short keyword excerpts were retrieved.",
-        "Excerpt boundaries and context are not independently verified; check the original filing.",
+        "Selected SEC 10-K passages are not comprehensive industry coverage.",
+        "Deterministic screening does not prove claim support, original context, or factual correctness.",
         "Issuer disclosures are not independent verification of claims or industry-wide conditions.",
-        "Saved filing research is marked stale by age; checking it does not refetch SEC documents.",
+        "Saved filing research is marked stale by age; reading it does not refetch SEC documents.",
     ]
+    if section in SECTION_TERMS:
+        rows = snapshot.get("excerpts")
+        if isinstance(rows, list):
+            eligible = [row for row in rows[:50] if _valid_filing_metadata(row)]
+            missing_metadata = len(rows[:50]) - len(eligible)
+        else:
+            eligible = []
+            missing_metadata = 0
+        quality = select_quality_excerpts(eligible, section, SECTION_TERMS[section])
+        if missing_metadata:
+            gaps.append(f"Automated source-metadata checks rejected {missing_metadata} excerpt(s).")
+        discarded = sum(quality.rejection_counts.values())
+        if discarded:
+            reasons = ", ".join(f"{key}={value}" for key, value in quality.rejection_counts.items())
+            gaps.append(f"Automated evidence-quality screening rejected {discarded} excerpt(s): {reasons}.")
+        issuer_count = len({item.get("symbol") for item in quality.selected})
+        if issuer_count <= 1:
+            gaps.append(
+                "Quality-screened evidence represents at most one selected issuer, not an industry consensus."
+            )
+    return gaps
