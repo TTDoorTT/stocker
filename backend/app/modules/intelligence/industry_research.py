@@ -15,6 +15,7 @@ from pathlib import Path
 from threading import Lock
 
 from app.contracts.market import Evidence
+from app.modules.intelligence.filing_coverage import filing_coverage
 from app.modules.intelligence.filing_dispatch import prepare_filing_generation
 from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
 from app.modules.intelligence.industry_profiles import ALL_SECTIONS, generation_pipeline
@@ -277,6 +278,8 @@ class IndustryResearchService:
                     inputs.gaps,
                     inputs.task,
                 )
+                coverage = filing_coverage(slug, section, evidence)
+                gaps = [*gaps, coverage["limitation"]]
                 result = summarize_captured_headlines(
                     {
                         "symbol": "US",
@@ -300,6 +303,7 @@ class IndustryResearchService:
                 )
                 # Exactly the same persistence contract as Overview: save only
                 # after the model output has passed research citation validation.
+                result["filing_coverage"] = coverage
                 self.repository.save(slug, section, result, snapshot, settings.llm_model, _hash(evidence))
                 return self.repository.get(slug, section)
 

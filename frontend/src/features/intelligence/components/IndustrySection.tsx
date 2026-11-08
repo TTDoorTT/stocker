@@ -85,6 +85,16 @@ export function IndustrySection({
                 Saved {saved.generated_at?.slice(0, 19).replace('T', ' ')} UTC · Model: {saved.model_id}
                 {saved.stale ? ' · Potentially outdated — refresh the research to update evidence' : ''}
               </p>
+              {saved.result.filing_coverage && (
+                <p className="muted" aria-label="Filing evidence coverage">
+                  Accepted excerpts: {saved.result.filing_coverage.accepted_excerpts}. Issuers represented:{' '}
+                  {saved.result.filing_coverage.represented_issuers.length} of{' '}
+                  {saved.result.filing_coverage.selected_issuers.length} selected.
+                  {saved.result.filing_coverage.missing_issuers.length > 0 &&
+                    ` Missing selected issuers: ${saved.result.filing_coverage.missing_issuers.join(', ')}.`}{' '}
+                  These counts do not establish industry-wide coverage or claim support.
+                </p>
+              )}
               <div className="markdown">
                 <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
               </div>

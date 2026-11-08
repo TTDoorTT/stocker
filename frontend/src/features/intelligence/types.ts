@@ -30,6 +30,14 @@ export interface SavedRSSHighlights {
   result: ChatReply | null;
 }
 
+export interface FilingEvidenceCoverage {
+  selected_issuers: string[];
+  represented_issuers: string[];
+  missing_issuers: string[];
+  accepted_excerpts: number;
+  limitation: string;
+}
+
 export interface SavedIndustrySection {
   industry_slug: string;
   section: IndustrySectionKey;
@@ -37,7 +45,7 @@ export interface SavedIndustrySection {
   generated_at: string | null;
   model_id: string | null;
   stale: boolean;
-  result: ChatReply | null;
+  result: (ChatReply & { filing_coverage?: FilingEvidenceCoverage }) | null;
 }
 
 export type IndustrySectionKey = 'overview' | 'technology' | 'supply-chain' | 'competition' | 'outlook';
