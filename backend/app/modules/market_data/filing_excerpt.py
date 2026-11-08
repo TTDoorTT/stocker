@@ -158,10 +158,79 @@ def _blocks(document: str) -> list[tuple[str, str | None]]:
     return output
 
 
-def _excerpt(text: str, position: int) -> str:
-    start = max(0, position - 100)
-    end = min(len(text), start + MAX_EXCERPT_CHARS)
-    return text[start:end].strip()
+# Detect likely sentence boundaries rather than clipping arbitrary characters.
+_SENTENCE_GAP = re.compile(r'(?<=[.!?])\s+(?=[A-Z“"(])')
+_ABBREVIATION = re.compile(
+    r"(?:\b(?:U\.S|U\.K|e\.g|i\.e|Dr|Mr|Mrs|Ms|vs))\.$",
+    re.IGNORECASE,
+)
+_SENTENCE_END = re.compile(r"""[.!?]["'\u201d)\]]*$""")
+
+
+def _sentence_spans(text: str) -> list[tuple[int, int]]:
+    """Select sentence-shaped spans, rejecting unfinished trailing fragments."""
+    spans: list[tuple[int, int]] = []
+    start = 0
+
+    for gap in _SENTENCE_GAP.finditer(text):
+        if _ABBREVIATION.search(text[max(start, gap.start() - 14) : gap.start()]):
+            continue
+
+        end = gap.start()
+        if _SENTENCE_END.search(text[start:end].rstrip()):
+            spans.append((start, end))
+            start = gap.end()
+
+    if _SENTENCE_END.search(text[start:].rstrip()):
+        spans.append((start, len(text)))
+
+    return spans
+
+
+def _excerpt(
+    text: str,
+    position: int,
+    spans: list[tuple[int, int]] | None = None,
+) -> str:
+    """Prefer complete sentences within the existing excerpt limit.
+
+    Skip overlong or incomplete spans instead of silently truncating
+    qualifications. These remain heuristic, unverified source boundaries.
+    """
+    sentences = _sentence_spans(text) if spans is None else spans
+
+    index = next(
+        (i for i, (start, end) in enumerate(sentences) if start <= position < end),
+        None,
+    )
+
+    if index is None:
+        return ""
+
+    left = right = index
+
+    if sentences[right][1] - sentences[left][0] > MAX_EXCERPT_CHARS:
+        return ""
+
+    # Expand short sentences to retain enough context for quality screening.
+    while sentences[right][1] - sentences[left][0] < 100 and right + 1 < len(sentences):
+        if sentences[right + 1][1] - sentences[left][0] > MAX_EXCERPT_CHARS:
+            break
+        right += 1
+
+    while sentences[right][1] - sentences[left][0] < 100 and left > 0:
+        if sentences[right][1] - sentences[left - 1][0] > MAX_EXCERPT_CHARS:
+            break
+        left -= 1
+
+    if sentences[right][1] - sentences[left][0] < 100:
+        return ""
+
+    # Include a following caveat when it fits without truncation.
+    if right + 1 < len(sentences) and sentences[right + 1][1] - sentences[left][0] <= MAX_EXCERPT_CHARS:
+        right += 1
+
+    return text[sentences[left][0] : sentences[right][1]].strip()
 
 
 def _tokens(text: str) -> set[str]:
@@ -203,16 +272,23 @@ def extract_passages(document: str, *, topic_terms: dict[str, tuple[str, ...]] |
         if not matches:
             position += len(paragraph)
             continue
-        names = {match.group(0).casefold() for match in matches}
+        spans = _sentence_spans(paragraph)
         for topic, allowed in topics.items():
             relevant = [m for m in matches if m.group(0).casefold() in allowed]
             if not relevant or len(candidates[topic]) >= MAX_CANDIDATES_PER_TOPIC:
                 continue
-            # Pick the most specific phrase rather than whichever occurs first.
-            best = max(relevant, key=lambda m: (weights[m.group(0).casefold()], -m.start()))
-            excerpt = _excerpt(paragraph, best.start())
-            if len(excerpt) < 100:
+            # Try the strongest keyword first; skip an overlong sentence
+            # rather than cutting it and losing important source qualifiers.
+            for best in sorted(
+                relevant,
+                key=lambda m: (-weights[m.group(0).casefold()], m.start()),
+            ):
+                excerpt = _excerpt(paragraph, best.start(), spans)
+                if 100 <= len(excerpt) <= MAX_EXCERPT_CHARS:
+                    break
+            else:
                 continue
+            names = {m.group(0).casefold() for m in matcher.finditer(excerpt)}
             distinct = len(names.intersection(allowed))
             score = 10 + weights[best.group(0).casefold()] * 3 + min(distinct, 4) * 2
             if heading:
