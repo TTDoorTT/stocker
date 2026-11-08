@@ -200,14 +200,17 @@ class SECIndustryEvidence:
             except DataUnavailable as exc:
                 result["gaps"].append(f"{company['symbol']} filings: {exc}")
         result["filings"] = sorted(result["filings"], key=lambda f: f["filed"], reverse=True)[:15]
-        if industry == "semiconductor":
+        if industry == "ai-computing":
+            result["gaps"].extend(
+                [
+                    "XBRL Frames can omit peers because their fiscal periods or accounting concepts differ.",
+                    "An XBRL frame does not establish as-of filing availability; use source filings for historical cutoffs.",
+                    "The metric tables do not establish supply-chain relationships, market shares, or industry totals.",
+                ]
+            )
+        else:
             result["gaps"].append(source.limitations)
-        result["gaps"].extend(
-            [
-                "XBRL Frames can omit peers because their fiscal periods or accounting concepts differ.",
-                "An XBRL frame does not establish as-of filing availability; use source filings for historical cutoffs.",
-                "The metric tables do not establish supply-chain relationships, market shares, or industry totals.",
-                "Filing search here filters recent submissions by form, not full-text document contents.",
-            ]
+        result["gaps"].append(
+            "Filing search here filters recent submissions by form, not full-text document contents."
         )
         return result

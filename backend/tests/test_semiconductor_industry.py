@@ -53,7 +53,7 @@ def snapshot(*rows: dict) -> dict:
 
 def test_profile_permissions_and_issuer_universe():
     validate_filing_sources()
-    assert len(SEC_FILING_SOURCES) == 2
+    assert len(SEC_FILING_SOURCES) == 3
     semiconductor = sec_filing_source("semiconductor")
     assert semiconductor.peers == ("NVDA", "INTC", "MU", "AMAT", "LRCX")
     catalog = IndustryCatalog()

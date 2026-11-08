@@ -69,7 +69,53 @@ SEMICONDUCTOR_TOPICS = {
     ),
 }
 
+POWER_GRID_TOPICS = {
+    "technology": (
+        "grid modernization",
+        "transmission",
+        "distribution",
+        "substation",
+        "transformer",
+        "switchgear",
+        "smart grid",
+        "grid automation",
+        "high voltage",
+        "power grid",
+    ),
+    "supply-chain": (
+        "supply chain",
+        "manufacturing",
+        "transformer",
+        "switchgear",
+        "lead times",
+        "backlog",
+        "capacity",
+        "equipment",
+        "substation",
+    ),
+    "competition": (
+        "competition",
+        "competitive",
+        "competitors",
+        "customer concentration",
+        "customer demand",
+        "risk factors",
+        "regulated utility",
+    ),
+}
+
 SEC_FILING_SOURCES: dict[str, SECFilingSource] = {
+    "power-grid": SECFilingSource(
+        slug="power-grid",
+        label="Grid infrastructure",
+        peers=("GEV", "ETN", "HUBB", "PWR", "NEE"),
+        topic_terms=POWER_GRID_TOPICS,
+        limitations=(
+            "Five selected SEC 10-K issuers span grid equipment, engineering and utilities; "
+            "issuer disclosures do not establish sector-wide capacity, procurement awards, "
+            "supplier relationships, regulation or global transmission investment."
+        ),
+    ),
     "ai-computing": SECFilingSource(
         slug="ai-computing",
         label="AI Computing infrastructure",
