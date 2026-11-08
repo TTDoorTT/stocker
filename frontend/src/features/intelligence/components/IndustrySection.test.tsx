@@ -144,3 +144,82 @@ it('shows which accepted issuers were cited by model-screened claims', async () 
   expect(summary).toHaveTextContent('Accepted but not cited: AMD');
   expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
 });
+
+it('prioritizes structured issuer findings without duplicating the narrative', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'technology',
+    result: {
+      answer: 'Original research narrative for the saved report.',
+      evidence: [],
+      gaps: ['Selected issuer disclosures only.', 'Independent verification is unavailable.'],
+      mode: 'live',
+      issuer_findings: [
+        {
+          claim_index: 0,
+          text: 'AMD describes a specific technical approach.',
+          issuers: ['AMD'],
+          scope: 'single_issuer',
+          citations: [
+            {
+              evidence_id: 'ev-amd',
+              symbol: 'AMD',
+              source_url: 'https://www.sec.gov/Archives/edgar/data/1045810/000104581026000001/report.htm',
+            },
+          ],
+        },
+      ],
+    },
+  });
+
+  render(<IndustrySection slug="ai-computing" section="technology" enabledSections={['technology']} />);
+
+  expect(await screen.findByRole('region', { name: 'Issuer-attributed findings' })).toBeInTheDocument();
+
+  expect(screen.getByText('AMD describes a specific technical approach.')).toBeInTheDocument();
+
+  const narrative = screen.getByText('Original AI-generated narrative');
+  const narrativeDetails = narrative.closest('details');
+
+  expect(narrativeDetails).not.toHaveAttribute('open');
+
+  fireEvent.click(narrative);
+
+  expect(narrativeDetails).toHaveAttribute('open');
+  expect(screen.getByText('Original research narrative for the saved report.')).toBeInTheDocument();
+
+  const limitations = screen.getByText(/Data limitations \(2\)/);
+  const limitationsDetails = limitations.closest('details');
+
+  expect(limitationsDetails).not.toHaveAttribute('open');
+
+  fireEvent.click(limitations);
+
+  expect(limitationsDetails).toHaveAttribute('open');
+  expect(screen.getByText('Independent verification is unavailable.')).toBeInTheDocument();
+
+  expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
+});
+
+it('keeps legacy research narrative and limitations visible', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    result: {
+      answer: 'Original legacy research remains visible.',
+      evidence: [],
+      gaps: ['Legacy coverage limitation.'],
+      mode: 'live',
+    },
+  });
+
+  render(<IndustrySection slug="ai-computing" section="overview" enabledSections={['overview']} />);
+
+  expect(await screen.findByText('Original legacy research remains visible.')).toBeInTheDocument();
+
+  expect(screen.getByText('Data limitations')).toBeInTheDocument();
+  expect(screen.getByText('Legacy coverage limitation.')).toBeInTheDocument();
+
+  expect(screen.queryByText('Original AI-generated narrative')).toBeNull();
+
+  expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
+});
