@@ -17,6 +17,8 @@ from app.modules.research.errors import ModelError
 
 MAX_CLAIMS = 3
 MAX_EVIDENCE = 9
+# Keep consistent with Claim.text max_length in research/schemas.py.
+MAX_CLAIM_CHARS = 2000
 
 
 class _Strict(BaseModel):
@@ -71,7 +73,7 @@ def screen_filing_claims(claims: list[dict], evidence: list[dict], settings: Set
             raise ValueError("Filing review received malformed claim")
         body = claim.get("text")
         ids = claim.get("evidence_ids")
-        if not isinstance(body, str) or not 1 <= len(body) <= 600:
+        if not isinstance(body, str) or not 1 <= len(body) <= MAX_CLAIM_CHARS:
             raise ValueError("Filing review claim length exceeds bounded limit")
         if not isinstance(ids, list) or not ids or len(ids) > MAX_EVIDENCE:
             raise ValueError("Filing review requires source citations for each claim")
