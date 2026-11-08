@@ -107,11 +107,33 @@ export function IndustrySection({
                   Citation counts do not establish independent factual verification.
                 </p>
               )}
-              <div className="markdown">
-                <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
-              </div>
-              <IssuerFindings findings={saved.result.issuer_findings} />
-              <Gaps gaps={saved.result.gaps} />
+              {saved.result.issuer_findings?.length ? (
+                <>
+                  <IssuerFindings findings={saved.result.issuer_findings} />
+                  <details>
+                    <summary>Original AI-generated narrative</summary>
+                    <div className="markdown">
+                      <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
+                    </div>
+                  </details>
+                  {saved.result.gaps.length > 0 && (
+                    <details>
+                      <summary>
+                        Data limitations ({saved.result.gaps.length}) — selected issuer disclosures, not
+                        independent verification
+                      </summary>
+                      <Gaps gaps={saved.result.gaps} />
+                    </details>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="markdown">
+                    <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
+                  </div>
+                  <Gaps gaps={saved.result.gaps} />
+                </>
+              )}
               <details>
                 <summary>Captured supporting evidence ({saved.result.evidence.length})</summary>
                 <EvidenceTable evidence={saved.result.evidence} />
