@@ -86,3 +86,30 @@ it('does not enable AI Computing Outlook until sources exist', async () => {
   expect(await screen.findByText(/Automated research is not enabled/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Generate Outlook/ })).not.toBeInTheDocument();
 });
+
+it('displays filing evidence coverage without treating it as sector coverage', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'technology',
+    result: {
+      answer: 'A bounded research note.',
+      evidence: [],
+      gaps: [],
+      mode: 'live',
+      filing_coverage: {
+        selected_issuers: ['NVDA', 'AMD', 'INTC', 'AVGO', 'MU'],
+        represented_issuers: ['NVDA'],
+        missing_issuers: ['AMD', 'INTC', 'AVGO', 'MU'],
+        accepted_excerpts: 2,
+        limitation: 'A limited U.S. issuer sample.',
+      },
+    },
+  });
+  render(<IndustrySection slug="ai-computing" section="technology" enabledSections={['technology']} />);
+  const summary = await screen.findByLabelText('Filing evidence coverage');
+  expect(summary).toHaveTextContent('Accepted excerpts: 2');
+  expect(summary).toHaveTextContent('Issuers represented: 1 of 5 selected');
+  expect(summary).toHaveTextContent('Missing selected issuers: AMD, INTC, AVGO, MU');
+  expect(summary).toHaveTextContent('do not establish industry-wide coverage');
+  expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
+});
