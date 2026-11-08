@@ -1,4 +1,54 @@
 /* Stocker price-history panel, isolated from TradingView and research stages. */
+.candle-marker-status {
+  font-size: 10px;
+}
+.candle-earnings-markers {
+  border-top: 1px solid var(--border);
+  padding-top: 9px;
+  margin-top: 4px;
+}
+.candle-earnings-markers summary {
+  font-size: 11px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.candle-earnings-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+.candle-earnings-options button {
+  font-size: 10px;
+  padding: 6px 9px;
+  color: inherit;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.candle-earnings-options button[aria-pressed="true"] {
+  border-color: #f3c26e;
+}
+.candle-earnings-detail {
+  background: color-mix(in srgb, #f3c26e 5%, var(--panel));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  font-size: 11px;
+}
+.candle-earnings-detail p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+.candle-earnings-detail small {
+  color: var(--muted);
+}
+.candle-marker-gaps {
+  font-size: 10px;
+  margin-top: 8px;
+}
+
 .candle-controls {
   display: flex;
   flex-wrap: wrap;

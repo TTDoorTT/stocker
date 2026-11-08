@@ -1,14 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { marketApi } from '../api';
-import type { CandleSeries } from '../types';
+import type { CandleSeries, EventsResponse } from '../types';
 import { PriceHistoryPanel } from './PriceHistoryPanel';
 
-vi.mock('../api', () => ({ marketApi: { candles: vi.fn() } }));
+vi.mock('../api', () => ({ marketApi: { candles: vi.fn(), events: vi.fn() } }));
 vi.mock('./CandleChart', () => ({
-  CandleChart: ({ series }: { series: CandleSeries }) => (
+  CandleChart: ({ series, eventDates }: { series: CandleSeries; eventDates?: EventsResponse | null }) => (
     <div data-testid="candles">
-      {series.symbol} · {series.bars.length} observations
+      {series.symbol} · {series.bars.length} observations · {eventDates?.events.length ?? 0} earnings
     </div>
   ),
 }));
@@ -37,12 +37,58 @@ const sample: CandleSeries = {
   gaps: [],
 };
 
+const eventSample: EventsResponse = {
+  symbol: 'AAPL',
+  market: 'US',
+  currency: 'USD',
+  mode: 'fixtures',
+  events: [
+    {
+      event_id: 'US:AAPL:earnings_release:FY2025Q4',
+      fiscal_year: 2025,
+      fiscal_quarter: 'Q4',
+      event_date: '2025-12-30',
+      published_at: null,
+      date_precision: 'date_only',
+      timing_basis: 'vendor_report',
+      source: sample.source,
+    },
+  ],
+  sources: [sample.source],
+  gaps: ['SYNTHETIC'],
+};
+
 beforeEach(() => {
   vi.mocked(marketApi.candles).mockReset();
   vi.mocked(marketApi.candles).mockResolvedValue(sample);
+  vi.mocked(marketApi.events).mockReset();
+  vi.mocked(marketApi.events).mockResolvedValue(eventSample);
 });
 
 describe('price history panel', () => {
+  it('loads earnings dates independently, allows toggling markers, and preserves price history', async () => {
+    render(<PriceHistoryPanel symbol="AAPL" mode="fixtures" />);
+    await waitFor(() => expect(screen.getByTestId('candles')).toHaveTextContent('1 earnings'));
+    expect(marketApi.events).toHaveBeenCalledWith('AAPL');
+    fireEvent.click(screen.getByRole('button', { name: 'Earnings markers' }));
+    expect(screen.getByRole('button', { name: 'Earnings markers' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('candles')).toHaveTextContent('0 earnings');
+    fireEvent.click(screen.getByRole('button', { name: '3m' }));
+    await waitFor(() => expect(marketApi.candles).toHaveBeenLastCalledWith('AAPL', '3m', '1d'));
+    expect(marketApi.events).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the chart working when earnings dates fail or belong to another mode', async () => {
+    vi.mocked(marketApi.events).mockRejectedValueOnce(new Error('Calendar unavailable'));
+    const view = render(<PriceHistoryPanel symbol="AAPL" mode="fixtures" />);
+    expect(await screen.findByText(/Dates unavailable; prices unaffected/)).toBeInTheDocument();
+    expect(screen.getByTestId('candles')).toHaveTextContent('0 earnings');
+    view.unmount();
+    vi.mocked(marketApi.events).mockResolvedValueOnce({ ...eventSample, mode: 'live' });
+    render(<PriceHistoryPanel symbol="AAPL" mode="fixtures" />);
+    await waitFor(() => expect(screen.getByText('No matching earnings source')).toBeInTheDocument());
+    expect(screen.getByTestId('candles')).toHaveTextContent('0 earnings');
+  });
   it('loads candles and sends the selected range and interval to the API', async () => {
     render(<PriceHistoryPanel symbol="AAPL" mode="fixtures" />);
     expect(await screen.findByTestId('candles')).toHaveTextContent('AAPL');
