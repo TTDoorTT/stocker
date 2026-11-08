@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
     data_mode: Literal["fixtures", "live"] = "fixtures"
     app_env: str = "development"
+    extra_frontend_origins: str = ""
     database_url: str = "sqlite:///./stocker.db"
     llm_base_url: str = "http://127.0.0.1:4000/v1"
     llm_model: str = ""
@@ -42,6 +43,33 @@ class Settings(BaseSettings):
     fred_api_key: str = ""
     history_provider: Literal["auto", "yfinance", "alpha_vantage"] = "auto"
     bank_of_canada_enabled: bool = True
+
+    @field_validator("extra_frontend_origins")
+    @classmethod
+    def validate_extra_frontend_origins(cls, value: str) -> str:
+        """Permit explicit loopback browser origins, never wildcard or LAN hosts."""
+        if not value:
+            return value
+
+        origins = value.split(",")
+        if len(origins) > 4 or len(origins) != len(set(origins)):
+            raise ValueError("Additional frontend origins must be unique (maximum four)")
+
+        for origin in origins:
+            parsed = urlparse(origin)
+
+            if parsed.scheme != "http" or parsed.hostname not in {"localhost", "127.0.0.1"}:
+                raise ValueError("Additional frontend origins must use loopback HTTP")
+
+            try:
+                port = parsed.port
+            except ValueError:
+                raise ValueError("Additional frontend origin has invalid port") from None
+
+            if port is None or not 1 <= port <= 65535 or origin != f"http://{parsed.hostname}:{port}":
+                raise ValueError("Additional frontend origins require an exact host and port")
+
+        return value
 
     @field_validator("llm_base_url")
     @classmethod

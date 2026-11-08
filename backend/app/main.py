@@ -28,6 +28,9 @@ def create_app(
     settings: Settings | None = None, data: DataService | None = None, repo: ResearchRepository | None = None
 ) -> FastAPI:
     settings = settings or Settings()
+    allowed_origins = ["http://127.0.0.1:5173", "http://localhost:5173"]
+    if settings.extra_frontend_origins:
+        allowed_origins.extend(settings.extra_frontend_origins.split(","))
     ai = AIConfiguration(settings)
     repository = repo or ResearchRepository(settings.database_url)
     service = data or DataService(settings)
@@ -51,7 +54,7 @@ def create_app(
     )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+        allow_origins=allowed_origins,
         allow_methods=["GET", "POST", "DELETE"],
         allow_headers=["Content-Type"],
     )
@@ -61,11 +64,7 @@ def create_app(
         from fastapi.responses import JSONResponse
 
         origin = request.headers.get("origin")
-        if (
-            request.method not in ("GET", "HEAD", "OPTIONS")
-            and origin
-            and origin not in ("http://127.0.0.1:5173", "http://localhost:5173")
-        ):
+        if request.method not in ("GET", "HEAD", "OPTIONS") and origin and origin not in allowed_origins:
             return JSONResponse({"detail": "Untrusted request origin"}, status_code=403)
         return await call_next(request)
 
