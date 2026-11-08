@@ -36,6 +36,11 @@ export interface FilingEvidenceCoverage {
   missing_issuers: string[];
   accepted_excerpts: number;
   limitation: string;
+  cited_issuers?: string[];
+  uncited_represented_issuers?: string[];
+  cited_excerpts?: number;
+  model_screened_claims?: number;
+  citation_limitation?: string;
 }
 
 export interface SavedIndustrySection {

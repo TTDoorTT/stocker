@@ -113,3 +113,34 @@ it('displays filing evidence coverage without treating it as sector coverage', a
   expect(summary).toHaveTextContent('do not establish industry-wide coverage');
   expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
 });
+
+it('shows which accepted issuers were cited by model-screened claims', async () => {
+  vi.mocked(intelligenceApi.savedIndustrySection).mockResolvedValue({
+    ...stored,
+    section: 'technology',
+    result: {
+      answer: 'Issuer-limited note.',
+      evidence: [],
+      gaps: [],
+      mode: 'live',
+      filing_coverage: {
+        selected_issuers: ['NVDA', 'AMD', 'INTC', 'AVGO', 'MU'],
+        represented_issuers: ['NVDA', 'AMD', 'MU'],
+        missing_issuers: ['INTC', 'AVGO'],
+        accepted_excerpts: 4,
+        limitation: 'Limited accepted issuer evidence',
+        cited_issuers: ['NVDA', 'MU'],
+        uncited_represented_issuers: ['AMD'],
+        cited_excerpts: 2,
+        model_screened_claims: 2,
+        citation_limitation: 'Not independent factual verification',
+      },
+    },
+  });
+  render(<IndustrySection slug="ai-computing" section="technology" enabledSections={['technology']} />);
+  const summary = await screen.findByLabelText('Model-screened claim citation coverage');
+  expect(summary).toHaveTextContent('Cited issuers: 2 of 3 represented');
+  expect(summary).toHaveTextContent('Distinct cited excerpts: 2');
+  expect(summary).toHaveTextContent('Accepted but not cited: AMD');
+  expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
+});
