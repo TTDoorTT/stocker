@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 it('restores saved industry overview without invoking a model', async () => {
-  render(<IndustrySection slug="ai-computing" section="overview" />);
+  render(<IndustrySection slug="ai-computing" section="overview" enabledSections={['overview']} />);
   expect(await screen.findByText('Previously captured industry overview.')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Regenerate Overview' })).toBeEnabled();
   expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
@@ -35,7 +35,7 @@ it('restores saved industry overview without invoking a model', async () => {
 
 it('keeps previous research visible when regeneration fails', async () => {
   vi.mocked(intelligenceApi.generateIndustrySection).mockRejectedValue(new Error('Model unavailable'));
-  render(<IndustrySection slug="ai-computing" section="overview" />);
+  render(<IndustrySection slug="ai-computing" section="overview" enabledSections={['overview']} />);
   await screen.findByText('Previously captured industry overview.');
   fireEvent.click(screen.getByRole('button', { name: 'Regenerate Overview' }));
   expect(await screen.findByText('Model unavailable')).toBeInTheDocument();
@@ -50,7 +50,7 @@ it('does not enable unsupported industry sections', async () => {
     saved: false,
     result: null,
   });
-  render(<IndustrySection slug="energy" section="supply-chain" />);
+  render(<IndustrySection slug="energy" section="supply-chain" enabledSections={[]} />);
   expect(await screen.findByText(/Automated research is not enabled/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Generate Overview/ })).not.toBeInTheDocument();
 });
@@ -67,7 +67,7 @@ it('enables filing-backed technology generation on explicit click only', async (
     section: 'technology',
     result: { answer: 'Source-backed technology note.', evidence: [], gaps: [], mode: 'live' },
   });
-  render(<IndustrySection slug="ai-computing" section="technology" />);
+  render(<IndustrySection slug="ai-computing" section="technology" enabledSections={['technology']} />);
   const button = await screen.findByRole('button', { name: 'Generate Technology' });
   expect(intelligenceApi.generateIndustrySection).not.toHaveBeenCalled();
   fireEvent.click(button);
@@ -82,7 +82,7 @@ it('does not enable AI Computing Outlook until sources exist', async () => {
     saved: false,
     result: null,
   });
-  render(<IndustrySection slug="ai-computing" section="outlook" />);
+  render(<IndustrySection slug="ai-computing" section="outlook" enabledSections={[]} />);
   expect(await screen.findByText(/Automated research is not enabled/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: /Generate Outlook/ })).not.toBeInTheDocument();
 });

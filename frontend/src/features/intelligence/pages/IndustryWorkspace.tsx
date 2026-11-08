@@ -49,11 +49,7 @@ export function IndustryWorkspace() {
         <ErrorBox message={industry.error} retry={industry.reload} />
       ) : industry.data ? (
         <>
-          <p className="muted">
-            Research questions and supporting sources are organized separately from company analysis. AI
-            Computing supports an SEC/RSS-backed Overview and narrowly scoped filing-backed Technology, Supply
-            Chain and Competition notes. Outlook and other industries remain guided only.
-          </p>
+          <p className="muted">{industry.data.research_coverage}</p>
           <div
             className="actions"
             role="tablist"
@@ -73,7 +69,12 @@ export function IndustryWorkspace() {
               </button>
             ))}
           </div>
-          <IndustrySection key={`${slug}-${section}`} slug={slug} section={section} />
+          <IndustrySection
+            key={`${slug}-${section}`}
+            slug={slug}
+            section={section}
+            enabledSections={industry.data.ai_sections}
+          />
           {slug === 'ai-computing' && section === 'overview' && (
             <section className="panel">
               <h2>Original SEC evidence and cached news</h2>

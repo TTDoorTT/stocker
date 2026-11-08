@@ -10,8 +10,8 @@ export function Industries() {
     <>
       <PageTitle title="Industry research" />
       <p className="muted">
-        Open a guided workspace for each industry. AI Computing Overview has a limited, source-backed research
-        pilot; other sections are methodologies until their data integrations are complete.
+        Browse the industry workspaces. Automated generation is enabled only where the backend lists a
+        connected, source-backed research pipeline.
       </p>
       {industries.loading ? (
         <Loading />
@@ -23,11 +23,7 @@ export function Industries() {
             <article className="panel" key={industry.slug}>
               <p className="eyebrow">INDUSTRY WORKSPACE</p>
               <h2>{industry.name}</h2>
-              <p className="muted">
-                {industry.slug === 'ai-computing'
-                  ? 'Source-backed Overview pilot available'
-                  : 'Guided research sections; no verified industry-wide report yet'}
-              </p>
+              <p className="muted">{industry.research_coverage}</p>
               <Link className="button secondary" to={`/industries/${industry.slug}`}>
                 Open workspace ↗
               </Link>

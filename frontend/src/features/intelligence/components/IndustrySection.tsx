@@ -13,17 +13,20 @@ const descriptions: Record<IndustrySectionKey, string> = {
   outlook: 'Measurable milestones, unresolved uncertainties and sector risks.',
 };
 
-export function IndustrySection({ slug, section }: { slug: string; section: IndustrySectionKey }) {
+export function IndustrySection({
+  slug,
+  section,
+  enabledSections,
+}: {
+  slug: string;
+  section: IndustrySectionKey;
+  enabledSections: IndustrySectionKey[];
+}) {
   const [saved, setSaved] = useState<SavedIndustrySection | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const enabled =
-    slug === 'ai-computing' &&
-    (section === 'overview' ||
-      section === 'technology' ||
-      section === 'supply-chain' ||
-      section === 'competition');
+  const enabled = enabledSections.includes(section);
   const sectionLabel: Record<IndustrySectionKey, string> = {
     overview: 'Overview',
     technology: 'Technology',
