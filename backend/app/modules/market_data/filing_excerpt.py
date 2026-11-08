@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
+from app.contracts.industry_sources import sec_filing_source
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.providers.sec import SecProvider
 
@@ -174,32 +175,46 @@ def _near_duplicate(left: str, right: str) -> bool:
     return len(a & b) / len(a | b) >= 0.78
 
 
-def extract_passages(document: str) -> list[dict]:
+def extract_passages(document: str, *, topic_terms: dict[str, tuple[str, ...]] | None = None) -> list[dict]:
     """Find balanced topic excerpts, not just the first three regex matches.
 
     Per-topic ranking and deduplication are deterministic. Some text can be
     reused across different topics when the filing supports both, because the
     existing evidence adapter selects by its exact matched_term contract.
     """
+    topics = TOPIC_TERMS if topic_terms is None else topic_terms
+    weights = (
+        WORD_WEIGHTS
+        if topic_terms is None
+        else {term: WORD_WEIGHTS.get(term, 3) for values in topics.values() for term in values}
+    )
+    matcher = (
+        TERMS
+        if topic_terms is None
+        else re.compile(
+            r"\b(?:" + "|".join(re.escape(x) for x in sorted(weights, key=len, reverse=True)) + r")\b",
+            re.IGNORECASE,
+        )
+    )
     candidates: dict[str, list[dict]] = defaultdict(list)
     position = 0
     for paragraph, heading in _blocks(document):
-        matches = list(TERMS.finditer(paragraph))
+        matches = list(matcher.finditer(paragraph))
         if not matches:
             position += len(paragraph)
             continue
         names = {match.group(0).casefold() for match in matches}
-        for topic, allowed in TOPIC_TERMS.items():
+        for topic, allowed in topics.items():
             relevant = [m for m in matches if m.group(0).casefold() in allowed]
             if not relevant or len(candidates[topic]) >= MAX_CANDIDATES_PER_TOPIC:
                 continue
             # Pick the most specific phrase rather than whichever occurs first.
-            best = max(relevant, key=lambda m: (WORD_WEIGHTS[m.group(0).casefold()], -m.start()))
+            best = max(relevant, key=lambda m: (weights[m.group(0).casefold()], -m.start()))
             excerpt = _excerpt(paragraph, best.start())
             if len(excerpt) < 100:
                 continue
             distinct = len(names.intersection(allowed))
-            score = 10 + WORD_WEIGHTS[best.group(0).casefold()] * 3 + min(distinct, 4) * 2
+            score = 10 + weights[best.group(0).casefold()] * 3 + min(distinct, 4) * 2
             if heading:
                 score += 2
                 if topic == "competition" and "1A" in heading:
@@ -273,8 +288,10 @@ def _fetch_document(sec: SecProvider, url: str) -> tuple[str, str, bool]:
 
 def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
     """Consume only 10-K URLs from validated SEC submissions metadata."""
+    industry = snapshot.get("industry", "ai-computing")
+    source = sec_filing_source(industry)
     result = {
-        "industry": "ai-computing",
+        "industry": industry,
         "year": snapshot["year"],
         "mode": snapshot["mode"],
         "excerpts": [],
@@ -311,7 +328,9 @@ def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
         per_company[symbol] = {topic: [] for topic in TOPICS}
         try:
             document, fetched, cached = _fetch_document(sec, item["source_url"])
-            selected = extract_passages(document)
+            selected = extract_passages(
+                document, topic_terms=source.topic_terms if source.slug != "ai-computing" else None
+            )
             if not selected:
                 result["gaps"].append(f"{symbol}: no usable matching passages in the bounded text.")
             for passage in selected:
@@ -343,6 +362,8 @@ def filing_excerpts(sec: SecProvider, snapshot: dict) -> dict:
                 if len(matches) > rank:
                     result["excerpts"].append(matches[rank])
 
+    if source.slug == "semiconductor":
+        result["gaps"].append(source.limitations)
     result["gaps"].extend(
         [
             "Item labels are heading-based guesses, NOT validated SEC Item boundaries.",

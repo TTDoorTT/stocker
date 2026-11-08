@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, date, datetime, timedelta
 
+from app.contracts.industry_sources import sec_filing_source
 from app.contracts.market import Evidence
 from app.modules.intelligence.filing_quality import select_quality_excerpts
 from app.modules.market_data.errors import DataUnavailable
@@ -76,14 +77,15 @@ def _parse_timestamp(value: object) -> datetime | None:
     return stamp
 
 
-def _valid_filing_metadata(row: object) -> bool:
+def _valid_filing_metadata(row: object, *, industry: str = "ai-computing") -> bool:
+    peers = sec_filing_source(industry).peers
     if not isinstance(row, dict) or row.get("form") != "10-K":
         return False
     filed = _parse_date(row.get("filed"))
     fetched = _parse_timestamp(row.get("fetched_at"))
     return bool(
         isinstance(row.get("symbol"), str)
-        and row["symbol"] in PEERS
+        and row["symbol"] in peers
         and isinstance(row.get("source_url"), str)
         and SEC_DOCUMENT.fullmatch(row["source_url"])
         and filed is not None
@@ -92,18 +94,22 @@ def _valid_filing_metadata(row: object) -> bool:
     )
 
 
-def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
+def capture_filing_section(snapshot: dict, section: str, *, industry: str = "ai-computing") -> list[dict]:
     """Screen captured passages and create bounded, attributable evidence."""
     if section not in SECTION_TERMS:
         raise ValueError("Unsupported filing-backed industry section")
-    if not isinstance(snapshot, dict) or snapshot.get("mode") != "live":
+    source = sec_filing_source(industry)
+    allowed_terms = frozenset(source.topic_terms[section])
+    if not isinstance(snapshot, dict) or snapshot.get("industry", "ai-computing") != industry:
+        raise DataUnavailable("SEC filing source industry mismatch")
+    if snapshot.get("mode") != "live":
         raise DataUnavailable("Live SEC filing excerpts are required for this section")
     excerpts = snapshot.get("excerpts")
     if not isinstance(excerpts, list):
         raise DataUnavailable("SEC excerpt response was missing or malformed")
 
-    qualified = [row for row in excerpts[:50] if _valid_filing_metadata(row)]
-    quality = select_quality_excerpts(qualified, section, SECTION_TERMS[section])
+    qualified = [row for row in excerpts[:50] if _valid_filing_metadata(row, industry=industry)]
+    quality = select_quality_excerpts(qualified, section, allowed_terms)
     out: list[dict] = []
     seen: set[tuple[str, str, str]] = set()
     for row in quality.selected:
@@ -116,9 +122,9 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
         filed = _parse_date(row.get("filed"))
         fetched = _parse_timestamp(row.get("fetched_at"))
         if (
-            symbol not in PEERS
+            symbol not in source.peers
             or not SEC_DOCUMENT.fullmatch(url)
-            or term not in SECTION_TERMS[section]
+            or term not in allowed_terms
             or not 100 <= len(body) <= 400
             or filed is None
             or fetched is None
@@ -130,7 +136,13 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
             continue
         seen.add(signature)
         record = Evidence(
-            evidence_id=evidence_id("industry-filing", section, symbol, url, body),
+            evidence_id=evidence_id(
+                "industry-filing" if industry == "ai-computing" else f"industry-filing-{industry}",
+                section,
+                symbol,
+                url,
+                body,
+            ),
             symbol=symbol,
             field=f"sec_10k_excerpt_{section.replace('-', '_')}",
             value=(
@@ -161,12 +173,13 @@ def capture_filing_section(snapshot: dict, section: str) -> list[dict]:
     return out
 
 
-def filing_task(section: str) -> str:
+def filing_task(section: str, *, industry: str = "ai-computing") -> str:
     """Constrain output to the source material and its actual scope."""
     if section not in SECTION_TASK:
         raise ValueError("Unsupported filing-backed industry section")
+    source = sec_filing_source(industry)
     return (
-        f"Write at most three concise, qualitative AI Computing {section} findings from "
+        f"Write at most three concise, qualitative {source.label} {section} findings from "
         "the provided literal SEC 10-K excerpts ONLY. "
         + SECTION_TASK[section]
         + " Attribute every claim to one or more supplied evidence IDs. "
@@ -178,11 +191,20 @@ def filing_task(section: str) -> str:
         "No numerical claims or numerical prose, dates, calculations, predictions or forecasts. "
         "Use null for value, unit and reference_id and an empty calculation_ids list. "
         "State evidence limits explicitly."
+        + (
+            " Treat the selected chip design, memory, manufacturing and equipment issuers as "
+            "separate case studies, never as proof of cross-company contractual relationships, "
+            "production bottlenecks, worldwide market shares, or the global supply chain."
+            if industry == "semiconductor"
+            else ""
+        )
     )
 
 
-def filing_gaps(section: str, snapshot: dict) -> list[str]:
+def filing_gaps(section: str, snapshot: dict, *, industry: str = "ai-computing") -> list[str]:
+    source = sec_filing_source(industry)
     gaps = list(snapshot.get("gaps", [])) + [
+        source.limitations,
         f"This is a narrow issuer-disclosure note for {section}, not a complete industry report.",
         "Selected SEC 10-K passages are not comprehensive industry coverage.",
         "Deterministic screening does not prove claim support, original context, or factual correctness.",
@@ -192,12 +214,12 @@ def filing_gaps(section: str, snapshot: dict) -> list[str]:
     if section in SECTION_TERMS:
         rows = snapshot.get("excerpts")
         if isinstance(rows, list):
-            eligible = [row for row in rows[:50] if _valid_filing_metadata(row)]
+            eligible = [row for row in rows[:50] if _valid_filing_metadata(row, industry=industry)]
             missing_metadata = len(rows[:50]) - len(eligible)
         else:
             eligible = []
             missing_metadata = 0
-        quality = select_quality_excerpts(eligible, section, SECTION_TERMS[section])
+        quality = select_quality_excerpts(eligible, section, frozenset(source.topic_terms[section]))
         if missing_metadata:
             gaps.append(f"Automated source-metadata checks rejected {missing_metadata} excerpt(s).")
         discarded = sum(quality.rejection_counts.values())

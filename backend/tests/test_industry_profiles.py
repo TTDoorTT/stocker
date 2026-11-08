@@ -25,10 +25,10 @@ def test_all_industry_templates_have_truthful_generation_capabilities():
         assert row["ai_sections"] == allowed
         assert row["research_status"] == ("limited_pilot" if allowed else "guided_only")
         assert catalog.industry(row["slug"]) == row
-    assert sum(bool(row["ai_sections"]) for row in rows) == 1
+    assert sum(bool(row["ai_sections"]) for row in rows) == 2
 
 
-def test_only_existing_pilot_has_actual_generation_pipelines():
+def test_only_integrated_profiles_have_generation_pipelines():
     expected = {
         "overview": "sec_rss_overview",
         "technology": "sec_filing_review",
@@ -37,7 +37,12 @@ def test_only_existing_pilot_has_actual_generation_pipelines():
     }
     assert {s: generation_pipeline("ai-computing", s) for s in expected} == expected
     assert generation_pipeline("ai-computing", "outlook") is None
-    for slug in ("semiconductor", "ai-application", "power-grid", "../evil", ""):
+    assert public_capabilities("semiconductor")["ai_sections"] == [
+        "technology",
+        "supply-chain",
+        "competition",
+    ]
+    for slug in ("ai-application", "power-grid", "../evil", ""):
         assert public_capabilities(slug)["ai_sections"] == []
         assert all(generation_pipeline(slug, s) is None for s in ALL_SECTIONS)
 
@@ -62,6 +67,10 @@ def test_read_routes_expose_capabilities_without_model_or_sec(tmp_path, monkeypa
         ai = client.get("/api/industries/ai-computing")
         assert ai.status_code == 200
         assert ai.json()["ai_sections"] == ["overview", "technology", "supply-chain", "competition"]
-        assert client.get("/api/industries/semiconductor").json()["ai_sections"] == []
-        assert client.post("/api/industries/semiconductor/sections/technology/generate").status_code == 422
+        assert client.get("/api/industries/semiconductor").json()["ai_sections"] == [
+            "technology",
+            "supply-chain",
+            "competition",
+        ]
+        assert client.post("/api/industries/semiconductor/sections/technology/generate").status_code == 503
         assert client.post("/api/industries/ai-computing/sections/technology/generate").status_code == 503

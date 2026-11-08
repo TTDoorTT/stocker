@@ -248,7 +248,7 @@ class IndustryResearchService:
         self._validate(slug, section)
         pipeline = generation_pipeline(slug, section)
         if pipeline is None:
-            raise ValueError("AI generation is currently available only for selected AI Computing sections")
+            raise ValueError("AI generation is currently available only for configured industry sections")
         settings = self.current_settings()
         if settings.data_mode != "live":
             raise DataUnavailable("Industry AI research requires live SEC evidence, not fixtures")
@@ -261,9 +261,21 @@ class IndustryResearchService:
                 if self.capture_filing_excerpts is None:
                     raise DataUnavailable("SEC filing excerpt retrieval is not configured")
                 # Explicit generation only. GET /sections reads the saved SQLite row.
-                snapshot = self.capture_filing_excerpts(_now().year - 1)
-                evidence = capture_filing_section(snapshot, section)
-                gaps = filing_gaps(section, snapshot)
+                snapshot = (
+                    self.capture_filing_excerpts(_now().year - 1)
+                    if slug == "ai-computing"
+                    else self.capture_filing_excerpts(_now().year - 1, industry=slug)
+                )
+                if slug == "ai-computing":
+                    # Preserve the original adapter call signature.
+                    evidence = capture_filing_section(snapshot, section)
+                    gaps = filing_gaps(section, snapshot)
+                    task = filing_task(section)
+                else:
+                    # Additional industries require explicit identity checks.
+                    evidence = capture_filing_section(snapshot, section, industry=slug)
+                    gaps = filing_gaps(section, snapshot, industry=slug)
+                    task = filing_task(section, industry=slug)
                 result = summarize_captured_headlines(
                     {
                         "symbol": "US",
@@ -276,7 +288,7 @@ class IndustryResearchService:
                     evidence,
                     gaps,
                     settings,
-                    task=filing_task(section),
+                    task=task,
                     bullets_only=True,
                     review_filing=True,
                 )
