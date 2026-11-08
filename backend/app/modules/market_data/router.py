@@ -3,7 +3,13 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query
 
 from app.contracts.market import PriceBar, Stock
-from app.contracts.stock_research import CandleSeries, EarningsResponse, FinancialTrendsResponse
+from app.contracts.stock_research import (
+    CandleSeries,
+    EarningsResponse,
+    EventsResponse,
+    EventStudyResponse,
+    FinancialTrendsResponse,
+)
 from app.modules.market_data.service import DataService
 from app.modules.market_data.symbols import normalize_symbol, symbol_market
 
@@ -61,5 +67,19 @@ def create_router(service: DataService) -> APIRouter:
         if market and market != symbol_market(ticker):
             raise HTTPException(422, "Market does not match the explicit listing symbol")
         return service.earnings(ticker)
+
+    @router.get("/api/stocks/{ticker}/events", response_model=EventsResponse)
+    def events(ticker: str, market: Literal["US", "CA"] | None = None):
+        ticker = symbol(ticker)
+        if market and market != symbol_market(ticker):
+            raise HTTPException(422, "Market does not match the explicit listing symbol")
+        return service.events(ticker)
+
+    @router.get("/api/stocks/{ticker}/event-study", response_model=EventStudyResponse)
+    def event_study(ticker: str, market: Literal["US", "CA"] | None = None):
+        ticker = symbol(ticker)
+        if market and market != symbol_market(ticker):
+            raise HTTPException(422, "Market does not match the explicit listing symbol")
+        return service.event_study(ticker)
 
     return router
