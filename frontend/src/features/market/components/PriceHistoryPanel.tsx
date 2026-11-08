@@ -13,6 +13,11 @@ export function PriceHistoryPanel({ symbol, mode }: { symbol: string; mode: Stoc
   const [range, setRange] = useState<CandleRange>('6m');
   const [interval, setInterval] = useState<CandleInterval>('1d');
   const candles = useResource(() => marketApi.candles(symbol, range, interval), [symbol, range, interval]);
+  const earnings = useResource(() => marketApi.events(symbol), [symbol]);
+  const [showMarkers, setShowMarkers] = useState(true);
+  // Never overlay another listing's dates or mix synthetic with live prices.
+  const matchedEvents =
+    earnings.data?.symbol === symbol && earnings.data.mode === mode ? earnings.data : null;
 
   return (
     <section className="panel">
@@ -43,13 +48,25 @@ export function PriceHistoryPanel({ symbol, mode }: { symbol: string; mode: Stoc
         <button type="button" onClick={candles.reload}>
           Refresh
         </button>
+        <button type="button" aria-pressed={showMarkers} onClick={() => setShowMarkers((on) => !on)}>
+          Earnings markers
+        </button>
+        <small className="muted candle-marker-status">
+          {earnings.loading
+            ? 'Loading earnings dates…'
+            : earnings.error
+              ? 'Dates unavailable; prices unaffected'
+              : matchedEvents
+                ? `${matchedEvents.events.length} sourced historical date(s)`
+                : 'No matching earnings source'}
+        </small>
       </div>
       {candles.loading ? (
         <Loading />
       ) : candles.error ? (
         <ErrorBox message={candles.error} retry={candles.reload} />
       ) : candles.data ? (
-        <CandleChart series={candles.data} />
+        <CandleChart series={candles.data} eventDates={showMarkers ? matchedEvents : null} />
       ) : (
         <Empty>No sourced candlestick observations are available.</Empty>
       )}

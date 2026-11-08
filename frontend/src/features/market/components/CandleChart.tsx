@@ -1,17 +1,19 @@
 import type { EChartsOption } from 'echarts';
-import { BarChart, CandlestickChart, LineChart } from 'echarts/charts';
+import { BarChart, CandlestickChart, LineChart, ScatterChart } from 'echarts/charts';
 import { DataZoomComponent, GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import * as echarts from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Empty } from '../../../shared/ui/Feedback';
 import { SourceLink } from '../../../shared/ui/Presentation';
 import { candleRows, movingAverage, visiblePriceDomain, volumeRows } from '../chartMath';
-import type { CandleSeries } from '../types';
+import { alignEarningsMarkers } from '../earningsMarkers';
+import type { CandleSeries, EventsResponse } from '../types';
 
 echarts.use([
   BarChart,
   CandlestickChart,
+  ScatterChart,
   LineChart,
   DataZoomComponent,
   GridComponent,
@@ -27,10 +29,28 @@ const maColors = ['#d5b34d', '#8fbe50', '#ae8cdb', '#5a8ac9'];
 const number = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 });
 
-export function CandleChart({ series }: { series: CandleSeries }) {
+export function CandleChart({
+  series,
+  eventDates,
+}: {
+  series: CandleSeries;
+  eventDates?: EventsResponse | null;
+}) {
   const container = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const bars = series.bars;
+  const [selectedBar, setSelectedBar] = useState<string | null>(null);
+  const aligned = useMemo(
+    () =>
+      alignEarningsMarkers(
+        bars,
+        series.interval,
+        eventDates?.symbol === series.symbol && eventDates.mode === series.mode ? eventDates.events : [],
+      ),
+    [bars, series.interval, series.symbol, series.mode, eventDates],
+  );
+  const markers = aligned.markers;
+  const selected = markers.find((marker) => marker.candleDate === selectedBar);
   const current = bars[hovered !== null && hovered < bars.length ? hovered : bars.length - 1];
 
   useEffect(() => {
@@ -57,7 +77,7 @@ export function CandleChart({ series }: { series: CandleSeries }) {
           top: 4,
           itemWidth: 15,
           itemHeight: 8,
-          data: ['Candles', 'MA5', 'MA10', 'MA20', 'MA60'],
+          data: ['Candles', 'MA5', 'MA10', 'MA20', 'MA60', ...(markers.length ? ['Earnings dates'] : [])],
           textStyle: { color: muted, fontSize: 10 },
         },
         tooltip: {
@@ -81,6 +101,9 @@ export function CandleChart({ series }: { series: CandleSeries }) {
             if (bar.adjusted_close !== null) {
               lines.push(`Adjusted close ${number.format(bar.adjusted_close)}`);
             }
+            const bucket = markers.find((marker) => marker.candleDate === bar.date);
+            if (bucket)
+              lines.push(`${bucket.events.length} vendor-reported earnings date(s); time unverified`);
             for (const item of items) {
               const entry = item as { seriesName?: string; value?: unknown };
               if (entry.seriesName?.startsWith('MA') && typeof entry.value === 'number') {
@@ -180,6 +203,21 @@ export function CandleChart({ series }: { series: CandleSeries }) {
           ...(volumeAvailable
             ? [{ name: 'Volume', type: 'bar' as const, xAxisIndex: 1, yAxisIndex: 1, data: volumeRows(bars) }]
             : []),
+          ...(markers.length
+            ? [
+                {
+                  name: 'Earnings dates',
+                  type: 'scatter' as const,
+                  xAxisIndex: 0,
+                  yAxisIndex: 0,
+                  symbol: 'diamond',
+                  symbolSize: 15,
+                  z: 10,
+                  itemStyle: { color: '#f3c26e', borderColor: '#253445', borderWidth: 1 },
+                  data: markers.map((marker) => [marker.candleDate, marker.anchorPrice]),
+                },
+              ]
+            : []),
         ],
       };
     };
@@ -193,11 +231,20 @@ export function CandleChart({ series }: { series: CandleSeries }) {
     chart.setOption(makeOption());
     chart.on('datazoom', rescale);
     chart.on('mousemove', (event: unknown) => {
-      const index = (event as { dataIndex?: number }).dataIndex;
+      const point = event as { dataIndex?: number; seriesName?: string };
+      if (point.seriesName === 'Earnings dates') return;
+      const index = point.dataIndex;
       if (Number.isInteger(index) && index !== undefined && index >= 0 && index < bars.length) {
         setHovered(index);
       }
     });
+    const openMarker = (event: unknown) => {
+      const point = event as { seriesName?: string; dataIndex?: number };
+      if (point.seriesName !== 'Earnings dates' || point.dataIndex === undefined) return;
+      const marker = markers[point.dataIndex];
+      if (marker) setSelectedBar(marker.candleDate);
+    };
+    chart.on('click', openMarker);
     chart.getZr().on('globalout', () => setHovered(null));
 
     const resize = () => chart.resize();
@@ -220,12 +267,13 @@ export function CandleChart({ series }: { series: CandleSeries }) {
 
     return () => {
       chart.off('datazoom', rescale);
+      chart.off('click', openMarker);
       themeObserver.disconnect();
       resizeObserver?.disconnect();
       window.removeEventListener('resize', resize);
       chart.dispose();
     };
-  }, [bars]);
+  }, [bars, markers]);
 
   if (bars.length < 2) {
     return <Empty>Historical OHLCV chart requires at least two sourced trading observations.</Empty>;
@@ -270,6 +318,60 @@ export function CandleChart({ series }: { series: CandleSeries }) {
         role="img"
         aria-label={`${series.symbol} interactive candlestick chart with moving averages and volume`}
       />
+      {markers.length > 0 && (
+        <div className="candle-earnings-markers">
+          <details>
+            <summary>
+              Earnings dates on chart ({markers.reduce((sum, marker) => sum + marker.events.length, 0)})
+            </summary>
+            <div className="candle-earnings-options" role="group" aria-label="Select earnings marker">
+              {markers.map((marker) => (
+                <button
+                  type="button"
+                  key={marker.candleDate}
+                  aria-pressed={selectedBar === marker.candleDate}
+                  onClick={() => setSelectedBar(marker.candleDate)}
+                >
+                  {marker.events.length > 1 ? `${marker.events.length} dates · ` : ''}
+                  {marker.candleDate}
+                </button>
+              ))}
+            </div>
+          </details>
+          {selected && (
+            <div
+              className="candle-earnings-detail"
+              role="region"
+              aria-label="Selected earnings marker details"
+            >
+              <strong>Earnings date evidence</strong>
+              <p className="muted">
+                Chart bar: {selected.candleDate} ·{' '}
+                {series.interval === '1d'
+                  ? 'Exact trading-date match'
+                  : 'Weekly/monthly date bucket, not an exact session'}
+              </p>
+              {selected.events.map((event) => (
+                <p key={event.event_id}>
+                  {event.fiscal_quarter} FY{event.fiscal_year} · Vendor-reported date {event.event_date} ·{' '}
+                  {event.date_precision === 'date_only'
+                    ? 'Release time unverified'
+                    : 'Source timestamp available'}{' '}
+                  · <SourceLink url={event.source.url} name={event.source.name} />
+                  {event.source.fixture ? ' · SYNTHETIC' : ''}
+                </p>
+              ))}
+              <small>No intraday or before/after-close timing is inferred from a date-only event.</small>
+            </div>
+          )}
+        </div>
+      )}
+      {eventDates && (aligned.outsideRange > 0 || aligned.unaligned > 0) && (
+        <p className="muted candle-marker-gaps">
+          Earnings dates not plotted: {aligned.outsideRange} outside visible history, {aligned.unaligned}{' '}
+          without a matching trading bar. Date-only events are never shifted to another trading day.
+        </p>
+      )}
       <details className="candle-provenance">
         <summary>Data source &amp; price adjustments — {series.source.name}</summary>
         <small className="source-note">
