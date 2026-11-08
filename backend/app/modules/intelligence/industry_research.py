@@ -16,13 +16,13 @@ from threading import Lock
 
 from app.contracts.market import Evidence
 from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
+from app.modules.intelligence.industry_profiles import ALL_SECTIONS, generation_pipeline
 from app.modules.market_data.errors import DataUnavailable
 from app.modules.market_data.provenance import evidence_id
 from app.modules.research.service import summarize_captured_headlines
 
-SECTIONS = ("overview", "technology", "supply-chain", "competition", "outlook")
+SECTIONS = ALL_SECTIONS
 EXPERIMENTAL = ("ai-computing", "overview")
-FILING_SECTIONS = frozenset({"technology", "supply-chain", "competition"})
 
 
 def _now() -> datetime:
@@ -246,7 +246,8 @@ class IndustryResearchService:
 
     def generate(self, slug: str, section: str) -> dict:
         self._validate(slug, section)
-        if slug != "ai-computing" or section not in {"overview", *FILING_SECTIONS}:
+        pipeline = generation_pipeline(slug, section)
+        if pipeline is None:
             raise ValueError("AI generation is currently available only for selected AI Computing sections")
         settings = self.current_settings()
         if settings.data_mode != "live":
@@ -256,7 +257,7 @@ class IndustryResearchService:
         if not self.generation_lock.acquire(blocking=False):
             raise RuntimeError("An industry research generation is already running")
         try:
-            if section in FILING_SECTIONS:
+            if pipeline == "sec_filing_review":
                 if self.capture_filing_excerpts is None:
                     raise DataUnavailable("SEC filing excerpt retrieval is not configured")
                 # Explicit generation only. GET /sections reads the saved SQLite row.

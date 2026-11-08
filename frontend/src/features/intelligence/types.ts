@@ -79,6 +79,9 @@ export interface Industry {
   prompt: string;
   symbols: string[];
   gaps: string[];
+  research_status: 'guided_only' | 'limited_pilot';
+  ai_sections: IndustrySectionKey[];
+  research_coverage: string;
 }
 
 export interface FilingExcerpt {
