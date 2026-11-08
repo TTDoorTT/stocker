@@ -15,6 +15,7 @@ from pathlib import Path
 from threading import Lock
 
 from app.contracts.market import Evidence
+from app.modules.intelligence.filing_citations import cited_filing_coverage
 from app.modules.intelligence.filing_coverage import filing_coverage
 from app.modules.intelligence.filing_dispatch import prepare_filing_generation
 from app.modules.intelligence.filing_section import capture_filing_section, filing_gaps, filing_task
@@ -303,6 +304,9 @@ class IndustryResearchService:
                 )
                 # Exactly the same persistence contract as Overview: save only
                 # after the model output has passed research citation validation.
+                citation_coverage = cited_filing_coverage(coverage, evidence, result.get("claim_review"))
+                if citation_coverage is not None:
+                    coverage.update(citation_coverage)
                 result["filing_coverage"] = coverage
                 self.repository.save(slug, section, result, snapshot, settings.llm_model, _hash(evidence))
                 return self.repository.get(slug, section)

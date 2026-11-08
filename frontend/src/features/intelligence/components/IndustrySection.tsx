@@ -95,6 +95,17 @@ export function IndustrySection({
                   These counts do not establish industry-wide coverage or claim support.
                 </p>
               )}
+              {saved.result.filing_coverage?.cited_issuers && (
+                <p className="muted" aria-label="Model-screened claim citation coverage">
+                  Cited issuers: {saved.result.filing_coverage.cited_issuers.length} of{' '}
+                  {saved.result.filing_coverage.represented_issuers.length} represented. Distinct cited
+                  excerpts: {saved.result.filing_coverage.cited_excerpts}. Model-screened claims:{' '}
+                  {saved.result.filing_coverage.model_screened_claims}.
+                  {!!saved.result.filing_coverage.uncited_represented_issuers?.length &&
+                    ` Accepted but not cited: ${saved.result.filing_coverage.uncited_represented_issuers.join(', ')}.`}{' '}
+                  Citation counts do not establish independent factual verification.
+                </p>
+              )}
               <div className="markdown">
                 <ReactMarkdown>{saved.result.answer}</ReactMarkdown>
               </div>
