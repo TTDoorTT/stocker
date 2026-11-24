@@ -313,3 +313,126 @@ def test_research_enrichment_degrades_gracefully_on_provider_errors_or_mode_mism
     assert any("Quarterly financial trends unavailable" in gap for gap in run["gaps"])
     assert any("Earnings calendar mode mismatch" in gap for gap in run["gaps"])
     assert not any(item["field"].startswith("vendor_earnings") for item in run["evidence"])
+
+
+def test_cancellation_token_stops_orchestrator_between_stages(setup):
+    from app.modules.research.agents.client import CancellationToken
+
+    settings, repository, data = setup
+    token = CancellationToken()
+
+    class CancelAfterProfileModel(FixtureModel):
+        def complete(self, stage, context, schema, tools):
+            output = super().complete(stage, context, schema, tools)
+            if stage == "profile":
+                token.cancel()
+            return output
+
+    run = new_run("AAPL", settings, "multi")
+    repository.save_run(run)
+    result = ResearchOrchestrator(
+        repository, data, settings, model=CancelAfterProfileModel(), cancel_token=token
+    ).execute(run["run_id"])
+    events = repository.events(run["run_id"])
+    assert result["status"] == "cancelled"
+    assert result["report"] is None
+    assert "Research run was stopped by the user." in result["gaps"]
+    assert any(event["event"] == "run_cancelled" for event in events)
+    assert events[-1]["event"] == "run_finished" and events[-1]["status"] == "cancelled"
+
+
+def test_cancel_endpoint_marks_queued_run_cancelled_and_validates_id(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    settings = Settings(_env_file=None, database_url=f"sqlite:///{tmp_path}/cancel.db")
+    repository = ResearchRepository(settings.database_url)
+    run = new_run("AAPL", settings, "multi")
+    repository.save_run(run)
+    with TestClient(create_app(settings, repo=repository)) as client:
+        # Directly seeded queued run is marked incomplete on startup; seed a fresh queued run after startup.
+        queued = new_run("MSFT", settings, "multi")
+        repository.save_run(queued)
+        res = client.post(f"/api/research-runs/{queued['run_id']}/cancel")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["status"] == "cancelled"
+        assert "Research run was stopped by the user." in body["gaps"]
+        assert client.post("/api/research-runs/not-a-uuid/cancel").status_code == 422
+        assert (
+            client.post("/api/research-runs/00000000-0000-0000-0000-000000000001/cancel").status_code == 404
+        )
+
+
+def test_delete_endpoint_removes_terminal_run_and_blocks_active_runs(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    settings = Settings(_env_file=None, database_url=f"sqlite:///{tmp_path}/delete.db")
+    repository = ResearchRepository(settings.database_url)
+    with TestClient(create_app(settings, repo=repository)) as client:
+        active = new_run("MSFT", settings, "multi")
+        repository.save_run(active)
+        assert client.delete(f"/api/research-runs/{active['run_id']}").status_code == 409
+
+        assert client.post(f"/api/research-runs/{active['run_id']}/cancel").status_code == 200
+        deleted = client.delete(f"/api/research-runs/{active['run_id']}")
+        assert deleted.status_code == 200
+        assert deleted.json() == {"deleted": True, "run_id": active["run_id"]}
+        assert client.get(f"/api/research-runs/{active['run_id']}").status_code == 404
+        assert repository.events(active["run_id"]) == []
+        assert client.delete("/api/research-runs/not-a-uuid").status_code == 422
+        assert client.delete("/api/research-runs/00000000-0000-0000-0000-000000000001").status_code == 404
+
+
+def test_cancellation_token_aborts_blocked_live_model_socket_immediately():
+    import socket
+    import threading
+    from time import monotonic
+
+    from app.modules.research.agents.client import CancellationToken, ModelClient
+    from app.modules.research.agents.tools import ResearchTools
+    from app.modules.research.errors import RunCancelledError
+
+    server = socket.socket()
+    server.bind(("127.0.0.1", 0))
+    server.listen(1)
+    port = server.getsockname()[1]
+    accepted = threading.Event()
+    release = threading.Event()
+
+    def accept_and_hang():
+        conn, _ = server.accept()
+        accepted.set()
+        release.wait(timeout=5)
+        conn.close()
+        server.close()
+
+    threading.Thread(target=accept_and_hang, daemon=True).start()
+    token = CancellationToken()
+
+    def trigger():
+        accepted.wait(timeout=2)
+        token.cancel()
+
+    threading.Thread(target=trigger, daemon=True).start()
+
+    settings = Settings(
+        _env_file=None,
+        data_mode="live",
+        llm_base_url=f"http://127.0.0.1:{port}/v1",
+        llm_model="test-model",
+        llm_timeout=10,
+    )
+    toolset = ResearchTools(
+        {"evidence": [], "facts": [], "news": []}, [], [], {}, lambda *args, **kwargs: None, "profile"
+    )
+    start = monotonic()
+    try:
+        with pytest.raises(RunCancelledError):
+            ModelClient(settings, cancel_token=token).complete("profile", {}, {}, toolset)
+        assert monotonic() - start < 1.5
+    finally:
+        release.set()

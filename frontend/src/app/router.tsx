@@ -1,5 +1,4 @@
-import { NavLink, Route, Routes } from 'react-router-dom';
-import { DailyReview } from '../features/intelligence/pages/DailyReview';
+import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { Industries } from '../features/intelligence/pages/Industries';
 import { IndustryWorkspace } from '../features/intelligence/pages/IndustryWorkspace';
 import { NewsRadar } from '../features/intelligence/pages/NewsRadar';
@@ -21,7 +20,7 @@ export function AppRoutes() {
       <Route path="/records" element={<ResearchRecords />} />
       <Route path="/my-stocks" element={<MyStocks />} />
       <Route path="/settings" element={<Settings />} />
-      <Route path="/daily-review" element={<DailyReview />} />
+      <Route path="/daily-review" element={<Navigate to="/" replace />} />
       <Route path="/intelligence" element={<NewsRadar />} />
       <Route path="/industries" element={<Industries />} />
       <Route path="/industries/:slug" element={<IndustryWorkspace />} />

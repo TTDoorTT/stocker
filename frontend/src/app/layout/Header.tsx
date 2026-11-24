@@ -1,5 +1,3 @@
-import { StockSearch } from '../../features/market/components/StockSearch';
-
 type Theme = 'dark' | 'light';
 
 type HeaderProps = {
@@ -12,7 +10,6 @@ export function Header({ error, theme, onToggleTheme }: HeaderProps) {
   const label = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   return (
     <header className="topbar">
-      <StockSearch />
       <div className="topbar-actions">
         <div className="topbar-status">
           <span className={`connection-dot ${error ? 'offline' : ''}`} />

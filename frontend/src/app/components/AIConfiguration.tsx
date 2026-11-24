@@ -45,6 +45,7 @@ export function AIForm({ initial, onSaved }: { initial: AIStatus; onSaved: (valu
   }
   return (
     <form
+      className="ai-form"
       onSubmit={(event) => {
         event.preventDefault();
         void act('save');
@@ -52,46 +53,48 @@ export function AIForm({ initial, onSaved }: { initial: AIStatus; onSaved: (valu
       autoComplete="off"
     >
       <fieldset disabled={busy} className="ai-fields">
-        <legend>OpenAI-compatible model connection</legend>
-        <label>
-          API Base URL
-          <input
-            type="url"
-            required
-            value={baseURL}
-            onChange={(e) => {
-              setBaseURL(e.target.value);
-              change();
-            }}
-          />
-        </label>
-        <label>
-          Model ID
-          <input
-            required
-            value={model}
-            maxLength={200}
-            onChange={(e) => {
-              setModel(e.target.value);
-              change();
-            }}
-          />
-        </label>
-        <label>
-          API Key
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={key}
-            disabled={noKey}
-            placeholder={initial.has_api_key ? 'Saved key retained when left blank' : 'Optional'}
-            onChange={(e) => {
-              setKey(e.target.value);
-              change();
-            }}
-          />
-        </label>
-        <label>
+        <legend className="ai-legend">OpenAI-compatible model connection</legend>
+        <div className="ai-input-grid">
+          <label className="ai-field">
+            <span>API Base URL</span>
+            <input
+              type="url"
+              required
+              value={baseURL}
+              onChange={(e) => {
+                setBaseURL(e.target.value);
+                change();
+              }}
+            />
+          </label>
+          <label className="ai-field">
+            <span>Model ID</span>
+            <input
+              required
+              value={model}
+              maxLength={200}
+              onChange={(e) => {
+                setModel(e.target.value);
+                change();
+              }}
+            />
+          </label>
+          <label className="ai-field ai-field-full">
+            <span>API Key</span>
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={key}
+              disabled={noKey}
+              placeholder={initial.has_api_key ? 'Saved key retained when left blank' : 'Optional'}
+              onChange={(e) => {
+                setKey(e.target.value);
+                change();
+              }}
+            />
+          </label>
+        </div>
+        <label className="ai-checkbox-row">
           <input
             type="checkbox"
             checked={noKey}
@@ -100,36 +103,51 @@ export function AIForm({ initial, onSaved }: { initial: AIStatus; onSaved: (valu
               setKey('');
               change();
             }}
-          />{' '}
-          Use no API key (clear saved key)
+          />
+          <span>Use no API key (clear saved key)</span>
         </label>
         {endpointChanged && !key && !noKey && (
-          <p>For a changed endpoint, enter its key or select “Use no API key”.</p>
+          <p className="notice">For a changed endpoint, enter its key or select “Use no API key”.</p>
         )}
-        <p className="muted">
-          Docker: use http://host.docker.internal:PORT/v1 for a host model. The host service must accept
-          container connections. Use HTTPS for remote endpoints.
-        </p>
-        <p className="muted">
-          Keys stay on the backend after saving. Saving AI settings does not change synthetic fixture mode or
-          financial providers.
-        </p>
-        <div className="actions">
-          <button type="button" disabled={!valid} onClick={() => void act('test')}>
+        <div className="ai-hints">
+          <small>
+            Docker: use <code>http://host.docker.internal:PORT/v1</code> for a host model. The host service
+            must accept container connections. Use HTTPS for remote endpoints.
+          </small>
+          <small>
+            Keys stay on the backend after saving. Saving AI settings does not change synthetic fixture mode
+            or financial providers.
+          </small>
+        </div>
+        <div className="actions ai-actions">
+          <button
+            type="button"
+            className="button secondary"
+            disabled={!valid}
+            onClick={() => void act('test')}
+          >
             Test Connection
           </button>
-          <button type="submit" disabled={!valid || !tested}>
+          <button type="submit" className="button" disabled={!valid || !tested}>
             Save
           </button>
           {initial.source === 'saved' && (
-            <button type="button" onClick={() => void act('reset')}>
+            <button type="button" className="button secondary" onClick={() => void act('reset')}>
               Use environment configuration
             </button>
           )}
         </div>
       </fieldset>
-      {busy && <p role="status">Contacting backend…</p>}
-      {message && <p role="status">{message}</p>}
+      {busy && (
+        <p role="status" className="notice">
+          Contacting backend…
+        </p>
+      )}
+      {message && (
+        <p role="status" className="notice">
+          {message}
+        </p>
+      )}
     </form>
   );
 }
@@ -165,14 +183,16 @@ export function AISetup() {
       {config && open && (
         <>
           <h2 id="ai-setup-title">Set up AI in Stocker</h2>
-          <p>
+          <p className="muted">
             Connect your model, or continue with synthetic fixtures. You can configure AI later in Settings →
             AI.
           </p>
           <AIForm initial={config} onSaved={setConfig} />
-          <button type="button" onClick={() => setSkipped(true)}>
-            Skip AI setup
-          </button>
+          <div className="ai-setup-footer">
+            <button type="button" className="button secondary" onClick={() => setSkipped(true)}>
+              Skip AI setup
+            </button>
+          </div>
         </>
       )}
     </dialog>

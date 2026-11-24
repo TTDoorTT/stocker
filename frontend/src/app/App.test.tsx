@@ -67,9 +67,17 @@ const run: Run = {
 let watches: { symbol: string }[];
 let positions: unknown[];
 let currentRun: typeof run;
+let existingRuns: (typeof run)[] = [];
 let healthMode = 'fixtures';
 let liveNews = false;
 let summaryUnavailable = false;
+let dailyNews: {
+  headline: string;
+  source_name: string;
+  source_url: string;
+  published_at: string;
+  fetched_at: string;
+}[] = [];
 let currentStock = stock;
 let calls: { path: string; method: string; body: unknown }[];
 function mount(path: string) {
@@ -84,9 +92,11 @@ beforeEach(() => {
   positions = [];
   calls = [];
   currentRun = { ...run };
+  existingRuns = [run];
   healthMode = 'fixtures';
   liveNews = false;
   summaryUnavailable = false;
+  dailyNews = [];
   currentStock = { ...stock };
   vi.stubGlobal(
     'fetch',
@@ -108,8 +118,39 @@ beforeEach(() => {
       else if (path === '/health')
         response = { status: 'ok', mode: healthMode, model_id: 'fixture-stub', model_configured: false };
       else if (path === '/markets/overview') response = [];
-      else if (path.startsWith('/stocks/search')) response = [{ symbol: 'AAPL', name: 'Apple fixture' }];
-      else if (path === '/stocks/AAPL') response = currentStock;
+      else if (path === '/daily-review')
+        response = {
+          mode: healthMode,
+          as_of: timestamp,
+          proxies: [
+            {
+              symbol: 'SPY',
+              name: 'SPDR S&P 500 ETF Trust',
+              quote: stock.quote,
+              daily_return_pct: 1.25,
+              gaps: [],
+            },
+            {
+              symbol: 'QQQ',
+              name: 'Invesco QQQ Trust',
+              quote: stock.quote,
+              daily_return_pct: -0.5,
+              gaps: [],
+            },
+          ],
+          news: dailyNews,
+          coverage: 'SPY and QQQ ETF proxies; no market-wide breadth',
+          session: 'Market session is not inferred; use individual quote timestamps.',
+          gaps: ['ETF prices are not index levels.'],
+        };
+      else if (path.startsWith('/stocks/search')) {
+        const q = new URL(path, 'http://localhost').searchParams.get('q')?.toUpperCase() || '';
+        response = q.includes('MSFT')
+          ? [{ symbol: 'MSFT', name: 'Microsoft fixture' }]
+          : [{ symbol: 'AAPL', name: 'Apple fixture' }];
+      } else if (path === '/stocks/AAPL') response = currentStock;
+      else if (path === '/stocks/MSFT')
+        response = { ...currentStock, symbol: 'MSFT', name: 'Microsoft fixture' };
       else if (path.startsWith('/stocks/AAPL/history'))
         response = [
           { date: '2024-12-01', close: 90 },
@@ -127,7 +168,18 @@ beforeEach(() => {
         response = { saved: true };
       } else if (path === '/positions') response = positions;
       else if (path === '/research-runs' && method === 'POST') response = currentRun;
-      else if (path === '/research-runs') response = [run];
+      else if (path === '/research-runs/test-run' && method === 'DELETE') {
+        existingRuns = existingRuns.filter((item) => item.run_id !== 'test-run');
+        response = { deleted: true, run_id: 'test-run' };
+      } else if (path === '/research-runs/test-run/cancel' && method === 'POST') {
+        currentRun = {
+          ...currentRun,
+          status: 'cancelled',
+          report: null,
+          gaps: ['Research run was stopped by the user.'],
+        };
+        response = currentRun;
+      } else if (path === '/research-runs') response = existingRuns;
       else if (path === '/research-runs/test-run') response = currentRun;
       else if (path === '/research-runs/test-run/events')
         response = [
@@ -197,10 +249,52 @@ beforeEach(() => {
   );
 });
 describe('Stocker flows', () => {
-  it('removes the old homepage hero without hiding market widgets', () => {
+  it('combines market overview and compact headlines on Home without simple positions or topbar search', async () => {
+    positions = [
+      {
+        id: 1,
+        symbol: 'AAPL',
+        shares: 2,
+        average_cost: 90,
+        currency: 'USD',
+        quote_price: 100,
+        unrealized_pnl: 20,
+        mode: 'fixtures',
+        quote: stock.quote,
+      },
+    ];
+    dailyNews = Array.from({ length: 6 }, (_, i) => ({
+      headline: `Daily market headline ${i + 1}`,
+      source_name: 'Test wire',
+      source_url: `https://example.org/headline-${i + 1}`,
+      published_at: timestamp,
+      fetched_at: timestamp,
+    }));
     mount('/');
     expect(screen.getByRole('heading', { name: 'Market overview' })).toBeInTheDocument();
     expect(screen.queryByText('A clearer view.')).not.toBeInTheDocument();
+    expect(await screen.findByText('+1.25% daily return')).toBeInTheDocument();
+    const heatmapHeading = screen.getByRole('heading', { name: 'U.S. stock heatmap' });
+    const topNewsHeading = screen.getByRole('heading', { name: 'Top News' });
+    expect(
+      heatmapHeading.compareDocumentPosition(topNewsHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getByRole('link', { name: /Daily market headline 1/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Daily market headline 5/ })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Daily market headline 6/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show all (6)' }));
+    expect(screen.getByRole('link', { name: /Daily market headline 6/ })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Simple positions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Analyze' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('textbox', { name: 'Search U.S. and Canadian stocks' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Daily Review' })).not.toBeInTheDocument();
+  });
+  it('redirects legacy /daily-review route to Home', async () => {
+    mount('/daily-review');
+    expect(await screen.findByRole('heading', { name: 'Market workspace' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Top News' })).toBeInTheDocument();
   });
   it('toggles light and dark themes and restores the saved choice', () => {
     window.localStorage.removeItem('stocker-theme');
@@ -214,18 +308,42 @@ describe('Stocker flows', () => {
     expect(document.documentElement.dataset.theme).toBe('dark');
     window.localStorage.removeItem('stocker-theme');
   });
-  it('shows explicit fixture mode and navigates from research to a stock', async () => {
+  it('shows simplified stock research search with saved stocks and opens stock via Search button', async () => {
+    watches = [{ symbol: 'AAPL' }];
     mount('/research');
     expect(screen.getByRole('link', { name: /Stocker RESEARCH WORKSPACE/ })).toBeInTheDocument();
     expect(screen.getByText('STOCKER / U.S. MARKETS')).toBeInTheDocument();
     expect(screen.getByText(/Stocker · U.S. \/ Canadian research workspace/)).toBeInTheDocument();
     expect(await screen.findByText('Demo · synthetic fixtures')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('link', { name: 'AAPL ↗' }));
+    expect(screen.queryByText(/From source to/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Analyze' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'My saved stocks' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'AAPL ↗' })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search U.S. and Canadian stocks' }), {
+      target: { value: 'AAPL' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(await screen.findByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
     expect(await screen.findByText('Consensus unavailable')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Run Research/ })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: /Run Research/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Deep Research' })).toHaveAttribute('aria-selected', 'false');
+    // Quarterly financial trends appears directly after Price history; Earnings and Event Study are removed.
+    const priceHeading = screen.getByRole('heading', { name: /Price history/ });
+    const quarterlyHeading = screen.getByRole('heading', { name: 'Quarterly financial trends' });
+    expect(
+      priceHeading.compareDocumentPosition(quarterlyHeading) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /Earnings/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Historical event study' })).not.toBeInTheDocument();
+    // Quick stock switcher jumps directly to another stock from the stock page.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Jump to another stock' }), {
+      target: { value: 'MSFT' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(await screen.findByRole('heading', { name: 'Microsoft fixture' })).toBeInTheDocument();
   });
-  it('searches stocks and opens matching company', async () => {
+  it('searches stocks and opens matching company from suggestions', async () => {
     mount('/research');
     fireEvent.change(screen.getByRole('textbox', { name: 'Search U.S. and Canadian stocks' }), {
       target: { value: 'Apple' },
@@ -234,13 +352,26 @@ describe('Stocker flows', () => {
     fireEvent.click(result);
     expect(await screen.findByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
   });
-  it('launches research and exposes saved report and validation trail', async () => {
+  it('opens Deep Research tab inline without auto-running, supports starting and stopping a run', async () => {
+    existingRuns = [];
+    currentRun = { ...run, status: 'running', report: null };
     mount('/stocks/AAPL');
-    fireEvent.click(await screen.findByRole('button', { name: /Run Research/ }));
-    expect(await screen.findByRole('heading', { name: 'AAPL research' })).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Saved fixture report' })).toBeInTheDocument();
-    expect(screen.getByText('validation failed')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Deep Research' }));
+    // Stays on stock page with name/price visible and does NOT start a run automatically.
+    expect(screen.getByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Run Deep Research' })).toBeEnabled();
+    expect(calls.filter((call) => call.path === '/research-runs' && call.method === 'POST')).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Run Deep Research' }));
+    expect(await screen.findByRole('button', { name: 'Stop Research' })).toBeEnabled();
     expect(calls.some((call) => call.path === '/research-runs' && call.method === 'POST')).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stop Research' }));
+    expect(await screen.findByText(/This research run was stopped before completion/)).toBeInTheDocument();
+    expect(
+      calls.some((call) => call.path === '/research-runs/test-run/cancel' && call.method === 'POST'),
+    ).toBe(true);
   });
   it('keeps chat isolated from full research and shows cited answer', async () => {
     mount('/stocks/AAPL');
@@ -290,26 +421,6 @@ describe('Stocker flows', () => {
         currency: 'CAD',
       }),
     );
-  });
-  it('shows the sourced positions snapshot on Home', async () => {
-    positions = [
-      {
-        id: 1,
-        symbol: 'AAPL',
-        shares: 2,
-        average_cost: 90,
-        currency: 'USD',
-        quote_price: 100,
-        unrealized_pnl: 20,
-        mode: 'fixtures',
-        quote: stock.quote,
-      },
-    ];
-    mount('/');
-    expect(await screen.findByRole('heading', { name: 'Simple positions' })).toBeInTheDocument();
-    expect(await screen.findByText('$20.00')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Manage positions ↗' })).toBeInTheDocument();
-    expect(screen.getByText(/Manual holdings snapshot/)).toBeInTheDocument();
   });
   it('shows real running state then polls the saved terminal report', async () => {
     currentRun = { ...run, status: 'running', report: null };
@@ -397,8 +508,10 @@ describe('Stocker flows', () => {
   it('reopens a saved report and reports RSS provider failures', async () => {
     mount('/records');
 
+    expect(await screen.findByRole('button', { name: 'Delete AAPL research record' })).toBeEnabled();
+
     fireEvent.click(
-      await screen.findByRole('link', {
+      screen.getByRole('link', {
         name: 'Open analysis ↗',
       }),
     );
@@ -418,5 +531,17 @@ describe('Stocker flows', () => {
     expect(await screen.findByText('Test provider unavailable')).toBeInTheDocument();
 
     expect(calls.some((call) => call.path.startsWith('/intelligence/rss?'))).toBe(true);
+  });
+
+  it('deletes a saved research record from Research Records', async () => {
+    mount('/records');
+    const del = await screen.findByRole('button', { name: 'Delete AAPL research record' });
+    fireEvent.click(del);
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Delete AAPL research record' })).not.toBeInTheDocument(),
+    );
+    expect(calls.some((call) => call.path === '/research-runs/test-run' && call.method === 'DELETE')).toBe(
+      true,
+    );
   });
 });

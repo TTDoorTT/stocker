@@ -66,16 +66,21 @@
 :root[data-theme="light"] .button.secondary,
 :root[data-theme="light"] .search-results,
 :root[data-theme="light"] .stage-card,
-:root[data-theme="light"] .signal-grid article {
+:root[data-theme="light"] .signal-grid article,
+:root[data-theme="light"] .settings-stat,
+:root[data-theme="light"] .settings-coverage-card,
+:root[data-theme="light"] .ai-hints {
   background: #f1f5f9;
   color: #203144;
   border-color: var(--border);
 }
-:root[data-theme="light"] .search-results {
+:root[data-theme="light"] .search-results,
+:root[data-theme="light"] .research-search-results {
   background: #fff;
   box-shadow: 0 12px 30px #20314419;
 }
 :root[data-theme="light"] .search-results a span:nth-child(2),
+:root[data-theme="light"] .research-search-results a span:nth-child(2),
 :root[data-theme="light"] .panel > p,
 :root[data-theme="light"] td,
 :root[data-theme="light"] .markdown,
@@ -113,10 +118,16 @@
   color: #246e49;
   border-color: #add7bd;
 }
-:root[data-theme="light"] .badge.status-failed {
+:root[data-theme="light"] .badge.status-failed,
+:root[data-theme="light"] .badge.status-cancelled {
   background: #ffedf0;
   color: #a52e42;
   border-color: #e9b3bd;
+}
+:root[data-theme="light"] .button.danger {
+  background: #c9374c;
+  border-color: #a52e42;
+  color: #fff;
 }
 :root[data-theme="light"] .badge.status-running,
 :root[data-theme="light"] .badge.status-queued {

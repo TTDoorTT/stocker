@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query
 
 from app.contracts.api import ChatRequest, ChatResponse, ResearchRequest, ResearchRun
-from app.modules.research.errors import IndustryNotFound, ResearchQueueFull, RunNotFound
+from app.modules.research.errors import IndustryNotFound, ResearchQueueFull, RunActiveError, RunNotFound
 from app.modules.research.service import ResearchService
 
 
@@ -36,6 +36,19 @@ def create_router(service: ResearchService) -> APIRouter:
     @router.get("/api/research-runs/{run_id}", response_model=ResearchRun)
     def run_detail(run_id: str) -> dict:
         return get_run(run_id)
+
+    @router.post("/api/research-runs/{run_id}/cancel", response_model=ResearchRun)
+    def cancel_research(run_id: str) -> dict:
+        get_run(run_id)
+        return service.cancel(run_id)
+
+    @router.delete("/api/research-runs/{run_id}")
+    def delete_research(run_id: str) -> dict:
+        get_run(run_id)
+        try:
+            return service.delete_run(run_id)
+        except RunActiveError as exc:
+            raise HTTPException(409, str(exc)) from None
 
     @router.get("/api/research-runs/{run_id}/report")
     def report(run_id: str) -> dict:

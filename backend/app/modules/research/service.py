@@ -2,16 +2,16 @@
 
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from threading import BoundedSemaphore
+from threading import BoundedSemaphore, Lock
 
 from app.contracts.api import ChatRequest, ResearchRequest
 from app.core.config import Settings
 from app.modules.market_data.service import DataService
-from app.modules.research.agents.client import ModelClient
+from app.modules.research.agents.client import CancellationToken, ModelClient
 from app.modules.research.agents.tools import ResearchTools
 from app.modules.research.chat import answer_chat
 from app.modules.research.claim_review import screen_filing_claims
-from app.modules.research.errors import IndustryNotFound, ResearchQueueFull, RunNotFound
+from app.modules.research.errors import IndustryNotFound, ResearchQueueFull, RunActiveError, RunNotFound
 from app.modules.research.orchestrator import ResearchOrchestrator, new_run, now
 from app.modules.research.repository import ResearchRepository
 from app.modules.research.schemas import SCHEMAS
@@ -34,6 +34,8 @@ class ResearchService:
         self.industry = industry
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="research")
         self.capacity = BoundedSemaphore(4)
+        self._tokens_lock = Lock()
+        self._tokens: dict[str, CancellationToken] = {}
 
     def recover_interrupted(self) -> None:
         for run in self.repository.runs(limit=10000):
@@ -66,15 +68,52 @@ class ResearchService:
         if industry:
             run["industry"] = industry
         self.repository.save_run(run)
+        token = CancellationToken()
+        with self._tokens_lock:
+            self._tokens[run["run_id"]] = token
 
         def execute():
             try:
-                ResearchOrchestrator(self.repository, self.data, settings).execute(run["run_id"])
+                ResearchOrchestrator(self.repository, self.data, settings, cancel_token=token).execute(
+                    run["run_id"]
+                )
             finally:
+                token.mark_done()
+                with self._tokens_lock:
+                    self._tokens.pop(run["run_id"], None)
                 self.capacity.release()
 
         self.executor.submit(execute)
         return run
+
+    def cancel(self, run_id: str) -> dict:
+        run = self.run(run_id)
+        if run["status"] not in ("queued", "running"):
+            return run
+        with self._tokens_lock:
+            token = self._tokens.get(run_id)
+        if token is not None:
+            token.cancel()
+            if run["status"] == "running":
+                # Give the worker a moment to finish aborting the socket and record cancelled state.
+                token.wait_done(timeout=2.0)
+        latest = self.run(run_id)
+        if latest["status"] in ("queued", "running"):
+            latest.update(status="cancelled", finished_at=now())
+            msg = "Research run was stopped by the user."
+            if msg not in latest["gaps"]:
+                latest["gaps"].append(msg)
+            self.repository.save_run(latest)
+            self.repository.event(run_id, {"event": "run_cancelled", "at": now(), "reason": "user_requested"})
+            return latest
+        return latest
+
+    def delete_run(self, run_id: str) -> dict:
+        run = self.run(run_id)
+        if run["status"] in ("queued", "running"):
+            raise RunActiveError("Stop the active research run before deleting it")
+        self.repository.delete_run(run_id)
+        return {"deleted": True, "run_id": run_id}
 
     def runs(self, limit: int = 50, offset: int = 0) -> list[dict]:
         return self.repository.runs(limit, offset)

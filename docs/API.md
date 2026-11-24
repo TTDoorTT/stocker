@@ -10,6 +10,8 @@ Base URL `http://127.0.0.1:8000/api`; OpenAPI interactive contracts at `/docs`. 
 - `GET/POST /watchlist`, `DELETE /watchlist/{symbol}`; POST `{symbol}`.
 - `GET/POST /positions`, `DELETE /positions/{id}`; POST `{symbol,shares,average_cost,currency:"USD"|"CAD"}`. Simple position snapshots, no realized P&L or transaction ledger. Currency must match listing; missing/mismatched quotes produce null unrealized P&L. No automatic FX conversion.
 - `POST /research-runs`: `{symbol,strategy:"multi"|"single",industry_slug?:string}`, 202 with saved run ID. Multi is the six-stage workflow; single is an evaluation baseline.
+- `POST /research-runs/{id}/cancel`: interrupt a queued or running research run cleanly, marking it `cancelled` with an explicit user-stop gap (idempotent on terminal runs).
+- `DELETE /research-runs/{id}`: remove a saved terminal research run and its events from SQLite (returns 409 if the run is still `queued` or `running`).
 - `GET /research-runs?limit=50&offset=0`, `GET /research-runs/{id}`, `GET /research-runs/{id}/events`, `GET /research-runs/{id}/report`: saved artifacts and timestamped real execution trace. Poll detail/events every 1.5 seconds while queued/running. Stages can pass while overall analysis is incomplete due to missing data.
 - `POST /chat`: `{symbol,message}`; stock-context answer with validated evidence/numbers. Does not launch research. Fixture mode returns a visibly labeled deterministic stub.
 
