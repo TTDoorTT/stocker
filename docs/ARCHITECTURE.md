@@ -49,10 +49,10 @@ Providers preserve currency, units, fiscal periods, original retrieval/publicati
 frontend/src/
   app/                       root, router, health API, layout and Settings
   features/
-    market/                  Home/Stock pages, search/chart/heatmap, market API/types
-    research/                landing/run/records, chat/progress, research API/types
-    portfolio/               My Stocks/positions preview, portfolio API/types
-    intelligence/            RSS category feed/highlights, daily review, guided topics and signals
+    market/                  Home (combined market overview + compact headlines + heatmap + watchlist) and Stock pages, charts/heatmap, market API/types
+    research/                Stock Research search landing, run detail/records, chat/progress, research API/types
+    portfolio/               My Stocks (watchlist & simple positions), portfolio API/types
+    intelligence/            RSS category feed/highlights, guided topics and SEC-backed industry workspaces
   shared/                    generic HTTP/errors, resource hook, UI/evidence, formatting, stable DTOs
   styles/global.css          base layout and shared styling
   styles/themes.css          dark/light color overrides and header toggle styling

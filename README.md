@@ -16,7 +16,7 @@ Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/do
 
 ## What works
 
-- Stock search, company views, interactive OHLCV candlestick charts (volume, MA5/10/20/60, selectable ranges/intervals, earnings markers), SPY/QQQ ETF proxies and an isolated official TradingView heatmap.
+- Combined Home workspace with SPY/QQQ ETF proxy daily returns, an isolated official TradingView heatmap, a compact scrollable Top News window, and your watchlist; Stock Research provides a focused ticker/company search plus quick access to your saved stocks into company views with Overview and inline Deep Research (Run/Stop) tabs, interactive OHLCV candlestick charts (volume, MA5/10/20/60, selectable ranges/intervals, earnings markers), and bounded financial-facts/news panels.
 - Sourced U.S. quarterly financial trends with deterministic TTM calculations, Finnhub earnings previews/historical surprises, and historical earnings event studies (−5 to +20 trading days vs. SPY, gated at ≥8 eligible events).
 - Watchlists and simple USD/CAD position snapshots with unrealized P&L when a matching quote exists.
 - Profile → financials → expectations → valuation → risk → report, with additive quarterly/TTM and vendor earnings evidence capture, independent validation, bounded retries and a persisted execution trace.
