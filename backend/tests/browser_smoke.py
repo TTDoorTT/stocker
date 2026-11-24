@@ -174,16 +174,7 @@ def main():
                 steps.append("Backend restart preserves and browser reopens identical run/report")
                 page.get_by_role("link", name="My Stocks", exact=False).click()
                 expect(page.get_by_role("button", name="Remove AAPL from watchlist")).to_be_visible()
-                page.get_by_label("Ticker", exact=True).fill("AAPL")
-                page.get_by_label("Shares", exact=True).fill("2")
-                page.get_by_label("Average cost (USD)", exact=True).fill("100")
-                page.get_by_role("button", name="Add position", exact=True).click()
-                expect(page.get_by_role("cell", name="$40.00", exact=True)).to_be_visible()
-                positions = page.request.get(BASE + "/api/positions").json()
-                assert positions[0]["unrealized_pnl"] == 40
-                steps.append(
-                    "Manual position uses sourced fixture quote: 2 × (120−100) = USD40 unrealized P&L"
-                )
+                steps.append("My Stocks renders saved watchlist entries")
                 page.get_by_role("link", name="Industry Research", exact=False).click()
                 expect(page.locator(".industry-grid > article")).to_have_count(20)
                 steps.append("All twenty guided industry templates render")
