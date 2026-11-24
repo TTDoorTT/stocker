@@ -5,6 +5,7 @@ from uuid import uuid4
 from app.modules.market_data.symbols import symbol_market
 from app.modules.research.agents.client import FixtureModel, ModelClient
 from app.modules.research.agents.tools import ResearchTools
+from app.modules.research.enrichment import capture_supplementary_research_inputs
 from app.modules.research.errors import ModelBudgetError, ModelError
 from app.modules.research.reports import render_report
 from app.modules.research.schemas import SCHEMAS, STAGES
@@ -93,8 +94,24 @@ class ResearchOrchestrator:
                             if e["field"] in {"company_name", "industry_classification"}
                         ],
                     },
-                    "financials": {"facts": stock["facts"], "calculations": run["calculations"]},
-                    "estimates": {"news": stock["news"], "consensus": None},
+                    "financials": {
+                        "facts": stock["facts"],
+                        "calculations": run["calculations"],
+                        **(
+                            {"quarterly_trends": enrichment.quarterly_summary}
+                            if enrichment.quarterly_summary
+                            else {}
+                        ),
+                    },
+                    "estimates": {
+                        "news": stock["news"],
+                        "consensus": None,
+                        **(
+                            {"vendor_earnings": enrichment.earnings_summary}
+                            if enrichment.earnings_summary
+                            else {}
+                        ),
+                    },
                     "valuation": {"quote": stock["quote"], "calculations": run["calculations"]},
                     "risk": {"source_gaps": stock["gaps"]},
                     "report": {"gaps": list(dict.fromkeys(run["gaps"]))},
@@ -151,9 +168,24 @@ class ResearchOrchestrator:
             save()
             stock_model = self.data.stock(run["symbol"])
             stock = stock_model.model_dump(mode="json")
-            run["evidence"] = stock["evidence"]
+            run["evidence"] = list(stock["evidence"])
             run["gaps"] = list(stock["gaps"])
             run["calculations"] = [calc.model_dump(mode="json") for calc in build_calculations(stock_model)]
+            enrichment = capture_supplementary_research_inputs(self.data, run["symbol"], run["mode"])
+            seen_ev = {item["evidence_id"] for item in run["evidence"]}
+            for item in enrichment.evidence:
+                if item["evidence_id"] not in seen_ev:
+                    run["evidence"].append(item)
+                    seen_ev.add(item["evidence_id"])
+            seen_calc = {item["calculation_id"] for item in run["calculations"]}
+            for item in enrichment.calculations:
+                if item["calculation_id"] not in seen_calc:
+                    run["calculations"].append(item)
+                    seen_calc.add(item["calculation_id"])
+            for gap in enrichment.gaps:
+                if gap not in run["gaps"]:
+                    run["gaps"].append(gap)
+            stock["evidence"] = run["evidence"]
             try:
                 history = [bar.model_dump(mode="json") for bar in self.data.history(run["symbol"])]
             except Exception:
@@ -165,7 +197,7 @@ class ResearchOrchestrator:
                 if run["strategy"] == "single":
                     # Same full captured evidence, one model session instead of specialist handoffs.
                     outputs["baseline_inputs"] = {
-                        "evidence": stock["evidence"],
+                        "evidence": run["evidence"],
                         "calculations": run["calculations"],
                     }
                 if not execute_stage(stage):

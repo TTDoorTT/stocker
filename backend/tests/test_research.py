@@ -269,3 +269,47 @@ def test_run_timeout_accepts_long_local_execution_and_rejects_late_output(setup,
     assert run["stages"][-1]["status"] == "failed"  # No late output accepted at deadline.
     assert run["report"] is None
     assert not any(event["event"] == "stage_retry" for event in events)
+
+
+def test_research_enriches_financials_and_estimates_with_quarterly_ttm_and_earnings(setup):
+    run, _ = execute(setup, symbol="AAPL")
+    inputs = {entry["stage"]: entry["input"] for entry in run["stages"]}
+    ev_fields = {item["field"] for item in run["evidence"]}
+    calc_metrics = {item["metric"] for item in run["calculations"]}
+
+    assert "quarterly_revenue" in ev_fields
+    assert "ttm_revenue" in calc_metrics
+    assert "quarterly_trends" in inputs["financials"]["scope"]
+    assert inputs["financials"]["scope"]["quarterly_trends"]["ttm_calculation_ids"]
+
+    assert "vendor_earnings_actual_eps" in ev_fields
+    assert "vendor_earnings" in inputs["estimates"]["scope"]
+    assert inputs["estimates"]["scope"]["consensus"] is None
+    assert run["stages"][2]["output"]["consensus_available"] is False
+
+
+def test_research_enrichment_degrades_gracefully_on_provider_errors_or_mode_mismatch(setup):
+    from app.modules.market_data.errors import DataUnavailable
+
+    settings, repository, data = setup
+
+    class DegradedData:
+        def stock(self, symbol):
+            return data.stock(symbol)
+
+        def history(self, symbol):
+            return data.history(symbol)
+
+        def financial_trends(self, symbol):
+            raise DataUnavailable("SEC quarterly endpoint unavailable")
+
+        def earnings(self, symbol):
+            report = data.earnings(symbol)
+            return report.model_copy(update={"mode": "live"})
+
+    run, _ = execute((settings, repository, DegradedData()), symbol="AAPL")
+    assert len(run["stages"]) == 6
+    assert all(stage["status"] == "complete" for stage in run["stages"])
+    assert any("Quarterly financial trends unavailable" in gap for gap in run["gaps"])
+    assert any("Earnings calendar mode mismatch" in gap for gap in run["gaps"])
+    assert not any(item["field"].startswith("vendor_earnings") for item in run["evidence"])
