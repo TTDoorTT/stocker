@@ -12,18 +12,23 @@ The modular application, fixture checks, Docker persistence, CI, RSS category ne
 
 Chinese A-share-specific trading sentiment remains outside the product scope.
 
-## Stock research expansion (planned)
+## Stock research expansion (completed)
 
-The following five features are approved for incremental implementation:
+All five scoped stock research phases have been implemented behind strict contracts, deterministic finance modules, and offline fixture tests:
 
-1. Interactive OHLCV price charts.
-2. Quarterly financial trends.
-3. Earnings preview and historical review.
-4. Historical earnings event studies.
+1. Interactive OHLCV price charts (`/api/stocks/{ticker}/candles`).
+2. Quarterly financial trends and deterministic TTM (`/api/stocks/{ticker}/financial-trends`).
+3. Earnings preview and historical review (`/api/stocks/{ticker}/earnings`).
+4. Historical earnings event studies (`/api/stocks/{ticker}/events`, `/api/stocks/{ticker}/event-study`).
 5. Earnings markers on price charts.
 
-Phase 0 establishes contracts, synthetic test fixtures, and provider feasibility documentation.
-
-Subsequent phases will implement each feature independently while preserving the existing six-stage AI research engine and public APIs.
+Quarterly/TTM observations and dated vendor earnings records are also captured as additive, provenance-labeled evidence during six-stage company research runs while preserving GAAP vs. non-GAAP separation and explicit consensus gaps.
 
 See [Stock Research Providers](STOCK_RESEARCH_PROVIDERS.md).
+
+## Next priorities
+
+- Run live-provider and live-model end-to-end verification across SEC, Finnhub, Yahoo, and configured LLM endpoints; calibrate SEC excerpt quality gates and claim entailment with human-reviewed samples ([SEC evidence audit](SEC_EVIDENCE_QUALITY_AUDIT.md)).
+- Expand SEC-backed industry pilots beyond `ai-computing`, `semiconductor`, and `power-grid` where verified issuer universes and regression tests exist, and evaluate `overview`/`outlook` evidence sources.
+- Improve RSS source-health observability across the 88 configured feeds.
+- Add permitted Canadian quotes/fundamentals and evolve simple positions into transaction accounting.

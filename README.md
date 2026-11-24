@@ -16,11 +16,12 @@ Open **http://localhost:5173**. Interactive API docs: **http://localhost:8000/do
 
 ## What works
 
-- Stock search, company views, daily history, SPY/QQQ ETF proxies and an isolated official TradingView heatmap.
+- Stock search, company views, interactive OHLCV candlestick charts (volume, MA5/10/20/60, selectable ranges/intervals, earnings markers), SPY/QQQ ETF proxies and an isolated official TradingView heatmap.
+- Sourced U.S. quarterly financial trends with deterministic TTM calculations, Finnhub earnings previews/historical surprises, and historical earnings event studies (−5 to +20 trading days vs. SPY, gated at ≥8 eligible events).
 - Watchlists and simple USD/CAD position snapshots with unrealized P&L when a matching quote exists.
-- Profile → financials → expectations → valuation → risk → report, with independent validation, bounded retries and a persisted execution trace.
+- Profile → financials → expectations → valuation → risk → report, with additive quarterly/TTM and vendor earnings evidence capture, independent validation, bounded retries and a persisted execution trace.
 - Stock-context chat, research history and Markdown report downloads.
-- Daily review, optional macro indicators and 20 guided industry research topics.
+- Daily review, optional macro indicators and 20 guided industry research workspaces, including 3 SEC 10-K-backed research pilots (`ai-computing`, `semiconductor`, `power-grid`) with automated evidence quality screening, second-pass claim review, issuer-attributed findings and raw 10-K excerpt inspection.
 - Industry Intelligence: curated English-first RSS news across 12 categories (88 configured sources), with explicit AI highlights saved by category.
 - Persistent dark/light theme switch in the top-right header; the browser remembers the choice.
 

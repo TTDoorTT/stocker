@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useResource } from '../../../shared/hooks/useResource';
 import { ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
@@ -25,6 +25,11 @@ export function IndustryWorkspace() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!industry.data) return;
+    setSection(industry.data.ai_sections[0] ?? 'overview');
+  }, [industry.data]);
 
   async function researchCompany(symbol: string) {
     setBusy(symbol);
@@ -66,6 +71,7 @@ export function IndustryWorkspace() {
                 onClick={() => setSection(item.id)}
               >
                 {item.label}
+                {industry.data?.ai_sections.includes(item.id) ? ' · AI' : ''}
               </button>
             ))}
           </div>
@@ -75,13 +81,18 @@ export function IndustryWorkspace() {
             section={section}
             enabledSections={industry.data.ai_sections}
           />
-          {slug === 'ai-computing' && section === 'overview' && (
+          {slug === 'ai-computing' && section === 'overview' ? (
             <section className="panel">
               <h2>Original SEC evidence and cached news</h2>
               <IndustryEvidence />
-              <FilingExcerpts />
+              <FilingExcerpts key={slug} slug={slug} />
             </section>
-          )}
+          ) : industry.data.research_status === 'limited_pilot' ? (
+            <section className="panel">
+              <h2>Original SEC 10-K filing excerpts</h2>
+              <FilingExcerpts key={slug} slug={slug} />
+            </section>
+          ) : null}
           <section className="panel">
             <h2>Guided research questions</h2>
             <p>{industry.data.prompt}</p>

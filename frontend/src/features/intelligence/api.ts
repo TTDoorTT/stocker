@@ -26,8 +26,12 @@ export const intelligenceApi = {
   signals: () => request<{ mode: Mode; items: Signal[]; gaps: string[] }>('/intelligence/signals'),
   dailyReview: () => request<Review>('/daily-review'),
   industries: () => request<Industry[]>('/industries'),
-  filingExcerpts: (year: number) =>
-    request<FilingExcerptsResponse>(`/industries/ai-computing/filing-excerpts?year=${year}`),
+  filingExcerpts: (year: number, slug = 'ai-computing') =>
+    request<FilingExcerptsResponse>(
+      slug === 'ai-computing'
+        ? `/industries/ai-computing/filing-excerpts?year=${year}`
+        : `/industries/${encodeURIComponent(slug)}/filing-excerpts?year=${year}`,
+    ),
   industry: (slug: string) => request<Industry>(`/industries/${encodeURIComponent(slug)}`),
   savedIndustrySection: (slug: string, section: IndustrySectionKey) =>
     request<SavedIndustrySection>(`/industries/${encodeURIComponent(slug)}/sections/${section}`),

@@ -3,7 +3,7 @@ import { ErrorBox, Gaps } from '../../../shared/ui/Feedback';
 import { intelligenceApi } from '../api';
 import type { FilingExcerptsResponse } from '../types';
 
-export function FilingExcerpts() {
+export function FilingExcerpts({ slug = 'ai-computing' }: { slug?: string }) {
   const [year, setYear] = useState(new Date().getUTCFullYear() - 1);
   const [data, setData] = useState<FilingExcerptsResponse | null>(null);
   const [busy, setBusy] = useState(false);
@@ -13,7 +13,7 @@ export function FilingExcerpts() {
     setBusy(true);
     setError('');
     try {
-      setData(await intelligenceApi.filingExcerpts(year));
+      setData(await intelligenceApi.filingExcerpts(year, slug));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Filing excerpts unavailable');
     } finally {

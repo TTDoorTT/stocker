@@ -100,10 +100,10 @@ export function StockPage() {
             </small>
           ))}
       </section>
-      <PriceHistoryPanel key={symbol} symbol={symbol} mode={data.mode} />
-      <EarningsPanel key={symbol} symbol={symbol} />
-      <EventStudyPanel key={symbol} symbol={symbol} />
-      <QuarterlyTrendsPanel key={symbol} symbol={symbol} />
+      <PriceHistoryPanel key={`price-${symbol}`} symbol={symbol} mode={data.mode} />
+      <EarningsPanel key={`earnings-${symbol}`} symbol={symbol} />
+      <EventStudyPanel key={`event-study-${symbol}`} symbol={symbol} />
+      <QuarterlyTrendsPanel key={`quarterly-${symbol}`} symbol={symbol} />
       <section className="panel">
         <div className="panel-heading">
           <h2>Financial facts</h2>
@@ -111,7 +111,7 @@ export function StockPage() {
         </div>
         <EvidenceTable evidence={data.facts} />
       </section>
-      <Chat key={symbol} symbol={symbol} />
+      <Chat key={`chat-${symbol}`} symbol={symbol} />
       <section className="panel">
         <h2>Recent filings & news</h2>
         {data.news?.length ? (

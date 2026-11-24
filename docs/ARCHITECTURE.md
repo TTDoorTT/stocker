@@ -21,15 +21,15 @@ backend/app/
   main.py                    composition, lifespan, security, health
   core/config.py             settings and stable project root
   core/database.py           SQLite lifecycle/schema/transaction lock
-  contracts/{api,market}.py   stable public DTOs
-  finance/metrics.py         pure deterministic calculations
+  contracts/                 stable public DTOs (api, market, stock_research, industry_sources)
+  finance/                   pure deterministic calculations (metrics, quarterly, event_study)
   modules/
-    market_data/             normalized DataService, symbols/evidence/errors, synthetic fixtures
-      providers/             SEC, Finnhub, Yahoo, Alpha Vantage, FRED, Bank of Canada, shared HTTP
-    research/                scheduler/service, repository, orchestrator, schemas, validation, reports, chat
+    market_data/             normalized DataService, candles/quarterly/earnings/event_sources/filing_excerpt/industry_sec, synthetic fixtures
+      providers/             SEC, Finnhub, Yahoo/candles, Alpha Vantage/candles, FRED, Bank of Canada, shared HTTP
+    research/                scheduler/service, repository, orchestrator, enrichment, claim_review, schemas, validation, reports, chat
       agents/                bounded model client/tools and unchanged specialist prompts
     portfolio/               watchlist/positions router, service and repository
-    intelligence/            router/service, company news, industry catalog
+    intelligence/            router/service, company news, industry catalog, capability profiles, SEC filing research/quality/coverage/citations/findings, offline audit
       rss.py                separate curated RSS fetch/parse/refresh and headline evidence
       rss_sources.json     source/category inventory (third-party attribution required)
       highlight_cache.py   saved per-category validated AI-highlight results
@@ -39,7 +39,7 @@ Routers handle transport validation/error mapping and call owned services. Featu
 
 Research follows profile → financials → estimates → valuation → risk → report. Each role gets distinct instructions, scoped context and validated prior output. Schema/evidence/numeric validation runs outside the model. Existing bounded retries, single risk revisit, tool/token/context/wall-time budgets, one worker/four-slot scheduling, event ordering and restart recovery remain unchanged. A deterministic model is used only in visibly synthetic fixture mode; live failures never trigger fixture fallback.
 
-SQLite retains the versioned research/portfolio schema v1 and existing runs/events/watchlist/positions tables. The RSS feature lazily creates separate `rss_articles`, `rss_refresh` and `rss_highlights_cache` tables in that same database; the news cache is not part of the versioned research schema and must still be included in backups. Research snapshots preserve immutable evidence/calculations; research repositories share one connection/transaction lock. Unknown future schema versions require explicit migration. Interrupted runs become incomplete at startup.
+SQLite retains the versioned research/portfolio schema v1 and existing runs/events/watchlist/positions tables. The RSS and industry-research features lazily create separate `rss_articles`, `rss_refresh`, `rss_highlights_cache` and `industry_research_sections` tables in that same database; these tables are not part of the versioned research schema and must still be included in backups. Research snapshots preserve immutable evidence/calculations; research repositories share one connection/transaction lock. Unknown future schema versions require explicit migration. Interrupted runs become incomplete at startup.
 
 Providers preserve currency, units, fiscal periods, original retrieval/publication timestamps, source URLs/evidence IDs and explicit unavailable states. Cache hits retain network capture times; failures never silently use stale/fictional facts. U.S. SEC/Finnhub coverage, optional Yahoo/Alpha Vantage history and FRED/Valet semantics are unchanged. Canadian .TO/.V history, CAD positions and no-key macro are partial coverage; Canadian statements/current quotes remain unavailable without permitted verified sources. There is no SEDAR+ scraper or automatic FX conversion. Annual EPS ratios are not TTM.
 

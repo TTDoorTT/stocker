@@ -119,3 +119,16 @@ def test_fixture_endpoint_does_not_invoke_model(tmp_path, monkeypatch):
         assert response.status_code == 200
         assert response.json()["excerpts"] == []
         assert client.get("/api/industries/ai-computing/filing-excerpts?year=1999").status_code == 422
+
+
+def test_profile_driven_filing_excerpts_endpoint_supports_configured_pilots_only(tmp_path):
+    settings = Settings(_env_file=None, data_mode="fixtures", database_url=f"sqlite:///{tmp_path}/pilots.db")
+    with TestClient(create_app(settings)) as client:
+        for slug in ("semiconductor", "power-grid"):
+            response = client.get(f"/api/industries/{slug}/filing-excerpts?year=2025")
+            assert response.status_code == 200
+            body = response.json()
+            assert body["industry"] == slug
+            assert body["excerpts"] == []
+        assert client.get("/api/industries/humanoid/filing-excerpts?year=2025").status_code == 422
+        assert client.get("/api/industries/nonexistent-sector/filing-excerpts?year=2025").status_code == 404

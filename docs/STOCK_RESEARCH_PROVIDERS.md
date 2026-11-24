@@ -1,6 +1,6 @@
 # Stock research expansion — provider capability matrix (Phase 0)
 
-**Status:** contract/planning baseline only; **new API endpoints, charts, earnings and studies are not yet implemented**. No live provider access was verified as part of this Phase 0 contract package. This document does not confer rights to store, redistribute, or commercialize external data.
+**Status:** Phase 0 contract/provider reference baseline. The five scoped endpoints (`/candles`, `/financial-trends`, `/earnings`, `/events`, `/event-study`) and their frontend panels are now implemented in fixture and live-provider modes while preserving every provenance and unavailability constraint below. Live provider entitlements still depend on configured user credentials and provider terms. This document does not confer rights to store, redistribute, or commercialize external data.
 
 Only the five selected capabilities are in scope: (1) OHLCV charts, (2) earnings preview/review, (3) historical earnings event studies, (4) earnings markers, (5) quarterly financial trends. US/Canada only.
 
