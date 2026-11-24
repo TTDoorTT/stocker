@@ -44,5 +44,11 @@ class ResearchRepository:
                 )
             ]
 
+    def delete_run(self, run_id: str) -> bool:
+        with self.database.lock, self.database.conn:
+            self.database.conn.execute("DELETE FROM events WHERE run_id=?", (run_id,))
+            cursor = self.database.conn.execute("DELETE FROM runs WHERE id=?", (run_id,))
+            return cursor.rowcount > 0
+
     def close(self) -> None:
         self.database.close()

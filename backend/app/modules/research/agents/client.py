@@ -1,18 +1,107 @@
+import asyncio
 import json
 from pathlib import Path
+from threading import Event, Lock
 from time import monotonic
 
 import httpx
 
 from app.modules.research.agents.tools import ToolArgumentsError
-from app.modules.research.errors import ModelBudgetError, ModelError
+from app.modules.research.errors import ModelBudgetError, ModelError, RunCancelledError
 
 PROMPTS = Path(__file__).parent / "prompts"
+_REAL_HTTPX_CLIENT = httpx.Client
+
+
+class CancellationToken:
+    """Thread-safe cancellation signal that can also abort an active HTTP call."""
+
+    def __init__(self) -> None:
+        self._event = Event()
+        self._done = Event()
+        self._lock = Lock()
+        self._aborts: list = []
+
+    def is_cancelled(self) -> bool:
+        return self._event.is_set()
+
+    def mark_done(self) -> None:
+        self._done.set()
+
+    def wait_done(self, timeout: float = 2.0) -> bool:
+        return self._done.wait(timeout)
+
+    def register_abort(self, callback) -> None:
+        call_now = False
+        with self._lock:
+            if self._event.is_set():
+                call_now = True
+            else:
+                self._aborts.append(callback)
+        if call_now:
+            try:
+                callback()
+            except Exception:
+                pass
+
+    def clear_abort(self, callback) -> None:
+        with self._lock:
+            self._aborts = [cb for cb in self._aborts if cb is not callback]
+
+    def cancel(self) -> None:
+        with self._lock:
+            self._event.set()
+            callbacks = list(self._aborts)
+            self._aborts.clear()
+        for callback in callbacks:
+            try:
+                callback()
+            except Exception:
+                pass
+
+
+async def _post_cancellable(
+    url: str,
+    headers: dict[str, str],
+    payload: dict,
+    timeout: float,
+    cancel_token: CancellationToken,
+) -> httpx.Response:
+    """Execute an HTTP POST with an async event loop so cancel_token aborts blocked sockets immediately."""
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
+        req_task = asyncio.create_task(client.post(url, headers=headers, json=payload))
+        loop = asyncio.get_running_loop()
+        cancel_future = loop.create_future()
+
+        def trigger() -> None:
+            if not cancel_future.done():
+                try:
+                    loop.call_soon_threadsafe(cancel_future.set_result, True)
+                except RuntimeError:
+                    pass
+
+        cancel_token.register_abort(trigger)
+        try:
+            done, _ = await asyncio.wait(
+                {req_task, cancel_future},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if cancel_future in done:
+                req_task.cancel()
+                try:
+                    await req_task
+                except BaseException:
+                    pass
+                raise RunCancelledError("Research run stopped by user")
+            return req_task.result()
+        finally:
+            cancel_token.clear_abort(trigger)
 
 
 class ModelClient:
-    def __init__(self, settings):
+    def __init__(self, settings, cancel_token: CancellationToken | None = None):
         self.settings = settings
+        self.cancel_token = cancel_token
         self.deadline = monotonic() + settings.research_run_timeout
         self.calls = 0
         self.tokens = 0
@@ -22,6 +111,8 @@ class ModelClient:
         self.response_format_with_tools = True
 
     def check_deadline(self):
+        if self.cancel_token and self.cancel_token.is_cancelled():
+            raise RunCancelledError("Research run stopped by user")
         if monotonic() >= self.deadline:
             raise ModelBudgetError("Run wall-clock budget exhausted")
 
@@ -72,29 +163,32 @@ class ModelClient:
                 }
                 if self.response_format_with_tools:
                     payload["response_format"] = {"type": "json_object"}
-                with httpx.Client(
-                    timeout=min(self.settings.llm_timeout, self.deadline - monotonic()),
-                    follow_redirects=False,
-                ) as client:
-                    response = client.post(
-                        self.settings.llm_base_url.rstrip("/") + "/chat/completions",
-                        headers={"Authorization": f"Bearer {self.settings.llm_api_key}"}
-                        if self.settings.llm_api_key
-                        else {},
-                        json=payload,
+                timeout = min(self.settings.llm_timeout, self.deadline - monotonic())
+                url = self.settings.llm_base_url.rstrip("/") + "/chat/completions"
+                headers = (
+                    {"Authorization": f"Bearer {self.settings.llm_api_key}"}
+                    if self.settings.llm_api_key
+                    else {}
+                )
+                if self.cancel_token is not None and httpx.Client is _REAL_HTTPX_CLIENT:
+                    response = asyncio.run(
+                        _post_cancellable(url, headers, payload, timeout, self.cancel_token)
                     )
-                    if response.status_code == 400 and self.response_format_with_tools:
-                        error = response.json().get("error", {})
-                        if (
-                            isinstance(error, dict)
-                            and error.get("message")
-                            == "structured response_format with tools/MCP is not supported"
-                        ):
-                            self.response_format_with_tools = False
-                            self.reserved_output_tokens -= output_limit
-                            continue
-                    response.raise_for_status()
-                    result = response.json()
+                else:
+                    with httpx.Client(timeout=timeout, follow_redirects=False) as client:
+                        response = client.post(url, headers=headers, json=payload)
+                if response.status_code == 400 and self.response_format_with_tools:
+                    error = response.json().get("error", {})
+                    if (
+                        isinstance(error, dict)
+                        and error.get("message")
+                        == "structured response_format with tools/MCP is not supported"
+                    ):
+                        self.response_format_with_tools = False
+                        self.reserved_output_tokens -= output_limit
+                        continue
+                response.raise_for_status()
+                result = response.json()
                 self.check_deadline()
                 usage = result.get("usage")
                 if usage:
@@ -140,6 +234,8 @@ class ModelClient:
                         {"role": "tool", "tool_call_id": call["id"], "content": json.dumps(value)}
                     )
             except (httpx.HTTPError, KeyError, IndexError, AttributeError, TypeError, ValueError) as exc:
+                if self.cancel_token and self.cancel_token.is_cancelled():
+                    raise RunCancelledError("Research run stopped by user") from None
                 raise ModelError(f"Model response unavailable or invalid ({type(exc).__name__})") from None
         raise ModelError("Tool iteration budget exhausted")
 

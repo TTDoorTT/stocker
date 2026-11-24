@@ -19,3 +19,15 @@ class IndustryNotFound(KeyError):
 
 class RunNotFound(KeyError):
     pass
+
+
+class RunCancelledError(Exception):
+    """Raised when a user explicitly stops a queued or running research run."""
+
+    pass
+
+
+class RunActiveError(RuntimeError):
+    """Raised when attempting to delete a run that is still queued or running."""
+
+    pass

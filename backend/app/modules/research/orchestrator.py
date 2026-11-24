@@ -3,10 +3,10 @@ from time import monotonic
 from uuid import uuid4
 
 from app.modules.market_data.symbols import symbol_market
-from app.modules.research.agents.client import FixtureModel, ModelClient
+from app.modules.research.agents.client import CancellationToken, FixtureModel, ModelClient
 from app.modules.research.agents.tools import ResearchTools
 from app.modules.research.enrichment import capture_supplementary_research_inputs
-from app.modules.research.errors import ModelBudgetError, ModelError
+from app.modules.research.errors import ModelBudgetError, ModelError, RunCancelledError
 from app.modules.research.reports import render_report
 from app.modules.research.schemas import SCHEMAS, STAGES
 from app.modules.research.validation import validate_output
@@ -38,11 +38,16 @@ def new_run(symbol, settings, strategy="multi"):
 
 
 class ResearchOrchestrator:
-    def __init__(self, repo, data, settings, model=None):
+    def __init__(self, repo, data, settings, model=None, cancel_token: CancellationToken | None = None):
         self.repo = repo
         self.data = data
         self.settings = settings
         self.injected_model = model
+        self.cancel_token = cancel_token
+
+    def _check_cancelled(self) -> None:
+        if self.cancel_token and self.cancel_token.is_cancelled():
+            raise RunCancelledError("Research run stopped by user")
 
     def execute(self, run_id):
         from app.finance.metrics import build_calculations
@@ -50,21 +55,28 @@ class ResearchOrchestrator:
         run = self.repo.run(run_id)
         start = monotonic()
         model = self.injected_model or (
-            FixtureModel() if self.settings.data_mode == "fixtures" else ModelClient(self.settings)
+            FixtureModel()
+            if self.settings.data_mode == "fixtures"
+            else ModelClient(self.settings, cancel_token=self.cancel_token)
         )
         if isinstance(model, ModelClient):
             model.deadline = start + self.settings.research_run_timeout
+            if self.cancel_token is not None:
+                model.cancel_token = self.cancel_token
         outputs = {}
 
         def emit(event, **fields):
             self.repo.event(run_id, {"event": event, "at": now(), **fields})
 
-        def save():
+        def save(force: bool = False):
+            if not force and self.cancel_token and self.cancel_token.is_cancelled():
+                return
             self.repo.save_run(run)
 
         def execute_stage(stage, correction=None):
             feedback = [correction] if correction else []
             for attempt in range(1, 4):
+                self._check_cancelled()
                 if monotonic() - start >= self.settings.research_run_timeout:
                     raise ModelBudgetError("Run wall-clock budget exhausted")
                 entry = {
@@ -138,6 +150,7 @@ class ResearchOrchestrator:
                 save()
                 try:
                     raw = model.complete(stage, context, SCHEMAS[stage].model_json_schema(), tools)
+                    self._check_cancelled()
                     if monotonic() - start >= self.settings.research_run_timeout:
                         raise ModelBudgetError("Run wall-clock budget exhausted")
                     entry["output"] = raw
@@ -149,6 +162,10 @@ class ResearchOrchestrator:
                     emit("stage_completed", stage=stage, attempt=attempt)
                     save()
                     return True
+                except RunCancelledError:
+                    entry.update(status="cancelled", finished_at=now())
+                    save(force=True)
+                    raise
                 except (ValueError, ModelError) as exc:
                     # Validation messages only; model transport already redacts provider details.
                     feedback = [str(exc)[:1800]]
@@ -163,9 +180,11 @@ class ResearchOrchestrator:
             return False
 
         try:
+            self._check_cancelled()
             run["status"] = "running"
             emit("run_started", model_id=run["model_id"], mode=run["mode"], strategy=run["strategy"])
             save()
+            self._check_cancelled()
             stock_model = self.data.stock(run["symbol"])
             stock = stock_model.model_dump(mode="json")
             run["evidence"] = list(stock["evidence"])
@@ -228,6 +247,12 @@ class ResearchOrchestrator:
             if "report" in outputs:
                 run["report"] = render_report(run, outputs)
                 emit("report_ready", status=run["status"])
+        except RunCancelledError:
+            run["status"] = "cancelled"
+            msg = "Research run was stopped by the user."
+            if msg not in run["gaps"]:
+                run["gaps"].append(msg)
+            emit("run_cancelled", reason="user_requested")
         except Exception as exc:
             run["status"] = "failed"
             run["gaps"].append(f"Run failed safely ({type(exc).__name__}); check provider configuration")
@@ -236,6 +261,6 @@ class ResearchOrchestrator:
             run["finished_at"] = now()
             run["latency_seconds"] = round(monotonic() - start, 4)
             run["usage"] = model.usage
-            save()
+            save(force=True)
             emit("run_finished", status=run["status"])
         return run
