@@ -4,6 +4,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 
+from app.contracts.industry_sources import sec_filing_source
 from app.core.config import Settings
 from app.finance.metrics import build_calculations
 from app.modules.intelligence.highlight_cache import HighlightCache
@@ -123,6 +124,12 @@ class IntelligenceService:
     def ai_computing_filing_excerpts(self, year: int) -> dict:
         """Show a few actual 10-K text matches; never calls the LLM."""
         return self.data.sec_filing_excerpts(year)
+
+    def industry_filing_excerpts(self, slug: str, year: int) -> dict:
+        """Show literal 10-K passages for a configured SEC pilot; never calls the LLM."""
+        self.catalog.industry(slug)
+        sec_filing_source(slug)
+        return self.data.sec_filing_excerpts(year, industry=slug)
 
     def signals(self) -> dict:
         return self.data.signals()

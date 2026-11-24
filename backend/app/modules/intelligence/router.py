@@ -92,6 +92,18 @@ def create_router(intel: IntelligenceService) -> APIRouter:
         except ValueError:
             raise HTTPException(422, "Year must be a completed calendar year") from None
 
+    @router.get("/api/industries/{slug}/filing-excerpts")
+    def industry_filing_excerpts(slug: str, year: int | None = Query(default=None, ge=2009, le=2100)) -> dict:
+        if len(slug) > 60:
+            raise HTTPException(422, "Industry slug too long")
+        try:
+            target_year = year if year is not None else datetime.now(UTC).year - 1
+            return intel.industry_filing_excerpts(slug, target_year)
+        except KeyError:
+            raise HTTPException(404, "Industry template not found") from None
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+
     @router.get("/api/industries/{slug}/sections/{section}")
     def saved_industry_section(slug: str, section: str) -> dict:
         if len(slug) > 60 or len(section) > 40:

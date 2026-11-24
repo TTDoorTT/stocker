@@ -38,3 +38,19 @@ it('fetches only on explicit click and links literal SEC excerpt to source', asy
   );
   expect(intelligenceApi.filingExcerpts).toHaveBeenCalledTimes(1);
 });
+
+it('passes configured non-default industry slug when requested', async () => {
+  vi.mocked(intelligenceApi.filingExcerpts).mockClear();
+  vi.mocked(intelligenceApi.filingExcerpts).mockResolvedValue({
+    industry: 'semiconductor',
+    year: 2025,
+    mode: 'live',
+    coverage: 'Selected semiconductor SEC filings',
+    gaps: [],
+    excerpts: [],
+  });
+  render(<FilingExcerpts slug="semiconductor" />);
+  fireEvent.click(screen.getByRole('button', { name: 'Load SEC filing excerpts' }));
+  expect(await screen.findByText('Selected semiconductor SEC filings')).toBeInTheDocument();
+  expect(intelligenceApi.filingExcerpts).toHaveBeenCalledWith(expect.any(Number), 'semiconductor');
+});
