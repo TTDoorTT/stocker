@@ -15,6 +15,7 @@ export function ResearchRun() {
   const [events, setEvents] = useState<RunEvent[]>([]);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+  const [stopping, setStopping] = useState(false);
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
@@ -40,6 +41,18 @@ export function ResearchRun() {
   }, [id, retry]);
   if (!run) return error ? <ErrorBox message={error} retry={() => setRetry((v) => v + 1)} /> : <Loading />;
   const isRunning = ['queued', 'running'].includes(run.status);
+  async function stop() {
+    setStopping(true);
+    try {
+      const updated = await researchApi.cancelRun(id);
+      setRun(updated);
+      setRetry((v) => v + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not stop research run');
+    } finally {
+      setStopping(false);
+    }
+  }
   function download() {
     const url = URL.createObjectURL(new Blob([run?.report || ''], { type: 'text/markdown;charset=utf-8' }));
     const anchor = document.createElement('a');
@@ -52,6 +65,11 @@ export function ResearchRun() {
     <>
       <PageTitle eyebrow="RESEARCH / EXECUTION RECORD" title={`${run.symbol} research`}>
         <div className="actions">
+          {isRunning && (
+            <button type="button" className="button danger" onClick={() => void stop()} disabled={stopping}>
+              {stopping ? 'Stopping…' : 'Stop Research'}
+            </button>
+          )}
           <ModeBadge mode={run.mode} />
           <StatusBadge status={run.status} />
         </div>

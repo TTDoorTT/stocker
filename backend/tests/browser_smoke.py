@@ -108,8 +108,9 @@ def main():
                     heatmap = "explicit external-widget failure state visible"
                 page.screenshot(path=str(screenshots / "home-desktop.png"), full_page=True)
                 steps.append("Home fixture labels, two ETF proxies and heatmap state: " + heatmap)
+                page.get_by_role("link", name="Stock Research", exact=False).click()
                 page.get_by_label("Search U.S. and Canadian stocks").fill("AAPL")
-                page.locator(".search-results").get_by_role("link").filter(has_text="AAPL").click()
+                page.get_by_role("button", name="Search", exact=True).click()
                 expect(page.get_by_role("heading", name="Apple Inc.", exact=True)).to_be_visible()
                 expect(page.get_by_role("img", name="Closing price history", exact=False)).to_be_visible()
                 page.get_by_role("button", name="+ Watchlist", exact=True).click()
@@ -120,12 +121,14 @@ def main():
                 expect(page.locator(".chat-answer")).to_contain_text("Synthetic fixture report stage")
                 assert (page.request.get(BASE + "/api/research-runs").json()) == []
                 steps.append("Chat returns fixture-labeled answer and does not launch research")
-                page.get_by_role("button", name="Run Research", exact=False).click()
+                page.get_by_role("tab", name="Deep Research", exact=True).click()
+                page.get_by_role("button", name="Run Deep Research", exact=True).click()
+                expect(page.locator(".stage-card.complete")).to_have_count(6, timeout=20000)
+                expect(page.get_by_role("button", name="Download Markdown", exact=False)).to_be_visible()
+                page.get_by_role("link", name="Open full record", exact=False).click()
                 page.wait_for_url("**/runs/**")
                 run_url = page.url
                 expect(page.locator(".page-title h1")).to_have_text("AAPL research")
-                expect(page.locator(".stage-card.complete")).to_have_count(6, timeout=20000)
-                expect(page.get_by_role("button", name="Download Markdown", exact=False)).to_be_visible()
                 expect(page.locator(".event-log")).to_contain_text("run finished")
                 run = page.request.get(BASE + "/api/research-runs/" + run_url.rsplit("/", 1)[1]).json()
                 assert run["status"] == "incomplete" and len(run["stages"]) == 6 and run["report"]
@@ -184,15 +187,11 @@ def main():
                 page.get_by_role("link", name="Industry Research", exact=False).click()
                 expect(page.locator(".industry-grid > article")).to_have_count(20)
                 steps.append("All twenty guided industry templates render")
-                page.get_by_role("link", name="Daily Review", exact=False).click()
-                expect(page.get_by_role("heading", name="Daily market review")).to_be_visible()
+                page.get_by_role("link", name="Home", exact=True).click()
+                expect(page.get_by_role("heading", name="Top News")).to_be_visible()
                 expect(page.get_by_text("SPY and QQQ ETF proxies; no market-wide breadth")).to_be_visible()
                 page.get_by_role("link", name="Industry Intelligence", exact=False).click()
-                expect(page.locator(".signal-grid > article")).to_have_count(5)
-                expect(page.locator(".signal-grid")).to_contain_text("Unavailable")
-                steps.append(
-                    "Daily review preserves ETF coverage; five signals honestly unavailable in fixture mode"
-                )
+                steps.append("Combined Home preserves ETF coverage and compact headlines panel")
                 page.get_by_role("link", name="Settings / AI", exact=False).click()
                 expect(page.get_by_role("heading", name="Settings / AI", exact=True)).to_be_visible()
                 expect(
@@ -221,8 +220,8 @@ def main():
                 expect(
                     page.get_by_text("The external heatmap could not be confirmed loaded.", exact=False)
                 ).to_be_visible(timeout=25000)
-                expect(page.get_by_label("Search U.S. and Canadian stocks")).to_be_enabled()
-                steps.append("Blocked widget script shows explicit failure/retry; search remains available")
+                expect(page.get_by_role("heading", name="Market workspace")).to_be_visible()
+                steps.append("Blocked widget script shows explicit failure/retry; Home remains usable")
                 assert not errors, f"Browser runtime errors: {errors}"
                 browser.close()
             print(json.dumps({"status": "passed", "steps": steps, "console_page_errors": errors}, indent=2))

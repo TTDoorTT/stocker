@@ -7,7 +7,11 @@ const sources = import.meta.glob<string>('/src/**/*.{ts,tsx}', {
   import: 'default',
   eager: true,
 });
-const publicComponents = new Set(['research/components/Chat', 'portfolio/components/PositionsPreview']);
+const publicComponents = new Set([
+  'research/components/Chat',
+  'research/components/DeepResearchPanel',
+  'portfolio/components/PositionsPreview',
+]);
 
 function violations(source: string, file: string): string[] {
   const ast = ts.createSourceFile(
@@ -66,6 +70,12 @@ describe('frontend module boundaries', () => {
     expect(
       violations(
         "import {Chat} from '../../research/components/Chat'",
+        '/src/features/market/pages/StockPage.tsx',
+      ),
+    ).toEqual([]);
+    expect(
+      violations(
+        "import {DeepResearchPanel} from '../../research/components/DeepResearchPanel'",
         '/src/features/market/pages/StockPage.tsx',
       ),
     ).toEqual([]);
