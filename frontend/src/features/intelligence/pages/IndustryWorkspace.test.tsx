@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { intelligenceApi } from '../api';
@@ -49,9 +49,14 @@ it('defaults semiconductor pilot to its first AI-enabled tab and exposes SEC fil
 
   const techTab = await screen.findByRole('tab', { name: 'Technology · AI' });
   expect(techTab).toHaveAttribute('aria-selected', 'true');
-  expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'false');
+  const overviewTab = screen.getByRole('tab', { name: 'Overview' });
+  expect(overviewTab).toHaveAttribute('aria-selected', 'false');
   expect(screen.getByRole('heading', { name: 'Original SEC 10-K filing excerpts' })).toBeInTheDocument();
   expect(intelligenceApi.filingExcerpts).not.toHaveBeenCalled();
+
+  fireEvent.click(overviewTab);
+  expect(overviewTab).toHaveAttribute('aria-selected', 'true');
+  expect(techTab).toHaveAttribute('aria-selected', 'false');
 });
 
 it('keeps guided-only industries on Overview without SEC filing excerpts preview', async () => {

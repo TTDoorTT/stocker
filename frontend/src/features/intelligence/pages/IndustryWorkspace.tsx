@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useResource } from '../../../shared/hooks/useResource';
 import { ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
@@ -21,15 +21,13 @@ const sections: { id: IndustrySectionKey; label: string }[] = [
 export function IndustryWorkspace() {
   const { slug = '' } = useParams();
   const industry = useResource(() => intelligenceApi.industry(slug), [slug]);
-  const [section, setSection] = useState<IndustrySectionKey>('overview');
+  const [selected, setSelected] = useState<{ slug: string; section: IndustrySectionKey } | null>(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!industry.data) return;
-    setSection(industry.data.ai_sections[0] ?? 'overview');
-  }, [industry.data]);
+  const defaultSection: IndustrySectionKey = industry.data?.ai_sections[0] ?? 'overview';
+  const section: IndustrySectionKey = selected?.slug === slug ? selected.section : defaultSection;
 
   async function researchCompany(symbol: string) {
     setBusy(symbol);
@@ -68,7 +66,7 @@ export function IndustryWorkspace() {
                 key={item.id}
                 aria-selected={section === item.id}
                 className={`button ${section === item.id ? '' : 'secondary'}`}
-                onClick={() => setSection(item.id)}
+                onClick={() => setSelected({ slug, section: item.id })}
               >
                 {item.label}
                 {industry.data?.ai_sections.includes(item.id) ? ' · AI' : ''}
