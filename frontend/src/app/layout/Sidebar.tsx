@@ -2,7 +2,6 @@ import { NavLink } from 'react-router-dom';
 
 const navigation = [
   ['/', '◈', 'Home'],
-  ['/daily-review', '◷', 'Daily Review'],
   ['/intelligence', '⌁', 'Industry Intelligence'],
   ['/industries', '▦', 'Industry Research'],
   ['/research', '⌕', 'Stock Research'],
