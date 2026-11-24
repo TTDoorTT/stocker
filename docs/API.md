@@ -24,7 +24,11 @@ Selected intelligence APIs:
 - `GET /intelligence/rss/highlights?category=ai`: read-only saved highlights `{category,saved,generated_at,model_id,stale,result}`. `result` is a prior cited chat response or `null`. This never calls the model.
 - `POST /intelligence/rss/highlights`: JSON `{category:"ai"}`; explicitly generate and persist cited qualitative highlights from up to 20 recent publisher-diverse RSS headlines and short feed excerpts. Returns `{answer,evidence,mode,gaps}`. Requires a configured model and recent articles; missing input/model may return 503, invalid category 422 and failed evidence validation 502. A failed generation does not replace the last successful saved result.
 - `GET /intelligence/signals`: three optional FRED plus two no-key Bank of Canada Valet series descriptors (Valet can be disabled) with null unavailable observations or genuine source series. Observation date differs from publication date; freshness is explicit.
-- `GET /industries`, `GET /industries/{slug}`:20 guided topics with prompt, representative symbols and limitations. Optional industry_slug on a research run adds this question to the existing six-stage company workflow; it does not establish comprehensive industry coverage.
+- `GET /industries`, `GET /industries/{slug}`: 20 industry workspaces with prompt, representative symbols, limitations, and backend capability metadata (`research_status`, `ai_sections`, `research_coverage`). Optional `industry_slug` on a research run adds this question to the existing six-stage company workflow; it does not establish comprehensive industry coverage.
+- `GET /industries/ai-computing/evidence?year=YYYY`: deterministic SEC frames, filing metadata and cached RSS headlines preview for `ai-computing` (never invokes the LLM).
+- `GET /industries/ai-computing/filing-excerpts?year=YYYY` and `GET /industries/{slug}/filing-excerpts?year=YYYY`: bounded literal SEC 10-K text excerpts for configured SEC pilots (`ai-computing`, `semiconductor`, `power-grid`). Never invokes the LLM; returns 422 for guided-only industries and 404 for unknown slugs.
+- `GET /industries/{slug}/sections/{section}`: read-only saved industry section research (`overview`, `technology`, `supply-chain`, `competition`, `outlook`) from SQLite; never invokes SEC or the LLM.
+- `POST /industries/{slug}/sections/{section}/generate`: explicitly generates and persists validated industry research for backend-enabled pilot sections only (live mode + configured model required). Failed generation preserves the previously saved section.
 
 - `POST /intelligence/news/summary`: retained provider-news summary endpoint for at most 12 retrieved live headlines, separate from RSS industry highlights. Uses the shared model client and evidence validation. Returns `{answer,evidence,mode,gaps}`; fixture mode/missing model/no headlines → 503, failed validation → 502. Never auto-launches research or claims full articles were retrieved.
 
@@ -62,4 +66,10 @@ The frontend provides candlesticks, volume, moving averages, range and interval 
 - Missing or incompatible quarterly observations remain unavailable.
 - Canadian issuer quarterly fundamentals remain unsupported without a verified provider.
 
-This endpoint does not modify the original annual SEC parser or six-stage research workflow.
+This endpoint does not modify the original annual SEC parser; six-stage research runs capture recent standalone quarters and available TTM calculations additively with explicit GAAP provenance.
+
+## Earnings preview, historical review and event studies
+
+- `GET /stocks/{ticker}/earnings`: dated U.S. upcoming earnings schedule and historical vendor-reported actual vs. estimate EPS/revenue from Finnhub calendar when configured. Vendor adjusted/non-GAAP EPS is explicitly separated from SEC GAAP diluted EPS and is not treated as licensed analyst consensus. Canadian listings remain unavailable.
+- `GET /stocks/{ticker}/events`: historical dated U.S. earnings release dates with `date_only` precision and explicit vendor-date provenance (no inferred release timestamps).
+- `GET /stocks/{ticker}/event-study`: on-demand historical post-date drift (−5 to +20 trading days) vs. `SPY` using compounded close-to-close excess returns. Aggregate summary statistics require at least 8 eligible independent completed event windows.

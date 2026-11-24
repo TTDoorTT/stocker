@@ -21,16 +21,14 @@ The `GET /api/industries` and `GET /api/industries/{slug}` responses gain these 
 
 ## Not permission to add arbitrary sectors
 
-Merely adding an industry to the existing `fixtures/industries.json` does **not** enable AI generation. The new source strategy must be implemented and tested first. Phase 4B enables the **Semiconductor** pilot for Technology, Supply Chain and Competition using a separate SEC 10-K source universe, as documented in `INDUSTRY_SEMICONDUCTOR_PILOT.md`. The other 18 industries remain guided-only.
-
-This is a source-readiness refactor, not an announcement of multi-sector AI results. Keep the fixture-vs-live distinction, the five selected AI Computing peers, citation checks, second-pass reviewer, and non-destructive regeneration as they are.
+Merely adding an industry to the existing `fixtures/industries.json` does **not** enable AI generation. The new source strategy must be implemented and tested first. Phase 4B enables the **Semiconductor** pilot (`INDUSTRY_SEMICONDUCTOR_PILOT.md`) and Phase 4D enables the **Grid Infrastructure** (`power-grid`) pilot (`INDUSTRY_POWER_GRID_PILOT.md`), each for Technology, Supply Chain and Competition using a dedicated SEC 10-K source universe. The other 17 industries remain guided-only.
 
 ## Acceptance
 
 - All 20 templates remain navigable with the same research prompts.
 - AI Computing Overview, Technology, Supply Chain and Competition expose Generate.
-- Semiconductor Technology, Supply Chain and Competition expose Generate (Phase 4B).
-- Both Outlook tabs, Semiconductor Overview and the other 18 industries remain guided-only (including direct POST requests).
+- Semiconductor and Grid Infrastructure (`power-grid`) Technology, Supply Chain and Competition expose Generate and raw SEC 10-K excerpt previews via `/api/industries/{slug}/filing-excerpts`.
+- All Outlook tabs, Semiconductor/Power-Grid Overview, and the other 17 industries remain guided-only (including direct POST requests).
 - GETs do not invoke SEC or the model.
 - Existing saved notes load unchanged.
 - Backend architecture and complete fixture tests; frontend Biome, typecheck, tests, build; Docker smoke all pass.
