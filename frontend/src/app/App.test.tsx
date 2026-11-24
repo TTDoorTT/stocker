@@ -382,44 +382,16 @@ describe('Stocker flows', () => {
     expect(await screen.findByText('Available test evidence [ev-test].')).toBeInTheDocument();
     expect(calls.filter((call) => call.method === 'POST' && call.path === '/research-runs')).toHaveLength(0);
   });
-  it('adds watchlist entry and removes it through My Stocks', async () => {
+  it('adds watchlist entry and removes it through My Stocks without simple positions', async () => {
     mount('/stocks/AAPL');
     fireEvent.click(await screen.findByRole('button', { name: '+ Watchlist' }));
     expect(await screen.findByText('AAPL added to watchlist')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('link', { name: 'My Stocks' }));
     const remove = await screen.findByRole('button', { name: 'Remove AAPL from watchlist' });
+    expect(screen.queryByRole('heading', { name: 'Simple positions' })).not.toBeInTheDocument();
     fireEvent.click(remove);
     await waitFor(() =>
       expect(screen.queryByRole('button', { name: 'Remove AAPL from watchlist' })).not.toBeInTheDocument(),
-    );
-  });
-  it('saves a simple position and displays backend calculated P&L', async () => {
-    mount('/my-stocks');
-    fireEvent.change(await screen.findByLabelText('Ticker'), { target: { value: 'AAPL' } });
-    fireEvent.change(screen.getByLabelText('Shares'), { target: { value: '2' } });
-    fireEvent.change(screen.getByLabelText('Average cost (USD)'), { target: { value: '90' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add position' }));
-    expect(await screen.findByText('$20.00')).toBeInTheDocument();
-    expect(calls.find((call) => call.path === '/positions' && call.method === 'POST')?.body).toEqual({
-      symbol: 'AAPL',
-      shares: 2,
-      average_cost: 90,
-      currency: 'USD',
-    });
-  });
-  it('uses CAD for explicit Canadian positions without automatic conversion', async () => {
-    mount('/my-stocks');
-    fireEvent.change(await screen.findByLabelText('Ticker'), { target: { value: 'RY.TO' } });
-    fireEvent.change(screen.getByLabelText('Shares'), { target: { value: '2' } });
-    fireEvent.change(screen.getByLabelText('Average cost (CAD)'), { target: { value: '100' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Add position' }));
-    await waitFor(() =>
-      expect(calls.find((call) => call.path === '/positions' && call.method === 'POST')?.body).toEqual({
-        symbol: 'RY.TO',
-        shares: 2,
-        average_cost: 100,
-        currency: 'CAD',
-      }),
     );
   });
   it('shows real running state then polls the saved terminal report', async () => {
@@ -543,5 +515,24 @@ describe('Stocker flows', () => {
     expect(calls.some((call) => call.path === '/research-runs/test-run' && call.method === 'DELETE')).toBe(
       true,
     );
+  });
+
+  it('allows hiding and restoring Industry Research in Settings', () => {
+    window.localStorage.removeItem('stocker-hide-industry-research');
+    const view = mount('/settings');
+    expect(screen.getByRole('link', { name: 'Industry Research' })).toBeInTheDocument();
+    const toggle = screen.getByRole('checkbox', { name: 'Hide Industry Research from workspace sidebar' });
+    fireEvent.click(toggle);
+    expect(screen.queryByRole('link', { name: 'Industry Research' })).not.toBeInTheDocument();
+    view.unmount();
+
+    const reloaded = mount('/');
+    expect(screen.queryByRole('link', { name: 'Industry Research' })).not.toBeInTheDocument();
+    reloaded.unmount();
+
+    mount('/settings');
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Hide Industry Research from workspace sidebar' }));
+    expect(screen.getByRole('link', { name: 'Industry Research' })).toBeInTheDocument();
+    window.localStorage.removeItem('stocker-hide-industry-research');
   });
 });

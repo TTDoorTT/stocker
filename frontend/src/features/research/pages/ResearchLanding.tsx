@@ -14,15 +14,9 @@ export function ResearchLanding() {
   const [busy, setBusy] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const watchlist = useResource(portfolioApi.watchlist);
-  const positions = useResource(portfolioApi.positions);
   const navigate = useNavigate();
 
-  const savedSymbols = Array.from(
-    new Set([
-      ...(watchlist.data?.map((item) => item.symbol) ?? []),
-      ...(positions.data?.map((item) => item.symbol) ?? []),
-    ]),
-  );
+  const savedSymbols = Array.from(new Set(watchlist.data?.map((item) => item.symbol) ?? []));
 
   useEffect(() => {
     let active = true;
@@ -132,9 +126,9 @@ export function ResearchLanding() {
           <h2>My saved stocks</h2>
           <Link to="/my-stocks">Manage stocks ↗</Link>
         </div>
-        {watchlist.loading && positions.loading ? (
+        {watchlist.loading ? (
           <Loading />
-        ) : watchlist.error && positions.error ? (
+        ) : watchlist.error ? (
           <ErrorBox message={watchlist.error} retry={watchlist.reload} />
         ) : savedSymbols.length ? (
           <div className="ticker-links">
@@ -145,7 +139,7 @@ export function ResearchLanding() {
             ))}
           </div>
         ) : (
-          <Empty>No saved stocks yet. Add stocks to your watchlist or positions to jump straight in.</Empty>
+          <Empty>No saved stocks yet. Add stocks to your watchlist to jump straight in.</Empty>
         )}
       </section>
       <div className="notice">

@@ -1,12 +1,20 @@
+import { useState } from 'react';
 import { useResource } from '../../shared/hooks/useResource';
 import { ErrorBox, Loading } from '../../shared/ui/Feedback';
 import { ModeBadge, PageTitle } from '../../shared/ui/Presentation';
 import { appApi } from '../api';
 import { AIForm } from '../components/AIConfiguration';
+import { isIndustryResearchHidden, setIndustryResearchHidden } from '../preferences';
 
 export function Settings() {
   const ai = useResource(appApi.ai);
   const health = useResource(appApi.health);
+  const [hideIndustry, setHideIndustry] = useState(isIndustryResearchHidden);
+
+  function toggleIndustry(hidden: boolean) {
+    setHideIndustry(hidden);
+    setIndustryResearchHidden(hidden);
+  }
   return (
     <>
       <PageTitle title="Settings / AI" />
@@ -110,6 +118,30 @@ export function Settings() {
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="panel" aria-label="Workspace sections">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">WORKSPACE LAYOUT</p>
+              <h2>Workspace sections</h2>
+            </div>
+            <span className="badge">
+              {hideIndustry ? 'Industry Research hidden' : 'All sections visible'}
+            </span>
+          </div>
+          <label className="ai-checkbox-row">
+            <input
+              type="checkbox"
+              checked={hideIndustry}
+              onChange={(event) => toggleIndustry(event.target.checked)}
+            />
+            <span>Hide Industry Research from workspace sidebar</span>
+          </label>
+          <p className="muted" style={{ marginBottom: 0, fontSize: 12 }}>
+            Removes Industry Research from the left navigation without deleting saved notes. You can turn it
+            back on here anytime.
+          </p>
         </section>
       </div>
     </>
