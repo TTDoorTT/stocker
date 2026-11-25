@@ -436,3 +436,52 @@ def test_cancellation_token_aborts_blocked_live_model_socket_immediately():
         assert monotonic() - start < 1.5
     finally:
         release.set()
+
+
+def test_report_renders_human_readable_metrics_identity_performance_and_tables(setup):
+    from app.modules.research.reports import format_numeric_value
+
+    assert format_numeric_value(391035000000.0, "USD") == "$391.04B"
+    assert format_numeric_value(-42500000.0, "CAD") == "-CA$42.50M"
+    assert format_numeric_value(26.44123, "%") == "26.44%"
+    assert format_numeric_value(34.2, "ratio") == "34.20x"
+    assert format_numeric_value(6.11, "USD/shares") == "$6.11/share"
+
+    run, _ = execute(setup, symbol="AAPL")
+    report = run["report"]
+    assert "### Key metrics snapshot" in report
+    assert "### Identity verification" in report
+    assert "Fixture identity only; no live cross-source verification." in report
+    assert "### Performance overview" in report
+    assert "Synthetic annual data exercises calculations only." in report
+    assert "### Counterevidence" in report
+    assert "### Invalidation conditions" in report
+    assert "| Evidence ID | Field | Period | Source | Published | Fetched |" in report
+    assert "e+" not in report.lower()
+
+
+def test_prompts_preserve_untrusted_data_guard_and_zero_digit_rules():
+    from app.modules.research.agents.client import PROMPTS
+
+    common = (PROMPTS / "common.md").read_text()
+    assert "untrusted data" in common
+    assert "Zero-digit prose rule" in common
+    for stage in STAGES:
+        text = (PROMPTS / f"{stage}.md").read_text()
+        assert text.strip()
+        assert "Inputs to use directly" in text
+    assert "Use calculate_metric" not in (PROMPTS / "financials.md").read_text()
+
+
+def test_research_captures_price_history_return_scope_records_and_filters_ui_footnotes(setup):
+    run, _ = execute(setup, symbol="AAPL")
+    inputs = {entry["stage"]: entry["input"] for entry in run["stages"]}
+    calc_metrics = {item["metric"] for item in run["calculations"]}
+
+    assert "price_history_return" in calc_metrics
+    assert "price_history" in inputs["valuation"]["scope"]
+    assert inputs["valuation"]["scope"]["price_history"]["observations"] == 10
+    assert inputs["profile"]["scope"]["reporting_currencies"] == ["USD"]
+    assert inputs["financials"]["scope"]["quarterly_trends"]["records"]
+    assert inputs["estimates"]["scope"]["vendor_earnings"]["records"]
+    assert not any("after-hours stock-price reaction" in gap for gap in run["gaps"])

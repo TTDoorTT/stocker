@@ -117,6 +117,82 @@ def build_calculations(stock: Stock) -> list[Calculation]:
                 None if value is not None else "Period/unit/currency mismatch",
             )
         )
+    cashflows, capexes = by_field.get("cashflow", []), by_field.get("capex", [])
+    if cashflows and capexes:
+        ocf, capex = cashflows[0], capexes[0]
+        valid = comparable(ocf, capex) and capex.value >= 0
+        fcf_value = (ocf.value - capex.value) if valid and isfinite(ocf.value - capex.value) else None
+        result.append(
+            _calculation(
+                "free_cash_flow",
+                fcf_value,
+                ocf.unit,
+                [ocf.evidence_id, capex.evidence_id],
+                {
+                    "operating_cash_flow": ocf.value,
+                    "capex": capex.value,
+                    "period": ocf.period,
+                    "currency": ocf.currency,
+                },
+                None if fcf_value is not None else "Period/unit/currency mismatch or invalid CapEx",
+            )
+        )
+    curr_assets, curr_liab = by_field.get("current_assets", []), by_field.get("current_liabilities", [])
+    if curr_assets and curr_liab:
+        ca, cl = curr_assets[0], curr_liab[0]
+        same_snapshot = (
+            ca.period_end is not None
+            and ca.period_end == cl.period_end
+            and ca.currency == cl.currency
+            and ca.unit == cl.unit
+            and cl.value > 0
+        )
+        cr_value = (ca.value / cl.value) if same_snapshot and isfinite(ca.value / cl.value) else None
+        result.append(
+            _calculation(
+                "current_ratio",
+                cr_value,
+                "ratio",
+                [ca.evidence_id, cl.evidence_id],
+                {
+                    "current_assets": ca.value,
+                    "current_liabilities": cl.value,
+                    "period": ca.period,
+                    "currency": ca.currency,
+                },
+                None
+                if cr_value is not None
+                else "Snapshot date/currency mismatch or nonpositive liabilities",
+            )
+        )
+    debts, equities = by_field.get("long_term_debt", []), by_field.get("stockholders_equity", [])
+    if debts and equities:
+        debt, equity = debts[0], equities[0]
+        same_snapshot = (
+            debt.period_end is not None
+            and debt.period_end == equity.period_end
+            and debt.currency == equity.currency
+            and debt.unit == equity.unit
+            and equity.value > 0
+        )
+        dte_value = (
+            (debt.value / equity.value) if same_snapshot and isfinite(debt.value / equity.value) else None
+        )
+        result.append(
+            _calculation(
+                "debt_to_equity",
+                dte_value,
+                "ratio",
+                [debt.evidence_id, equity.evidence_id],
+                {
+                    "long_term_debt": debt.value,
+                    "stockholders_equity": equity.value,
+                    "period": debt.period,
+                    "currency": debt.currency,
+                },
+                None if dte_value is not None else "Snapshot date/currency mismatch or nonpositive equity",
+            )
+        )
     eps_facts = by_field.get("eps", [])
     if stock.quote and eps_facts:
         eps, quote = eps_facts[0], stock.quote

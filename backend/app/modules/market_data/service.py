@@ -257,3 +257,10 @@ class DataService:
     def sec_filing_excerpts(self, year: int, *, industry: str = "ai-computing") -> dict:
         """Fetch approved 10-K passages without invoking an AI model."""
         return filing_excerpts(self.sec, self.sec_industry_snapshot(year, industry=industry))
+
+    def cross_source_profile(self, symbol: str) -> list:
+        """Optional Finnhub company profile evidence for cross-source identity checks."""
+        symbol = normalize_symbol(symbol)
+        if self.settings.data_mode == "fixtures" or symbol_market(symbol) != "US":
+            return []
+        return self.finnhub.company_profile(symbol)

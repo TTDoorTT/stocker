@@ -71,6 +71,52 @@ class FinnhubProvider:
         except (DataUnavailable, ValueError, TypeError, OverflowError, OSError):
             stock.gaps.append("Quote unavailable; verify FINNHUB_API_KEY, symbol and plan entitlement.")
 
+    def company_profile(self, symbol: str) -> list[Evidence]:
+        """Optional Finnhub profile2 identity check for cross-source verification."""
+        if not self.settings.finnhub_api_key:
+            return []
+        try:
+            response = self.http.fetch(
+                "https://finnhub.io/api/v1/stock/profile2",
+                params={"symbol": symbol, "token": self.settings.finnhub_api_key},
+                ttl=21600,
+            )
+            data = response.data
+            if not isinstance(data, dict) or str(data.get("ticker", "")).upper() != symbol:
+                return []
+            url = "https://finnhub.io/docs/api/company-profile2"
+            period = str(response.fetched_at.date())
+            records: list[Evidence] = []
+            for field_name, key in (
+                ("company_name", "name"),
+                ("industry_classification", "finnhubIndustry"),
+                ("listing_exchange", "exchange"),
+                ("reporting_currency", "currency"),
+            ):
+                raw = data.get(key)
+                if not isinstance(raw, str) or not raw.strip():
+                    continue
+                records.append(
+                    Evidence(
+                        evidence_id=evidence_id(symbol, "finnhub-profile", field_name, raw.strip()),
+                        symbol=symbol,
+                        field=field_name,
+                        value=raw.strip(),
+                        unit="text",
+                        currency=data.get("currency") if isinstance(data.get("currency"), str) else None,
+                        period=period,
+                        source_name="Finnhub company profile",
+                        source_url=url,
+                        published_at=None,
+                        fetched_at=response.fetched_at,
+                        cached=response.cached,
+                        missing_reason="Profile publication timestamp is not supplied by Finnhub.",
+                    )
+                )
+            return records
+        except (DataUnavailable, ValueError, TypeError, OverflowError, OSError, KeyError):
+            return []
+
     def search(self, q: str) -> list[dict]:
         data = self.http.json(
             "https://finnhub.io/api/v1/search",
