@@ -16,6 +16,46 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _compact_facts(facts: list[dict]) -> list[dict]:
+    """Keep only analysis- and binding-relevant fields in model scope; full provenance stays in run['evidence']."""
+    return [
+        {
+            "evidence_id": fact["evidence_id"],
+            "field": fact["field"],
+            "value": fact["value"],
+            "unit": fact["unit"],
+            "currency": fact.get("currency"),
+            "period": fact["period"],
+            "statement": fact.get("statement"),
+        }
+        for fact in facts
+    ]
+
+
+def _compact_news(news: list[dict]) -> list[dict]:
+    return [
+        {
+            "headline": item.get("headline"),
+            "source_name": item.get("source_name"),
+            "published_at": item.get("published_at"),
+        }
+        for item in news
+    ]
+
+
+def _compact_calculations(calculations: list[dict]) -> list[dict]:
+    return [
+        {
+            "calculation_id": calc["calculation_id"],
+            "metric": calc["metric"],
+            "value": calc["value"],
+            "unit": calc["unit"],
+            "reason": calc.get("reason"),
+        }
+        for calc in calculations
+    ]
+
+
 def new_run(symbol, settings, strategy="multi"):
     return {
         "run_id": str(uuid4()),
@@ -92,7 +132,9 @@ class ResearchOrchestrator:
                 }
                 run["stages"].append(entry)
                 prior = {key: value for key, value in outputs.items() if key != stage}
-                tools = ResearchTools(stock, run["calculations"], history, prior, emit, stage)
+                tools = ResearchTools(
+                    stock, run["calculations"], history, prior, emit, stage, expose_tools=False
+                )
                 # Stage scope is distinct; source text remains data within this envelope.
                 scopes = {
                     "profile": {
@@ -111,12 +153,13 @@ class ResearchOrchestrator:
                                 "company_name",
                                 "industry_classification",
                                 "listing_exchange",
+                                "listing_currency",
                                 "reporting_currency",
                             }
                         ],
                     },
                     "financials": {
-                        "facts": stock["facts"],
+                        "facts": _compact_facts(stock["facts"]),
                         "calculations": run["calculations"],
                         **(
                             {"quarterly_trends": enrichment.quarterly_summary}
@@ -125,7 +168,7 @@ class ResearchOrchestrator:
                         ),
                     },
                     "estimates": {
-                        "news": stock["news"],
+                        "news": _compact_news(stock["news"]),
                         "consensus": None,
                         **(
                             {"vendor_earnings": enrichment.earnings_summary}
@@ -142,7 +185,10 @@ class ResearchOrchestrator:
                             else {}
                         ),
                     },
-                    "risk": {"source_gaps": stock["gaps"]},
+                    "risk": {
+                        "source_gaps": stock["gaps"],
+                        "calculations_summary": _compact_calculations(run["calculations"]),
+                    },
                     "report": {"gaps": list(dict.fromkeys(run["gaps"]))},
                 }
                 context = {

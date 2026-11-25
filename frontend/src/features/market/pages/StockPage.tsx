@@ -85,7 +85,7 @@ export function StockPage() {
           className={`button ${activeTab === 'deep-research' ? '' : 'secondary'}`}
           onClick={() => setSelectedTab({ symbol, tab: 'deep-research' })}
         >
-          Deep Research
+          Research
         </button>
       </div>
       {notice && (

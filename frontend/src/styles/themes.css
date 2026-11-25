@@ -220,3 +220,90 @@
   width: 19px;
   height: 19px;
 }
+
+:root[data-theme="light"] .report-view {
+  color: #2c4157;
+}
+:root[data-theme="light"] .report-title,
+:root[data-theme="light"] .report-section-title,
+:root[data-theme="light"] .report-kpi-value,
+:root[data-theme="light"] .report-meta-pill strong {
+  color: #142638;
+}
+:root[data-theme="light"] .report-meta-pill,
+:root[data-theme="light"] .report-jump-bar,
+:root[data-theme="light"] .report-section,
+:root[data-theme="light"] .report-audit-section {
+  background: #f8fafc;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .report-section-exec {
+  background: linear-gradient(180deg, #eef8f4 0%, #f8fafc 100%);
+  border-color: #b7dfd0;
+}
+:root[data-theme="light"] .report-callout {
+  background: #e6f5ee;
+  border-color: #9fd4be;
+  color: #17332a;
+}
+:root[data-theme="light"] .report-highlight-text {
+  color: #0e2233;
+  background: rgba(18, 107, 84, 0.11);
+}
+:root[data-theme="light"] .report-paragraph,
+:root[data-theme="light"] .report-list li {
+  color: #2f455c;
+}
+:root[data-theme="light"] .report-kpi-card {
+  background: #ffffff;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .report-jump-pill,
+:root[data-theme="light"] .report-audit-toggle {
+  background: #ffffff;
+  color: #253b52;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .report-disclaimer {
+  background: #eef4f7;
+  color: #465d75;
+}
+:root[data-theme="light"] .ref-chip {
+  background: #e9f2fb;
+  border-color: #9ec0e4;
+  color: #154d84;
+}
+:root[data-theme="light"] .ref-chip-calc {
+  background: #e6f5ee;
+  border-color: #88ccb1;
+  color: #0f5c47;
+}
+:root[data-theme="light"] .ref-chip.active {
+  background: var(--accent);
+  color: #ffffff;
+}
+:root[data-theme="light"] .report-row-highlighted {
+  background: #e3f5ec !important;
+}
+:root[data-theme="light"] .report-row-highlighted td {
+  color: #123328;
+}
+:root[data-theme="light"] .report-selected-pill {
+  color: #ffffff;
+}
+:root[data-theme="light"] .report-back-btn {
+  background: #d9f0e5;
+  color: #0f4c3a;
+  border-color: #7cc5a7;
+}
+:root[data-theme="light"] .report-clear-btn {
+  background: #eef3f7;
+  color: #3d5268;
+  border-color: var(--border);
+}
+
+:root[data-theme="light"] .research-depth-select {
+  background: #ffffff;
+  color: #203144;
+  border-color: var(--border);
+}

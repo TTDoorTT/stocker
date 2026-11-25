@@ -13,6 +13,8 @@ def parse_sec_facts(symbol: str, data: dict, fetched_at: datetime, *, cached=Fal
     """Annual 10-K contexts only; never combine YTD or quarterly values."""
     concepts = {
         "revenue": ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet"],
+        "operating_income": ["OperatingIncomeLoss"],
+        "interest_expense": ["InterestExpense", "InterestExpenseDebt", "InterestAndDebtExpense"],
         "net_income": ["NetIncomeLoss"],
         "eps": ["EarningsPerShareDiluted", "EarningsPerShareBasic"],
         "cashflow": ["NetCashProvidedByUsedInOperatingActivities"],

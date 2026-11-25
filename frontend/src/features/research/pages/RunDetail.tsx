@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
 import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
@@ -7,6 +6,7 @@ import { ModeBadge, PageTitle, StatusBadge } from '../../../shared/ui/Presentati
 import { dateTime } from '../../../shared/utils/format';
 import { researchApi } from '../api';
 import { AgentProgress } from '../components/AgentProgress';
+import { ResearchReportView } from '../components/ResearchReportView';
 import type { Run, RunEvent } from '../types';
 
 export function ResearchRun() {
@@ -70,6 +70,7 @@ export function ResearchRun() {
               {stopping ? 'Stopping…' : 'Stop Research'}
             </button>
           )}
+          <span className="badge">{run.strategy === 'single' ? 'Quick Research' : 'Deep Research'}</span>
           <ModeBadge mode={run.mode} />
           <StatusBadge status={run.status} />
         </div>
@@ -87,7 +88,7 @@ export function ResearchRun() {
           when the backend records real events.
         </p>
       )}
-      <Gaps gaps={run.gaps} />
+      {!run.report && <Gaps gaps={run.gaps} />}
       {run.error && <ErrorBox message={run.error} />}
       <section className="panel report">
         <div className="panel-heading">
@@ -99,9 +100,7 @@ export function ResearchRun() {
           )}
         </div>
         {run.report ? (
-          <div className="markdown">
-            <ReactMarkdown>{run.report}</ReactMarkdown>
-          </div>
+          <ResearchReportView markdown={run.report} />
         ) : (
           <Empty>
             {isRunning
@@ -110,6 +109,16 @@ export function ResearchRun() {
           </Empty>
         )}
       </section>
+      {run.report && Boolean(run.gaps?.length) && (
+        <section className="panel">
+          <details className="stage-detail">
+            <summary>
+              <strong>All recorded stage data limitations</strong> · {run.gaps.length} entries
+            </summary>
+            <Gaps gaps={run.gaps} />
+          </details>
+        </section>
+      )}
       <section className="panel">
         <div className="panel-heading">
           <h2>Agent handoffs & validation</h2>

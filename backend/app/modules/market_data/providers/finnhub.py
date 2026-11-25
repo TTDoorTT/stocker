@@ -91,6 +91,7 @@ class FinnhubProvider:
                 ("company_name", "name"),
                 ("industry_classification", "finnhubIndustry"),
                 ("listing_exchange", "exchange"),
+                ("listing_currency", "currency"),
                 ("reporting_currency", "currency"),
             ):
                 raw = data.get(key)

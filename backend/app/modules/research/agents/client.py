@@ -137,11 +137,13 @@ class ModelClient:
             remaining_total = self.settings.llm_run_total_tokens - self.tokens
             if self.calls >= 24 or remaining <= 0 or remaining_total <= 0:
                 raise ModelBudgetError("Per-run model budget exhausted")
-            # UTF-8 bytes conservatively bound text tokens, including tool definitions.
+            # UTF-8 bytes conservatively bound text tokens, including tool definitions when exposed.
             # Reserve framing room; the provider remains the exact tokenizer authority.
-            context_bytes = len(
-                json.dumps({"messages": messages, "tools": tools.definitions}).encode("utf-8")
+            has_tools = bool(tools.definitions)
+            budget_envelope = (
+                {"messages": messages, "tools": tools.definitions} if has_tools else {"messages": messages}
             )
+            context_bytes = len(json.dumps(budget_envelope).encode("utf-8"))
             output_limit = min(self.settings.llm_max_tokens, remaining, remaining_total - context_bytes)
             if output_limit <= 0:
                 raise ModelBudgetError("Per-run reported total token budget exhausted")
@@ -159,9 +161,10 @@ class ModelClient:
                     "temperature": 0,
                     "max_tokens": output_limit,
                     "messages": messages,
-                    "tools": tools.definitions,
                 }
-                if self.response_format_with_tools:
+                if has_tools:
+                    payload["tools"] = tools.definitions
+                if self.response_format_with_tools or not has_tools:
                     payload["response_format"] = {"type": "json_object"}
                 timeout = min(self.settings.llm_timeout, self.deadline - monotonic())
                 url = self.settings.llm_base_url.rstrip("/") + "/chat/completions"
