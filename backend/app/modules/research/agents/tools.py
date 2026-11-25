@@ -48,7 +48,7 @@ def history_table(history):
 
 
 class ResearchTools:
-    def __init__(self, stock, calculations, history, prior, emit, stage):
+    def __init__(self, stock, calculations, history, prior, emit, stage, *, expose_tools: bool = True):
         self.stock = stock
         self.calculations = calculations
         self.history = history
@@ -56,20 +56,24 @@ class ResearchTools:
         self.emit = emit
         self.stage = stage
         self.count = 0
-        self.definitions = [
-            {
-                "type": "function",
-                "function": {
-                    "name": name,
-                    "description": (
-                        TOOL_DESCRIPTIONS[name] + " This tool takes NO arguments: "
-                        "always pass exactly {}. No symbol, fields, period or network parameters."
-                    ),
-                    "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-                },
-            }
-            for name in TOOL_NAMES
-        ]
+        self.definitions = (
+            [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": name,
+                        "description": (
+                            TOOL_DESCRIPTIONS[name] + " This tool takes NO arguments: "
+                            "always pass exactly {}. No symbol, fields, period or network parameters."
+                        ),
+                        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+                    },
+                }
+                for name in TOOL_NAMES
+            ]
+            if expose_tools
+            else []
+        )
 
     def call(self, name, args):
         self.count += 1

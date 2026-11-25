@@ -327,7 +327,7 @@ describe('Stocker flows', () => {
     expect(await screen.findByText('Consensus unavailable')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Run Research/ })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'Deep Research' })).toHaveAttribute('aria-selected', 'false');
+    expect(screen.getByRole('tab', { name: 'Research' })).toHaveAttribute('aria-selected', 'false');
     // Quarterly financial trends appears directly after Price history; Earnings and Event Study are removed.
     const priceHeading = screen.getByRole('heading', { name: /Price history/ });
     const quarterlyHeading = screen.getByRole('heading', { name: 'Quarterly financial trends' });
@@ -352,18 +352,24 @@ describe('Stocker flows', () => {
     fireEvent.click(result);
     expect(await screen.findByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
   });
-  it('opens Deep Research tab inline without auto-running, supports starting and stopping a run', async () => {
+  it('opens Research tab inline without auto-running, supports Quick/Deep mode selection, starting and stopping', async () => {
     existingRuns = [];
     currentRun = { ...run, status: 'running', report: null };
     mount('/stocks/AAPL');
     expect(await screen.findByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: 'Deep Research' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Research' }));
     // Stays on stock page with name/price visible and does NOT start a run automatically.
     expect(screen.getByRole('heading', { name: 'Apple fixture' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Run Deep Research' })).toBeEnabled();
     expect(calls.filter((call) => call.path === '/research-runs' && call.method === 'POST')).toHaveLength(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Run Deep Research' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Research mode' }), {
+      target: { value: 'single' },
+    });
+    expect(screen.getByRole('option', { name: /Deep Research.*~8–12 min/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Quick Research.*~1–3 min/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Run Quick Research' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Run Quick Research' }));
     expect(await screen.findByRole('button', { name: 'Stop Research' })).toBeEnabled();
     expect(calls.some((call) => call.path === '/research-runs' && call.method === 'POST')).toBe(true);
 

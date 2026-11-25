@@ -207,6 +207,9 @@ def test_baseline_receives_identical_captured_evidence_and_calculations(setup):
     assert single["strategy"] == "single"
     assert single["report"] is not None
     assert single["status"] == "incomplete"
+    assert "# AAPL — Quick Research Brief" in single["report"]
+    assert "Quick (1-pass synthesis)" in single["report"]
+    assert "Unavailable: this stage did not pass validation." not in single["report"]
 
 
 class FailedRiskReassessmentModel(RepeatedDisputeModel):
@@ -484,4 +487,59 @@ def test_research_captures_price_history_return_scope_records_and_filters_ui_foo
     assert inputs["profile"]["scope"]["reporting_currencies"] == ["USD"]
     assert inputs["financials"]["scope"]["quarterly_trends"]["records"]
     assert inputs["estimates"]["scope"]["vendor_earnings"]["records"]
+    assert "calculations_summary" in inputs["risk"]["scope"]
+    assert inputs["financials"]["scope"]["facts"]
+    assert "source_url" not in inputs["financials"]["scope"]["facts"][0]
     assert not any("after-hours stock-price reaction" in gap for gap in run["gaps"])
+
+
+def test_report_deduplicates_gaps_and_links_evidence_and_calculations(setup):
+    run, _ = execute(setup, symbol="AAPL")
+    report = run["report"]
+    assert "> **Bottom line:**" in report
+    assert "(#ref-ev-" in report
+    assert "(#ref-calc-" in report
+    gaps_section = report.split("## Data gaps", 1)[1].split("## Sources and timestamps", 1)[0]
+    gap_lines = [line for line in gaps_section.splitlines() if line.startswith("- ")]
+    # Report stage distilled gaps are rendered instead of repeating every stage's raw gaps.
+    assert len(gap_lines) == 1
+    assert "Synthetic test data only" in gap_lines[0]
+
+
+def test_model_client_omits_tools_payload_when_tool_definitions_empty(monkeypatch):
+    import json
+
+    import httpx
+
+    from app.modules.research.agents.client import ModelClient
+    from app.modules.research.agents.tools import ResearchTools
+
+    captured = []
+    original = httpx.Client
+
+    def handler(request):
+        captured.append(json.loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"stage":"risk"}'}}]})
+
+    monkeypatch.setattr(
+        "app.modules.research.agents.client.httpx.Client",
+        lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    settings = Settings(
+        _env_file=None,
+        llm_model="test-model",
+        llm_base_url="https://model.example/v1",
+    )
+    toolset = ResearchTools(
+        {"evidence": [], "facts": [], "news": []},
+        [],
+        [],
+        {},
+        lambda *args, **kwargs: None,
+        "risk",
+        expose_tools=False,
+    )
+    assert toolset.definitions == []
+    assert ModelClient(settings).complete("risk", {}, {}, toolset) == {"stage": "risk"}
+    assert "tools" not in captured[0]
+    assert captured[0]["response_format"] == {"type": "json_object"}

@@ -97,7 +97,27 @@ def build_calculations(stock: Stock) -> list[Calculation]:
                     else "Incomparable fiscal periods/currency or nonpositive denominator",
                 )
             )
-    revenues, profits = by_field.get("revenue", []), by_field.get("net_income", [])
+    revenues, op_incomes = by_field.get("revenue", []), by_field.get("operating_income", [])
+    if revenues and op_incomes:
+        revenue, op_income = revenues[0], op_incomes[0]
+        valid = comparable(revenue, op_income)
+        value = profit_margin(op_income.value, revenue.value) if valid else None
+        result.append(
+            _calculation(
+                "operating_margin",
+                value,
+                "%",
+                [op_income.evidence_id, revenue.evidence_id],
+                {
+                    "operating_income": op_income.value,
+                    "revenue": revenue.value,
+                    "period": revenue.period,
+                    "currency": revenue.currency,
+                },
+                None if value is not None else "Period/unit/currency mismatch",
+            )
+        )
+    profits = by_field.get("net_income", [])
     if revenues and profits:
         revenue, profit = revenues[0], profits[0]
         valid = comparable(revenue, profit)
@@ -115,6 +135,30 @@ def build_calculations(stock: Stock) -> list[Calculation]:
                     "currency": revenue.currency,
                 },
                 None if value is not None else "Period/unit/currency mismatch",
+            )
+        )
+    interest_expenses = by_field.get("interest_expense", [])
+    if op_incomes and interest_expenses:
+        op_income, int_exp = op_incomes[0], interest_expenses[0]
+        valid = comparable(op_income, int_exp) and int_exp.value > 0
+        ic_value = (
+            (op_income.value / int_exp.value) if valid and isfinite(op_income.value / int_exp.value) else None
+        )
+        result.append(
+            _calculation(
+                "interest_coverage",
+                ic_value,
+                "ratio",
+                [op_income.evidence_id, int_exp.evidence_id],
+                {
+                    "operating_income": op_income.value,
+                    "interest_expense": int_exp.value,
+                    "period": op_income.period,
+                    "currency": op_income.currency,
+                },
+                None
+                if ic_value is not None
+                else "Period/unit/currency mismatch or nonpositive interest expense",
             )
         )
     cashflows, capexes = by_field.get("cashflow", []), by_field.get("capex", [])

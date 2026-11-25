@@ -10,14 +10,18 @@ export interface Stage {
   started_at?: string;
   finished_at?: string;
 }
+export type ResearchStrategy = 'multi' | 'single';
+
 export interface Run {
   run_id: string;
   symbol: string;
   status: string;
   model_id: string;
+  strategy?: ResearchStrategy;
   mode: Mode;
   started_at: string;
   finished_at?: string | null;
+  latency_seconds?: number | null;
   stages: Stage[];
   evidence: Evidence[];
   calculations: Calculation[];

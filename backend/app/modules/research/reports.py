@@ -7,10 +7,12 @@ from math import isfinite
 METRIC_LABELS = {
     "revenue_yoy": "Revenue YoY Growth",
     "eps_growth": "Annual EPS YoY Growth",
+    "operating_margin": "Operating Margin",
     "profit_margin": "Net Profit Margin",
     "free_cash_flow": "Free Cash Flow",
     "current_ratio": "Current Ratio",
     "debt_to_equity": "Long-Term Debt / Equity",
+    "interest_coverage": "Interest Coverage",
     "pe_annual": "P/E Ratio (Annual EPS)",
     "daily_return": "Daily Return",
     "price_history_return": "Trailing Price Return",
@@ -20,6 +22,25 @@ METRIC_LABELS = {
     "ttm_operating_cash_flow": "TTM Operating Cash Flow",
 }
 
+HEADLINE_METRICS = (
+    "revenue_yoy",
+    "operating_margin",
+    "profit_margin",
+    "free_cash_flow",
+    "current_ratio",
+    "debt_to_equity",
+    "interest_coverage",
+    "pe_annual",
+    "price_history_return",
+)
+
+_CRITICAL_SYSTEM_GAP_MARKERS = (
+    "Unresolved risk disputes",
+    "exhausted bounded validation attempts",
+    "stopped by the user",
+    "Price history unavailable",
+)
+
 
 def _escape_cell(value: object) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ").strip()
@@ -27,6 +48,11 @@ def _escape_cell(value: object) -> str:
 
 def _metric_label(metric: str) -> str:
     return METRIC_LABELS.get(metric, metric.replace("_", " ").title())
+
+
+def _ref_link(ref_id: str) -> str:
+    clean = _escape_cell(ref_id)
+    return f"[{clean}](#ref-{clean})"
 
 
 def _format_currency(value: float, currency: str) -> str:
@@ -66,12 +92,12 @@ def _render_claims(claims: list[dict]) -> list[str]:
     lines: list[str] = []
     for claim in claims:
         refs = claim["evidence_ids"] + claim["calculation_ids"]
+        ref_part = f" ({', '.join(_ref_link(ref) for ref in refs)})" if refs else ""
         if claim["value"] is None:
-            value_part = ""
+            lines.append(f"- {claim['text']}{ref_part}")
         else:
-            value_part = f" — **{format_numeric_value(claim['value'], claim['unit'])}**"
-        ref_part = f" (`{', '.join(refs)}`)" if refs else ""
-        lines.append(f"- {claim['text']}{value_part}{ref_part}")
+            formatted = format_numeric_value(claim["value"], claim["unit"])
+            lines.append(f"- **{formatted}** — {claim['text']}{ref_part}")
     return lines
 
 
@@ -79,19 +105,34 @@ def _render_key_metrics(calculations: list[dict]) -> list[str]:
     available = [calc for calc in calculations if calc.get("value") is not None]
     if not available:
         return []
+    by_metric = {calc["metric"]: calc for calc in available}
+    selected = [by_metric[metric] for metric in HEADLINE_METRICS if metric in by_metric]
+    if not selected:
+        selected = available[:8]
     lines = [
         "### Key metrics snapshot",
         "",
         "| Metric | Value | Reference |",
         "|---|---|---|",
     ]
-    for calc in available:
+    for calc in selected:
         label = _escape_cell(_metric_label(calc["metric"]))
         formatted = _escape_cell(format_numeric_value(calc["value"], calc["unit"]))
-        calc_id = _escape_cell(calc["calculation_id"])
-        lines.append(f"| {label} | **{formatted}** | `{calc_id}` |")
+        lines.append(f"| {label} | **{formatted}** | {_ref_link(calc['calculation_id'])} |")
     lines.append("")
     return lines
+
+
+def _select_report_gaps(run: dict, outputs: dict) -> list[str]:
+    """Use the curated report-stage gaps plus critical system gaps to avoid 30-bullet repetition."""
+    report_output = outputs.get("report")
+    if report_output and report_output.get("gaps"):
+        selected = list(dict.fromkeys(report_output["gaps"]))
+        for gap in run.get("gaps", []):
+            if any(marker in gap for marker in _CRITICAL_SYSTEM_GAP_MARKERS) and gap not in selected:
+                selected.append(gap)
+        return selected
+    return sorted(set(run.get("gaps", [])))
 
 
 def render_report(run, outputs):
@@ -103,12 +144,16 @@ def render_report(run, outputs):
         "risk": "Risks and counterevidence",
         "report": "Executive summary",
     }
+    is_quick = run.get("strategy") == "single"
+    depth_label = "Quick (1-pass synthesis)" if is_quick else "Deep (6-stage specialist)"
+    title_label = "Quick Research Brief" if is_quick else "Research Brief"
     lines = [
-        f"# {run['symbol']} — Research Brief",
+        f"# {run['symbol']} — {title_label}",
         "",
         "| Field | Value |",
         "|---|---|",
         f"| **Symbol** | `{_escape_cell(run['symbol'])}` ({_escape_cell(run.get('market', 'US'))}) |",
+        f"| **Depth** | {depth_label} |",
         f"| **Mode** | `{_escape_cell(run['mode'])}` |",
         f"| **Status** | `{_escape_cell(run['status'])}` |",
         f"| **Model** | `{_escape_cell(run.get('model_id', 'unknown'))}` |",
@@ -123,7 +168,10 @@ def render_report(run, outputs):
             "",
         ]
 
-    for stage in ("report", "profile", "financials", "estimates", "valuation", "risk"):
+    rendered_stages = (
+        ("report",) if is_quick else ("report", "profile", "financials", "estimates", "valuation", "risk")
+    )
+    for stage in rendered_stages:
         lines += [f"## {sections[stage]}", ""]
         output = outputs.get(stage)
         if not output:
@@ -131,12 +179,12 @@ def render_report(run, outputs):
             continue
 
         if stage == "report":
-            lines += [output["executive_summary"], ""]
+            lines += [f"> **Bottom line:** {output['executive_summary']}", ""]
+            if output["claims"]:
+                lines += _render_claims(output["claims"])
+                lines.append("")
             if output["summary"] and output["summary"].strip() != output["executive_summary"].strip():
                 lines += [f"**Coverage & completeness:** {output['summary']}", ""]
-            lines += _render_claims(output["claims"])
-            if output["claims"]:
-                lines.append("")
             lines += _render_key_metrics(run.get("calculations", []))
             continue
 
@@ -188,11 +236,14 @@ def render_report(run, outputs):
             if calc["value"] is not None
             else f"Unavailable ({calc['reason']})"
         )
-        refs = "; ".join([f"`{calc['calculation_id']}`"] + [f"`{ref}`" for ref in calc["input_evidence_ids"]])
+        refs = "; ".join(
+            [f"`{_escape_cell(calc['calculation_id'])}`"]
+            + [_ref_link(ref) for ref in calc["input_evidence_ids"]]
+        )
         lines.append(f"| {label} | {_escape_cell(value)} | {_escape_cell(calc['unit'])} | {refs} |")
 
     lines += ["", "## Data gaps", ""]
-    gaps = sorted(set(run["gaps"]))
+    gaps = _select_report_gaps(run, outputs)
     if gaps:
         lines += [f"- {gap}" for gap in gaps]
     else:

@@ -60,6 +60,8 @@ export function ResearchRecords() {
                     <tr key={run.run_id}>
                       <td>
                         <strong>{run.symbol}</strong>
+                        <br />
+                        <span className="badge">{run.strategy === 'single' ? 'Quick' : 'Deep'}</span>
                       </td>
                       <td>{dateTime(run.started_at)}</td>
                       <td>

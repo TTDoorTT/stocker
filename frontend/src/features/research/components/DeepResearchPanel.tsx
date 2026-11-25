@@ -1,17 +1,53 @@
 import { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Link } from 'react-router-dom';
 import { EvidenceTable } from '../../../shared/ui/EvidenceTable';
 import { Empty, ErrorBox, Gaps, Loading } from '../../../shared/ui/Feedback';
 import { ModeBadge, StatusBadge } from '../../../shared/ui/Presentation';
 import { dateTime } from '../../../shared/utils/format';
 import { researchApi } from '../api';
-import type { Run, RunEvent } from '../types';
+import type { ResearchStrategy, Run, RunEvent } from '../types';
 import { AgentProgress } from './AgentProgress';
+import { ResearchReportView } from './ResearchReportView';
+
+const DEFAULT_ESTIMATES: Record<ResearchStrategy, string> = {
+  multi: '~8–12 min',
+  single: '~1–3 min',
+};
+
+function formatDuration(seconds: number): string {
+  const total = Math.max(1, Math.round(seconds));
+  if (total < 60) return `${total}s`;
+  const mins = Math.floor(total / 60);
+  const secs = total % 60;
+  return secs ? `${mins}m ${secs}s` : `${mins}m`;
+}
+
+function estimateLabel(runs: Run[], target: ResearchStrategy): { label: string; fromHistory: boolean } {
+  const matching = runs
+    .filter(
+      (item) =>
+        item.mode === 'live' &&
+        (item.strategy ?? 'multi') === target &&
+        ['complete', 'incomplete'].includes(item.status) &&
+        typeof item.latency_seconds === 'number' &&
+        item.latency_seconds > 1,
+    )
+    .slice(0, 5);
+  if (!matching.length) {
+    return { label: DEFAULT_ESTIMATES[target], fromHistory: false };
+  }
+  const avg = matching.reduce((sum, item) => sum + (item.latency_seconds ?? 0), 0) / matching.length;
+  if (avg < 60) {
+    return { label: `~${Math.max(1, Math.round(avg))}s`, fromHistory: true };
+  }
+  return { label: `~${Math.max(1, Math.round(avg / 60))} min`, fromHistory: true };
+}
 
 export function DeepResearchPanel({ symbol }: { symbol: string }) {
   const [run, setRun] = useState<Run | null>(null);
+  const [recentRuns, setRecentRuns] = useState<Run[]>([]);
   const [events, setEvents] = useState<RunEvent[]>([]);
+  const [strategy, setStrategy] = useState<ResearchStrategy>('multi');
   const [loadingLatest, setLoadingLatest] = useState(true);
   const [starting, setStarting] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -27,11 +63,15 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
       .runs()
       .then((list) => {
         if (!active) return;
+        setRecentRuns(list);
         const latest = list.find((item) => item.symbol.toUpperCase() === symbol.toUpperCase()) ?? null;
         setRun(latest);
       })
       .catch(() => {
-        if (active) setRun(null);
+        if (active) {
+          setRecentRuns([]);
+          setRun(null);
+        }
       })
       .finally(() => {
         if (active) setLoadingLatest(false);
@@ -77,7 +117,7 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
     setStarting(true);
     setError('');
     try {
-      const created = await researchApi.runResearch(symbol);
+      const created = await researchApi.runResearch(symbol, undefined, strategy);
       setRun(created);
       setEvents([]);
     } catch (e) {
@@ -116,16 +156,36 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
     URL.revokeObjectURL(url);
   }
 
+  const isQuickSelected = strategy === 'single';
+  const runLabel = isQuickSelected ? 'Run Quick Research' : 'Run Deep Research';
+  const deepEstimate = estimateLabel(recentRuns, 'multi');
+  const quickEstimate = estimateLabel(recentRuns, 'single');
+  const selectedEstimate = isQuickSelected ? quickEstimate : deepEstimate;
+  const activeRunEstimate = estimateLabel(recentRuns, run?.strategy ?? strategy);
+
   return (
-    <section className="panel" aria-label="Deep research workspace">
+    <section className="panel" aria-label="Research workspace">
       <div className="panel-heading">
         <div>
-          <h2>Deep Research · {symbol}</h2>
+          <h2>Research · {symbol}</h2>
           <small>
-            Six-stage evidence-bound analysis: profile → financials → expectations → valuation → risk → report
+            {isQuickSelected
+              ? `Quick Research: fast 1-pass executive brief from captured filings, quote, and core metrics · Est. ${quickEstimate.label}`
+              : `Deep Research: full 6-stage analysis (profile → financials → expectations → valuation → risk → report) · Est. ${deepEstimate.label}`}
+            {selectedEstimate.fromHistory ? ' (based on recent runs)' : ''}
           </small>
         </div>
         <div className="actions">
+          <select
+            aria-label="Research mode"
+            className="research-depth-select"
+            value={strategy}
+            disabled={isRunning || starting}
+            onChange={(event) => setStrategy(event.target.value as ResearchStrategy)}
+          >
+            <option value="multi">Deep Research (6-stage · {deepEstimate.label})</option>
+            <option value="single">Quick Research (1-pass · {quickEstimate.label})</option>
+          </select>
           {isRunning ? (
             <button
               type="button"
@@ -137,7 +197,7 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
             </button>
           ) : (
             <button type="button" className="button" onClick={() => void startRun()} disabled={starting}>
-              {starting ? 'Starting…' : 'Run Deep Research'}
+              {starting ? 'Starting…' : runLabel}
             </button>
           )}
         </div>
@@ -149,32 +209,36 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
         <Loading />
       ) : !run ? (
         <Empty>
-          No deep research run yet for {symbol}. Click <strong>Run Deep Research</strong> to launch a
-          six-stage evidence-backed analysis.
+          No research run yet for {symbol}. Pick <strong>Deep Research</strong> ({deepEstimate.label}) or{' '}
+          <strong>Quick Research</strong> ({quickEstimate.label}) and click <strong>{runLabel}</strong>.
         </Empty>
       ) : (
         <>
           <div className="run-meta">
+            <span className="badge">{run.strategy === 'single' ? 'Quick Research' : 'Deep Research'}</span>
             <ModeBadge mode={run.mode} />
             <StatusBadge status={run.status} />
             <span>Started {dateTime(run.started_at)}</span>
+            {typeof run.latency_seconds === 'number' && run.latency_seconds > 0 && (
+              <span>Duration {formatDuration(run.latency_seconds)}</span>
+            )}
             <span>Model: {run.model_id}</span>
             <Link to={`/runs/${run.run_id}`}>Open full record ↗</Link>
           </div>
           <AgentProgress run={run} />
           {isRunning && (
             <p role="status" className="notice">
-              <span className="spinner" /> Agents are executing. Click <strong>Stop Research</strong> to
-              interrupt this run.
+              <span className="spinner" /> Agents are executing (Est. {activeRunEstimate.label}). Click{' '}
+              <strong>Stop Research</strong> to interrupt this run.
             </p>
           )}
           {run.status === 'cancelled' && (
             <p role="status" className="notice">
-              This research run was stopped before completion. Click <strong>Run Deep Research</strong> to
-              start a new run.
+              This research run was stopped before completion. Click <strong>{runLabel}</strong> to start a
+              new run.
             </p>
           )}
-          <Gaps gaps={run.gaps} />
+          {!run.report && <Gaps gaps={run.gaps} />}
           {run.error && <ErrorBox message={run.error} />}
           <div className="panel report" style={{ marginTop: 18 }}>
             <div className="panel-heading">
@@ -186,9 +250,7 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
               )}
             </div>
             {run.report ? (
-              <div className="markdown">
-                <ReactMarkdown>{run.report}</ReactMarkdown>
-              </div>
+              <ResearchReportView markdown={run.report} />
             ) : (
               <Empty>
                 {isRunning
@@ -197,6 +259,14 @@ export function DeepResearchPanel({ symbol }: { symbol: string }) {
               </Empty>
             )}
           </div>
+          {run.report && Boolean(run.gaps?.length) && (
+            <details className="stage-detail" style={{ marginTop: 14 }}>
+              <summary>
+                <strong>All recorded stage data limitations</strong> · {run.gaps.length} entries
+              </summary>
+              <Gaps gaps={run.gaps} />
+            </details>
+          )}
           <details className="stage-detail" style={{ marginTop: 14 }}>
             <summary>
               <strong>Agent handoffs &amp; validation</strong> · {run.stages?.length || 0} recorded attempts

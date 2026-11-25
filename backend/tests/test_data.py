@@ -448,6 +448,9 @@ def test_sec_balance_sheet_and_capex_drive_deterministic_fcf_liquidity_and_lever
         "cik": 320193,
         "facts": {
             "us-gaap": {
+                "Revenues": duration(2000),
+                "OperatingIncomeLoss": duration(600),
+                "InterestExpense": duration(60),
                 "NetCashProvidedByUsedInOperatingActivities": duration(1200),
                 "PaymentsToAcquirePropertyPlantAndEquipment": duration(200),
                 "CashAndCashEquivalentsAtCarryingValue": instant(500),
@@ -462,6 +465,9 @@ def test_sec_balance_sheet_and_capex_drive_deterministic_fcf_liquidity_and_lever
     facts = parse_sec_facts("AAPL", payload, datetime(2025, 3, 1, tzinfo=UTC))
     fields = {f.field for f in facts}
     assert {
+        "revenue",
+        "operating_income",
+        "interest_expense",
         "cashflow",
         "capex",
         "cash",
@@ -473,6 +479,8 @@ def test_sec_balance_sheet_and_capex_drive_deterministic_fcf_liquidity_and_lever
     } <= fields
     stock = Stock(symbol="AAPL", name="Apple Inc.", mode="live", profile="Test", facts=facts, evidence=facts)
     calcs = {c.metric: c for c in build_calculations(stock)}
+    assert calcs["operating_margin"].value == pytest.approx(30.0)
+    assert calcs["interest_coverage"].value == pytest.approx(10.0)
     assert calcs["free_cash_flow"].value == pytest.approx(1000)
     assert calcs["current_ratio"].value == pytest.approx(1.5)
     assert calcs["debt_to_equity"].value == pytest.approx(0.5)
