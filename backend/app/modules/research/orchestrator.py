@@ -5,7 +5,7 @@ from uuid import uuid4
 from app.modules.market_data.symbols import symbol_market
 from app.modules.research.agents.client import CancellationToken, FixtureModel, ModelClient
 from app.modules.research.agents.tools import ResearchTools
-from app.modules.research.enrichment import capture_supplementary_research_inputs
+from app.modules.research.enrichment import capture_supplementary_research_inputs, enrich_price_history
 from app.modules.research.errors import ModelBudgetError, ModelError, RunCancelledError
 from app.modules.research.reports import render_report
 from app.modules.research.schemas import SCHEMAS, STAGES
@@ -99,11 +99,20 @@ class ResearchOrchestrator:
                         "symbol": run["symbol"],
                         "market": stock["market"],
                         "currency": stock["currency"],
+                        "reporting_currencies": sorted(
+                            {f["currency"] for f in stock.get("facts", []) if f.get("currency")}
+                        ),
                         "profile": stock["profile"],
                         "evidence": [
                             e
                             for e in stock["evidence"]
-                            if e["field"] in {"company_name", "industry_classification"}
+                            if e["field"]
+                            in {
+                                "company_name",
+                                "industry_classification",
+                                "listing_exchange",
+                                "reporting_currency",
+                            }
                         ],
                     },
                     "financials": {
@@ -124,7 +133,15 @@ class ResearchOrchestrator:
                             else {}
                         ),
                     },
-                    "valuation": {"quote": stock["quote"], "calculations": run["calculations"]},
+                    "valuation": {
+                        "quote": stock["quote"],
+                        "calculations": run["calculations"],
+                        **(
+                            {"price_history": enrichment.price_history_summary}
+                            if enrichment.price_history_summary
+                            else {}
+                        ),
+                    },
                     "risk": {"source_gaps": stock["gaps"]},
                     "report": {"gaps": list(dict.fromkeys(run["gaps"]))},
                 }
@@ -191,6 +208,12 @@ class ResearchOrchestrator:
             run["gaps"] = list(stock["gaps"])
             run["calculations"] = [calc.model_dump(mode="json") for calc in build_calculations(stock_model)]
             enrichment = capture_supplementary_research_inputs(self.data, run["symbol"], run["mode"])
+            try:
+                history = [bar.model_dump(mode="json") for bar in self.data.history(run["symbol"])]
+            except Exception:
+                history = []
+                run["gaps"].append("Price history unavailable")
+            enrich_price_history(run["symbol"], stock["market"], history, enrichment)
             seen_ev = {item["evidence_id"] for item in run["evidence"]}
             for item in enrichment.evidence:
                 if item["evidence_id"] not in seen_ev:
@@ -205,11 +228,6 @@ class ResearchOrchestrator:
                 if gap not in run["gaps"]:
                     run["gaps"].append(gap)
             stock["evidence"] = run["evidence"]
-            try:
-                history = [bar.model_dump(mode="json") for bar in self.data.history(run["symbol"])]
-            except Exception:
-                history = []
-                run["gaps"].append("Price history unavailable")
             save()
             stages = ("report",) if run["strategy"] == "single" else STAGES
             for stage in stages:

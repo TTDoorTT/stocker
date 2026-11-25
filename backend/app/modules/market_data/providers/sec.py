@@ -16,10 +16,30 @@ def parse_sec_facts(symbol: str, data: dict, fetched_at: datetime, *, cached=Fal
         "net_income": ["NetIncomeLoss"],
         "eps": ["EarningsPerShareDiluted", "EarningsPerShareBasic"],
         "cashflow": ["NetCashProvidedByUsedInOperatingActivities"],
+        "capex": ["PaymentsToAcquirePropertyPlantAndEquipment"],
+        "cash": ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsAndShortTermInvestments"],
+        "current_assets": ["AssetsCurrent"],
+        "current_liabilities": ["LiabilitiesCurrent"],
+        "total_assets": ["Assets"],
+        "stockholders_equity": [
+            "StockholdersEquity",
+            "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+        ],
         "long_term_debt": ["LongTermDebt"],
         "long_term_debt_current": ["LongTermDebtCurrent"],
         "long_term_debt_noncurrent": ["LongTermDebtNoncurrent"],
     }
+    balance_fields = {
+        "cash",
+        "current_assets",
+        "current_liabilities",
+        "total_assets",
+        "stockholders_equity",
+        "long_term_debt",
+        "long_term_debt_current",
+        "long_term_debt_noncurrent",
+    }
+    cashflow_fields = {"cashflow", "capex"}
     facts = []
     if not isinstance(data, dict) or not isinstance(data.get("facts", {}), dict):
         return []
@@ -32,7 +52,7 @@ def parse_sec_facts(symbol: str, data: dict, fetched_at: datetime, *, cached=Fal
             fact.field == "long_term_debt" for fact in facts
         ):
             continue
-        is_debt = field.startswith("long_term_debt")
+        is_balance = field in balance_fields
         for tag in tags:
             concept = taxonomy.get(tag, {})
             units = concept.get("units", {}) if isinstance(concept, dict) else {}
@@ -51,9 +71,9 @@ def parse_sec_facts(symbol: str, data: dict, fetched_at: datetime, *, cached=Fal
                     start = date.fromisoformat(row["start"]) if row.get("start") else None
                     if row.get("form") != "10-K" or filed > fetched_at.date() or end > fetched_at.date():
                         continue
-                    if not is_debt and (not start or not 350 <= (end - start).days <= 380):
+                    if not is_balance and (not start or not 350 <= (end - start).days <= 380):
                         continue
-                    if is_debt and start:
+                    if is_balance and start:
                         continue
                     value = float(row["val"])
                     if isinstance(row["val"], bool) or not isfinite(value):
@@ -89,9 +109,9 @@ def parse_sec_facts(symbol: str, data: dict, fetched_at: datetime, *, cached=Fal
                                 fetched_at=fetched_at,
                                 cached=cached,
                                 statement="cashflow"
-                                if field == "cashflow"
+                                if field in cashflow_fields
                                 else "balance"
-                                if is_debt
+                                if is_balance
                                 else "income",
                                 fiscal_year=None,
                                 filing_fiscal_year=row.get("fy"),

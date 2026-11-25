@@ -406,3 +406,73 @@ def test_expired_cache_does_not_silently_serve_stale_data_on_provider_failure(mo
     assert provider.fetch("https://data.sec.gov/example", ttl=-1, interval=0).data == {"value": 1}
     with pytest.raises(DataUnavailable, match="503"):
         provider.fetch("https://data.sec.gov/example", interval=0)
+
+
+def test_sec_balance_sheet_and_capex_drive_deterministic_fcf_liquidity_and_leverage():
+    from app.contracts.market import Stock
+
+    def duration(val):
+        return {
+            "units": {
+                "USD": [
+                    {
+                        "start": "2023-10-01",
+                        "end": "2024-09-30",
+                        "val": val,
+                        "filed": "2024-11-01",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "accn": "0000320193-24-000001",
+                    }
+                ]
+            }
+        }
+
+    def instant(val):
+        return {
+            "units": {
+                "USD": [
+                    {
+                        "end": "2024-09-30",
+                        "val": val,
+                        "filed": "2024-11-01",
+                        "form": "10-K",
+                        "fy": 2024,
+                        "accn": "0000320193-24-000001",
+                    }
+                ]
+            }
+        }
+
+    payload = {
+        "cik": 320193,
+        "facts": {
+            "us-gaap": {
+                "NetCashProvidedByUsedInOperatingActivities": duration(1200),
+                "PaymentsToAcquirePropertyPlantAndEquipment": duration(200),
+                "CashAndCashEquivalentsAtCarryingValue": instant(500),
+                "AssetsCurrent": instant(1500),
+                "LiabilitiesCurrent": instant(1000),
+                "Assets": instant(4000),
+                "StockholdersEquity": instant(800),
+                "LongTermDebt": instant(400),
+            }
+        },
+    }
+    facts = parse_sec_facts("AAPL", payload, datetime(2025, 3, 1, tzinfo=UTC))
+    fields = {f.field for f in facts}
+    assert {
+        "cashflow",
+        "capex",
+        "cash",
+        "current_assets",
+        "current_liabilities",
+        "total_assets",
+        "stockholders_equity",
+        "long_term_debt",
+    } <= fields
+    stock = Stock(symbol="AAPL", name="Apple Inc.", mode="live", profile="Test", facts=facts, evidence=facts)
+    calcs = {c.metric: c for c in build_calculations(stock)}
+    assert calcs["free_cash_flow"].value == pytest.approx(1000)
+    assert calcs["current_ratio"].value == pytest.approx(1.5)
+    assert calcs["debt_to_equity"].value == pytest.approx(0.5)

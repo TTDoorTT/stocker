@@ -1,4 +1,4 @@
-"""Additive quarterly/TTM and earnings evidence capture for six-stage research runs.
+"""Additive quarterly/TTM, earnings, profile, and price-history capture for six-stage research runs.
 
 Preserves strict separation between SEC GAAP statements and vendor-reported
 adjusted earnings calendars. Missing or incompatible data becomes explicit gaps
@@ -9,23 +9,42 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from math import isfinite
 
 from app.contracts.market import Calculation, Evidence
 from app.contracts.stock_research import EarningsResponse, FinancialTrendsResponse
+from app.finance.metrics import percentage_change
 from app.modules.market_data.provenance import evidence_id
+
+# UI-panel methodology footnotes that describe parser mechanics rather than missing research data.
+_NOISY_METHODOLOGY_GAPS = (
+    "No after-hours stock-price reaction is calculated in this phase.",
+    "SEC fy/fp identifies the filing context;",
+    "Quarterly metrics require comparable standalone contexts.",
+    "Derived Q4 is FY minus nine-month YTD",
+    "Calendar availability and older historical coverage depend on Finnhub",
+    "Calendar dates are vendor-scheduled or reported dates",
+    "SEC companyfacts filings have date-level timestamps",
+)
+
+
+def _is_research_gap(gap: str) -> bool:
+    return not any(gap.startswith(prefix) for prefix in _NOISY_METHODOLOGY_GAPS)
 
 
 @dataclass
 class ResearchEnrichment:
     evidence: list[dict] = field(default_factory=list)
     calculations: list[dict] = field(default_factory=list)
+    profile_evidence: list[dict] = field(default_factory=list)
     quarterly_summary: dict | None = None
     earnings_summary: dict | None = None
+    price_history_summary: dict | None = None
     gaps: list[str] = field(default_factory=list)
 
 
 def _merge_quarterly(trends: FinancialTrendsResponse, symbol: str, result: ResearchEnrichment) -> None:
-    result.gaps.extend(trends.gaps)
+    result.gaps.extend(g for g in trends.gaps if _is_research_gap(g))
     standalone = [p for p in trends.periods if p.period_kind == "standalone_quarter"]
     if not standalone:
         return
@@ -45,6 +64,7 @@ def _merge_quarterly(trends: FinancialTrendsResponse, symbol: str, result: Resea
 
     period_metric_refs: dict[tuple[str, str], str] = {}
     quarterly_ev_ids: list[str] = []
+    compact_records: list[dict] = []
     for period in selected:
         published = datetime.fromisoformat(f"{period.filed_on.isoformat()}T00:00:00+00:00")
         period_label = (
@@ -80,6 +100,15 @@ def _merge_quarterly(trends: FinancialTrendsResponse, symbol: str, result: Resea
             result.evidence.append(ev.model_dump(mode="json"))
             period_metric_refs[(period.period_id, metric_name)] = ev_id
             quarterly_ev_ids.append(ev_id)
+            compact_records.append(
+                {
+                    "evidence_id": ev_id,
+                    "field": f"quarterly_{metric_name}",
+                    "period": period.period_id,
+                    "value": mv.value,
+                    "unit": mv.unit,
+                }
+            )
 
     ttm_calc_ids: list[str] = []
     for metric_name, ttm in trends.ttm.items():
@@ -113,6 +142,7 @@ def _merge_quarterly(trends: FinancialTrendsResponse, symbol: str, result: Resea
             "quarters_captured": [p.period_id for p in selected],
             "evidence_ids": quarterly_ev_ids,
             "ttm_calculation_ids": ttm_calc_ids,
+            "records": compact_records,
             "note": (
                 "SEC GAAP standalone quarters and derived TTM where four consecutive quarters exist; "
                 "separate from annual SEC facts and vendor adjusted earnings."
@@ -121,8 +151,9 @@ def _merge_quarterly(trends: FinancialTrendsResponse, symbol: str, result: Resea
 
 
 def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnrichment) -> None:
-    result.gaps.extend(report.gaps)
+    result.gaps.extend(g for g in report.gaps if _is_research_gap(g))
     earnings_ev_ids: list[str] = []
+    compact_records: list[dict] = []
 
     upcoming = report.upcoming
     if upcoming is not None:
@@ -156,6 +187,15 @@ def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnric
         )
         result.evidence.append(sched_ev.model_dump(mode="json"))
         earnings_ev_ids.append(sched_id)
+        compact_records.append(
+            {
+                "evidence_id": sched_id,
+                "field": "upcoming_earnings",
+                "period": upcoming_period,
+                "value": sched_ev.value,
+                "unit": "text",
+            }
+        )
 
         if upcoming.eps_estimate is not None:
             est_id = evidence_id(
@@ -183,6 +223,15 @@ def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnric
             )
             result.evidence.append(est_ev.model_dump(mode="json"))
             earnings_ev_ids.append(est_id)
+            compact_records.append(
+                {
+                    "evidence_id": est_id,
+                    "field": "vendor_upcoming_eps_estimate",
+                    "period": upcoming_period,
+                    "value": upcoming.eps_estimate,
+                    "unit": f"{report.currency}/shares",
+                }
+            )
 
     recent_history = sorted(report.history, key=lambda r: r.reported_on, reverse=True)[:4]
     for record in recent_history:
@@ -234,6 +283,15 @@ def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnric
             )
             result.evidence.append(ev.model_dump(mode="json"))
             earnings_ev_ids.append(ev_id)
+            compact_records.append(
+                {
+                    "evidence_id": ev_id,
+                    "field": field_name,
+                    "period": period_label,
+                    "value": value,
+                    "unit": unit,
+                }
+            )
 
     if earnings_ev_ids:
         result.earnings_summary = {
@@ -241,6 +299,7 @@ def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnric
             "upcoming_date": upcoming.scheduled_date.isoformat() if upcoming else None,
             "history_periods": [f"FY{r.fiscal_year}{r.fiscal_quarter}" for r in recent_history],
             "evidence_ids": earnings_ev_ids,
+            "records": compact_records,
             "note": (
                 "Vendor earnings calendar records (typically adjusted/non-GAAP); "
                 "not licensed analyst consensus and separate from SEC GAAP diluted EPS."
@@ -248,9 +307,94 @@ def _merge_earnings(report: EarningsResponse, symbol: str, result: ResearchEnric
         }
 
 
+def enrich_price_history(symbol: str, market: str, history: list[dict], result: ResearchEnrichment) -> None:
+    """Derive deterministic trailing return and range summary from already-captured price bars."""
+    if len(history) < 2:
+        return
+    ordered = sorted(history, key=lambda bar: str(bar.get("date", "")))
+    first, last = ordered[0], ordered[-1]
+    start_close, end_close = first.get("close"), last.get("close")
+    if (
+        not isinstance(start_close, (int, float))
+        or not isinstance(end_close, (int, float))
+        or not isfinite(start_close)
+        or not isfinite(end_close)
+        or start_close <= 0
+    ):
+        return
+    ret = percentage_change(float(end_close), float(start_close))
+    if ret is None:
+        return
+    currency = str(last.get("currency") or "USD")
+    start_id = evidence_id("history", symbol, "start_close", first["date"], start_close)
+    end_id = evidence_id("history", symbol, "end_close", last["date"], end_close)
+    for ev_id, bar, field_name in (
+        (start_id, first, "history_start_close"),
+        (end_id, last, "history_end_close"),
+    ):
+        ev = Evidence(
+            evidence_id=ev_id,
+            symbol=symbol,
+            market=market if market in {"US", "CA"} else "US",
+            field=field_name,
+            value=float(bar["close"]),
+            unit=currency,
+            currency=currency,
+            period=str(bar["date"]),
+            source_name=str(bar.get("source_name") or "Price history provider"),
+            source_url=str(bar.get("source_url") or "https://example.org/history"),
+            published_at=datetime.fromisoformat(f"{bar['date']}T00:00:00+00:00"),
+            fetched_at=datetime.fromisoformat(str(bar["fetched_at"]).replace("Z", "+00:00")),
+            fixture=bool(bar.get("fixture", False)),
+            cached=bool(bar.get("cached", False)),
+        )
+        result.evidence.append(ev.model_dump(mode="json"))
+
+    calc_id = evidence_id(
+        "calc-history", symbol, first["date"], last["date"], start_close, end_close
+    ).replace("ev-", "calc-", 1)
+    calc = Calculation(
+        calculation_id=calc_id,
+        metric="price_history_return",
+        value=ret,
+        unit="%",
+        input_evidence_ids=[start_id, end_id],
+        inputs={
+            "start_date": str(first["date"]),
+            "end_date": str(last["date"]),
+            "start_close": float(start_close),
+            "end_close": float(end_close),
+            "currency": currency,
+        },
+    )
+    result.calculations.append(calc.model_dump(mode="json"))
+    closes = [float(b["close"]) for b in ordered if isinstance(b.get("close"), (int, float))]
+    result.price_history_summary = {
+        "observations": len(ordered),
+        "start_date": str(first["date"]),
+        "end_date": str(last["date"]),
+        "currency": currency,
+        "return_calculation_id": calc_id,
+        "period_low": min(closes) if closes else None,
+        "period_high": max(closes) if closes else None,
+        "note": "Deterministic trailing close-to-close return from captured daily history.",
+    }
+
+
 def capture_supplementary_research_inputs(data, symbol: str, run_mode: str) -> ResearchEnrichment:
-    """Best-effort capture of quarterly/TTM trends and earnings records for research runs."""
+    """Best-effort capture of cross-source profile, quarterly/TTM, and earnings records."""
     result = ResearchEnrichment()
+
+    if hasattr(data, "cross_source_profile"):
+        try:
+            profile_records = data.cross_source_profile(symbol)
+            for item in profile_records or []:
+                if isinstance(item, Evidence) and item.fixture == (run_mode == "fixtures"):
+                    dumped = item.model_dump(mode="json")
+                    result.evidence.append(dumped)
+                    result.profile_evidence.append(dumped)
+        except Exception:
+            pass
 
     if hasattr(data, "financial_trends"):
         try:
